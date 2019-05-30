@@ -16,15 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-add_subdirectory(ControlElements)
-add_subdirectory(AdaptiveControlEnvironment)
+add_library(adaptive_control SHARED 	AdaptiveControlEnvironment.cpp)
+					
+target_link_libraries(adaptive_control)
 
-set(FLIGHT_CONTROL_SRC 	${FLIGHT_CONTROL_SRC}
-						${CMAKE_CURRENT_SOURCE_DIR}/PIDController/SimplePIDController/SimplePIDController.cpp
-						${CMAKE_CURRENT_SOURCE_DIR}/PIDController/SimplePIDController/detail/AirplaneSimplePIDCascade.cpp
-#						${CMAKE_CURRENT_SOURCE_DIR}/PIDController/SimplePIDController/detail/HelicopterSimplePIDCascade.cpp
-						${CMAKE_CURRENT_SOURCE_DIR}/PIDController/ManeuverPIDController/ManeuverPIDController.cpp
-						${CMAKE_CURRENT_SOURCE_DIR}/PIDController/ManeuverPIDController/detail/ManeuverCascade.cpp
-						${CMAKE_CURRENT_SOURCE_DIR}/PIDController/RatePIDController/RatePIDController.cpp
-						${CMAKE_CURRENT_SOURCE_DIR}/PIDController/RatePIDController/detail/RateCascade.cpp
-						PARENT_SCOPE)
+install(TARGETS adaptive_control
+		LIBRARY DESTINATION lib
+		)
+                                

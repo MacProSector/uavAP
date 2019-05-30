@@ -29,6 +29,7 @@ set (TEST_SOURCES 	TestRunner.cpp
                         #Core/FramesTest.cpp
 			#FlightControl/Controller/PIDControllerTest_Airplane.cpp
 			#FlightControl/Controller/PIDControllerTest_Helicopter.cpp
+			FlightControl/Controller/AdaptiveControlEnvironmentTest.cpp
 			API/ApExtTest.cpp
 			)
 

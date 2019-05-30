@@ -25,7 +25,8 @@ add_subdirectory (DataHandling)
 
 add_library(uavap_flight_control SHARED ${FLIGHT_CONTROL_SRC})
 
-target_link_libraries(uavap_flight_control 	control
+target_link_libraries(uavap_flight_control 	adaptive_control
+											control
 											uavap_core
 											${BOOST}
 											rt
