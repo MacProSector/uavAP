@@ -39,120 +39,172 @@ BOOST_AUTO_TEST_SUITE(AdaptiveControlEnvironmentTest)
 BOOST_AUTO_TEST_CASE(ConstantElement)
 {
 	double value = 1.5;
-	double valueCheck = value;
 	double result = 0;
 
 	auto constant = std::make_shared<Constant<double>>(value);
 
 	result = constant->getValue();
 
-	BOOST_CHECK_EQUAL(result, valueCheck);
+	BOOST_CHECK_EQUAL(result, value);
 
 	value = 2.0;
+	constant->setConstant(value);
 	result = constant->getValue();
 
-	BOOST_CHECK_EQUAL(result, valueCheck);
+	BOOST_CHECK_EQUAL(result, value);
 }
 
 BOOST_AUTO_TEST_CASE(GainElement)
 {
-	double valueInput = 1.5;
+	double valueInputOne = 1.5;
+	double valueInputTwo = 3.0;
 	double valueGain = 2.0;
 	double result = 0;
 
-	auto input = std::make_shared<Input<double>>(valueInput);
-	auto gain = std::make_shared<Gain<double, double, double>>(input, valueGain);
+	auto inputOne = std::make_shared<Input<double>>(valueInputOne);
+	auto inputTwo = std::make_shared<Input<double>>(valueInputTwo);
+	auto gain = std::make_shared<Gain<double, double, double>>(inputOne, valueGain);
 
 	result = gain->getValue();
 
-	BOOST_CHECK_EQUAL(result, valueInput * valueGain);
+	BOOST_CHECK_EQUAL(result, valueInputOne * valueGain);
 
 	valueGain = 3.0;
+	gain->setGain(valueGain);
 	result = gain->getValue();
 
-	BOOST_CHECK_EQUAL(result, valueInput * valueGain);
+	BOOST_CHECK_EQUAL(result, valueInputOne * valueGain);
+
+	gain->setInput(inputTwo);
+	result = gain->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueInputTwo * valueGain);
 }
 
 BOOST_AUTO_TEST_CASE(InputElement)
 {
-	double value = 1.5;
+	double valueOne = 1.5;
+	double valueTwo = 3.0;
 	double result = 0;
 
-	auto input = std::make_shared<Input<double>>(value);
+	auto input = std::make_shared<Input<double>>(valueOne);
 
 	result = input->getValue();
 
-	BOOST_CHECK_EQUAL(result, value);
+	BOOST_CHECK_EQUAL(result, valueOne);
 
-	value = 2.0;
+	valueOne = 2.0;
 	result = input->getValue();
 
-	BOOST_CHECK_EQUAL(result, value);
+	BOOST_CHECK_EQUAL(result, valueOne);
+
+	input->setInput(valueTwo);
+	result = input->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueTwo);
 }
 
 BOOST_AUTO_TEST_CASE(ManualSwitchElement)
 {
-	bool selection = true;
-	double valueInputTrue = 1.5;
-	double valueInputFalse = 2.0;
+	double valueInputTrueOne = 1.5;
+	double valueInputTrueTwo = 3.0;
+	double valueInputFalseOne = 2.0;
+	double valueInputFalseTwo = 4.0;
 	double result = 0;
 
-	auto inputTrue = std::make_shared<Input<double>>(valueInputTrue);
-	auto inputFalse = std::make_shared<Input<double>>(valueInputFalse);
-	auto manualSwitch = std::make_shared<ManualSwitch<double>>(inputTrue, inputFalse, selection);
+	auto inputTrueOne = std::make_shared<Input<double>>(valueInputTrueOne);
+	auto inputTrueTwo = std::make_shared<Input<double>>(valueInputTrueTwo);
+	auto inputFalseOne = std::make_shared<Input<double>>(valueInputFalseOne);
+	auto inputFalseTwo = std::make_shared<Input<double>>(valueInputFalseTwo);
+	auto manualSwitch = std::make_shared<ManualSwitch<double>>(inputTrueOne, inputFalseOne, true);
 
 	result = manualSwitch->getValue();
 
-	BOOST_CHECK_EQUAL(result, valueInputTrue);
+	BOOST_CHECK_EQUAL(result, valueInputTrueOne);
 
-	selection = false;
+	manualSwitch->setSelection(false);
 	result = manualSwitch->getValue();
 
-	BOOST_CHECK_EQUAL(result, valueInputFalse);
+	BOOST_CHECK_EQUAL(result, valueInputFalseOne);
+
+	manualSwitch->setInputTrue(inputTrueTwo);
+	manualSwitch->setInputFalse(inputFalseTwo);
+	manualSwitch->setSelection(true);
+	result = manualSwitch->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueInputTrueTwo);
+
+	manualSwitch->setSelection(false);
+	result = manualSwitch->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueInputFalseTwo);
 }
 
 BOOST_AUTO_TEST_CASE(SumElement)
 {
-	double valueInputOne = 1.5;
-	double valueInputTwo = 2.0;
-	double resultAdd = 0;
-	double resultSub = 0;
+	double valueInputOneOne = 1.5;
+	double valueInputTwoOne = 2.0;
+	double valueInputOneTwo = 3.0;
+	double valueInputTwoTwo = 4.0;
+	double result = 0;
 
-	auto inputOne = std::make_shared<Input<double>>(valueInputOne);
-	auto inputTwo = std::make_shared<Input<double>>(valueInputTwo);
-	auto sumAdd = std::make_shared<Sum<double, double, double>>(inputOne, inputTwo, true);
-	auto sumSub = std::make_shared<Sum<double, double, double>>(inputOne, inputTwo, false);
+	auto inputOneOne = std::make_shared<Input<double>>(valueInputOneOne);
+	auto inputTwoOne = std::make_shared<Input<double>>(valueInputTwoOne);
+	auto inputOneTwo = std::make_shared<Input<double>>(valueInputOneTwo);
+	auto inputTwoTwo = std::make_shared<Input<double>>(valueInputTwoTwo);
+	auto sum = std::make_shared<Sum<double, double, double>>(inputOneOne, inputTwoOne, true);
 
-	resultAdd = sumAdd->getValue();
-	resultSub = sumSub->getValue();
+	result = sum->getValue();
 
-	BOOST_CHECK_EQUAL(resultAdd, valueInputOne + valueInputTwo);
-	BOOST_CHECK_EQUAL(resultSub, valueInputOne - valueInputTwo);
+	BOOST_CHECK_EQUAL(result, valueInputOneOne + valueInputTwoOne);
+
+	sum->setAddition(false);
+	result = sum->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueInputOneOne - valueInputTwoOne);
+
+	sum->setInputOne(inputOneTwo);
+	sum->setInputTwo(inputTwoTwo);
+	sum->setAddition(true);
+	result = sum->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueInputOneTwo + valueInputTwoTwo);
 }
 
 BOOST_AUTO_TEST_CASE(StateSpaceElement)
 {
 	Vector2 vectorState;
-	Vector2 vectorInput;
-	Matrix2 matrixA;
-	Matrix2 matrixB;
-	RowVector2 matrixC;
-	RowVector2 matrixD;
+	Vector2 vectorInputOne;
+	Vector2 vectorInputTwo;
+	Matrix2 matrixAOne;
+	Matrix2 matrixATwo;
+	Matrix2 matrixBOne;
+	Matrix2 matrixBTwo;
+	RowVector2 matrixCOne;
+	RowVector2 matrixCTwo;
+	RowVector2 matrixDOne;
+	RowVector2 matrixDTwo;
 	Scalar scalarOutput;
 	double result = 0;
 
 	vectorState << 0, 0;
-	vectorInput << 1, 1;
-	matrixA << 0.2354, -0.3395, -0.2027, 0.8230;
-	matrixB << 0.0077, 0.0566, -0.0156, 0.0272;
-	matrixC << 6.5658, 2.0057;
-	matrixD << 0, 0;
+	vectorInputOne << 1, 1;
+	vectorInputTwo << 2, 2;
+	matrixAOne << 0.2354, -0.3395, -0.2027, 0.8230;
+	matrixATwo << 0.9429, -0.0368, 0.0389, 0.9993;
+	matrixBOne << 0.0077, 0.0566, -0.0156, 0.0272;
+	matrixBTwo << 0.0194, -0.0004, 0.0004, 0.0200;
+	matrixCOne << 6.5658, 2.0057;
+	matrixCTwo << -0.0517, -2.5840;
+	matrixDOne << 0, 0;
+	matrixDTwo << 0, 0;
 	scalarOutput << 0;
 
-	auto input = std::make_shared<Input<Vector2>>(vectorInput);
+	auto inputOne = std::make_shared<Input<Vector2>>(vectorInputOne);
+	auto inputTwo = std::make_shared<Input<Vector2>>(vectorInputTwo);
 	auto stateSpace = std::make_shared<
 			StateSpace<Vector2, Vector2, Matrix2, Matrix2, RowVector2, RowVector2, Scalar>>(
-			vectorState, input, matrixA, matrixB, matrixC, matrixD, scalarOutput);
+			vectorState, inputOne, matrixAOne, matrixBOne, matrixCOne, matrixDOne, scalarOutput);
 
 	stateSpace->evaluate();
 	result = stateSpace->getValue().x();
@@ -168,6 +220,29 @@ BOOST_AUTO_TEST_CASE(StateSpaceElement)
 	result = stateSpace->getValue().x();
 
 	BOOST_CHECK_CLOSE(result, 0.5117, 1);
+
+	stateSpace->setState(vectorState);
+	stateSpace->setInput(inputTwo);
+	stateSpace->setMatrixA(matrixATwo);
+	stateSpace->setMatrixB(matrixBTwo);
+	stateSpace->setMatrixC(matrixCTwo);
+	stateSpace->setMatrixD(matrixDTwo);
+	stateSpace->setOutput(scalarOutput);
+
+	stateSpace->evaluate();
+	result = stateSpace->getValue().x();
+
+	BOOST_CHECK_EQUAL(result, 0);
+
+	stateSpace->evaluate();
+	result = stateSpace->getValue().x();
+
+	BOOST_CHECK_CLOSE(result, -0.1073, 1);
+
+	stateSpace->evaluate();
+	result = stateSpace->getValue().x();
+
+	BOOST_CHECK_CLOSE(result, -0.2182, 1);
 }
 
 BOOST_AUTO_TEST_CASE(AdaptiveLaw)

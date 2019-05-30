@@ -33,19 +33,22 @@ class Input: public IAdaptiveControlElement<TYPE>
 {
 public:
 
-	Input(const TYPE& input);
+	Input(TYPE& input);
 
 	TYPE
 	getValue() const override;
 
+	void
+	setInput(TYPE& input);
+
 private:
 
-	const TYPE& input_;
+	TYPE& input_;
 };
 
 template<typename TYPE>
 inline
-Input<TYPE>::Input(const TYPE& input) :
+Input<TYPE>::Input(TYPE& input) :
 		input_(input)
 {
 }
@@ -55,6 +58,13 @@ inline TYPE
 Input<TYPE>::getValue() const
 {
 	return input_;
+}
+
+template<typename TYPE>
+inline void
+Input<TYPE>::setInput(TYPE& input)
+{
+	input_ = input;
 }
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_ADAPTIVECONTROLELEMENTS_INPUT_HPP_ */

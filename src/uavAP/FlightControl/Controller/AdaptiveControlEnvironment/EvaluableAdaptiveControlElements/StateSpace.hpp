@@ -44,14 +44,35 @@ public:
 	OUTPUT
 	getValue() const override;
 
+	void
+	setState(const STATE& state);
+
+	void
+	setInput(const AdaptiveElement<INPUT>& input);
+
+	void
+	setMatrixA(const MATRIX_A& matrixA);
+
+	void
+	setMatrixB(const MATRIX_B& matrixB);
+
+	void
+	setMatrixC(const MATRIX_C& matrixC);
+
+	void
+	setMatrixD(const MATRIX_D& matrixD);
+
+	void
+	setOutput(const OUTPUT& output);
+
 private:
 
 	STATE state_;
-	const AdaptiveElement<INPUT> input_;
-	const MATRIX_A& matrixA_;
-	const MATRIX_B& matrixB_;
-	const MATRIX_C& matrixC_;
-	const MATRIX_D& matrixD_;
+	AdaptiveElement<INPUT> input_;
+	MATRIX_A matrixA_;
+	MATRIX_B matrixB_;
+	MATRIX_C matrixC_;
+	MATRIX_D matrixD_;
 	OUTPUT output_;
 };
 
@@ -83,6 +104,69 @@ inline OUTPUT
 StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::getValue() const
 {
 	return output_;
+}
+
+template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
+		typename MATRIX_D, typename OUTPUT>
+inline void
+StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::setState(
+		const STATE& state)
+{
+	state_ = state;
+}
+
+template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
+		typename MATRIX_D, typename OUTPUT>
+inline void
+StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::setInput(
+		const AdaptiveElement<INPUT>& input)
+{
+	input_ = input;
+}
+
+template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
+		typename MATRIX_D, typename OUTPUT>
+inline void
+StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::setMatrixA(
+		const MATRIX_A& matrixA)
+{
+	matrixA_ = matrixA;
+}
+
+template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
+		typename MATRIX_D, typename OUTPUT>
+inline void
+StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::setMatrixB(
+		const MATRIX_B& matrixB)
+{
+	matrixB_ = matrixB;
+}
+
+template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
+		typename MATRIX_D, typename OUTPUT>
+inline void
+StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::setMatrixC(
+		const MATRIX_C& matrixC)
+{
+	matrixC_ = matrixC;
+}
+
+template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
+		typename MATRIX_D, typename OUTPUT>
+inline void
+StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::setMatrixD(
+		const MATRIX_D& matrixD)
+{
+	matrixD_ = matrixD;
+}
+
+template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
+		typename MATRIX_D, typename OUTPUT>
+inline void
+StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::setOutput(
+		const OUTPUT& output)
+{
+	output_ = output;
 }
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_EVALUABLEADAPTIVECONTROLELEMENTS_STATESPACE_HPP_ */

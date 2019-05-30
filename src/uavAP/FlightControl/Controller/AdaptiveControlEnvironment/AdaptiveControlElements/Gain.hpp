@@ -38,10 +38,16 @@ public:
 	OUTPUT
 	getValue() const override;
 
+	void
+	setInput(const AdaptiveElement<INPUT>& input);
+
+	void
+	setGain(const GAIN& gain);
+
 private:
 
-	const AdaptiveElement<INPUT> input_;
-	const GAIN& gain_;
+	AdaptiveElement<INPUT> input_;
+	GAIN gain_;
 };
 
 template<typename INPUT, typename GAIN, typename OUTPUT>
@@ -56,6 +62,20 @@ inline OUTPUT
 Gain<INPUT, GAIN, OUTPUT>::getValue() const
 {
 	return gain_ * input_->getValue();
+}
+
+template<typename INPUT, typename GAIN, typename OUTPUT>
+inline void
+Gain<INPUT, GAIN, OUTPUT>::setInput(const AdaptiveElement<INPUT>& input)
+{
+	input_ = input;
+}
+
+template<typename INPUT, typename GAIN, typename OUTPUT>
+inline void
+Gain<INPUT, GAIN, OUTPUT>::setGain(const GAIN& gain)
+{
+	gain_ = gain;
 }
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_ADAPTIVECONTROLELEMENTS_GAIN_HPP_ */

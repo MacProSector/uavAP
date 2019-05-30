@@ -38,9 +38,12 @@ public:
 	TYPE
 	getValue() const override;
 
+	void
+	setConstant(const TYPE& constant);
+
 private:
 
-	const TYPE constant_;
+	TYPE constant_;
 };
 
 template<typename TYPE>
@@ -55,6 +58,13 @@ inline TYPE
 Constant<TYPE>::getValue() const
 {
 	return constant_;
+}
+
+template<typename TYPE>
+inline void
+Constant<TYPE>::setConstant(const TYPE& constant)
+{
+	constant_ = constant;
 }
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_ADAPTIVECONTROLELEMENTS_CONSTANT_HPP_ */

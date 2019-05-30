@@ -39,11 +39,20 @@ public:
 	OUTPUT
 	getValue() const override;
 
+	void
+	setInputOne(const AdaptiveElement<INPUT_ONE>& inputOne);
+
+	void
+	setInputTwo(const AdaptiveElement<INPUT_TWO>& inputTwo);
+
+	void
+	setAddition(const bool& addition);
+
 private:
 
-	const AdaptiveElement<INPUT_ONE> inputOne_;
-	const AdaptiveElement<INPUT_TWO> inputTwo_;
-	const bool addition_;
+	AdaptiveElement<INPUT_ONE> inputOne_;
+	AdaptiveElement<INPUT_TWO> inputTwo_;
+	bool addition_;
 };
 
 template<typename INPUT_ONE, typename INPUT_TWO, typename OUTPUT>
@@ -66,6 +75,27 @@ Sum<INPUT_ONE, INPUT_TWO, OUTPUT>::getValue() const
 	{
 		return inputOne_->getValue() - inputTwo_->getValue();
 	}
+}
+
+template<typename INPUT_ONE, typename INPUT_TWO, typename OUTPUT>
+inline void
+Sum<INPUT_ONE, INPUT_TWO, OUTPUT>::setInputOne(const AdaptiveElement<INPUT_ONE>& inputOne)
+{
+	inputOne_ = inputOne;
+}
+
+template<typename INPUT_ONE, typename INPUT_TWO, typename OUTPUT>
+inline void
+Sum<INPUT_ONE, INPUT_TWO, OUTPUT>::setInputTwo(const AdaptiveElement<INPUT_TWO>& inputTwo)
+{
+	inputTwo_ = inputTwo;
+}
+
+template<typename INPUT_ONE, typename INPUT_TWO, typename OUTPUT>
+inline void
+Sum<INPUT_ONE, INPUT_TWO, OUTPUT>::setAddition(const bool& addition)
+{
+	addition_ = addition;
 }
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_ADAPTIVECONTROLELEMENTS_SUM_HPP_ */

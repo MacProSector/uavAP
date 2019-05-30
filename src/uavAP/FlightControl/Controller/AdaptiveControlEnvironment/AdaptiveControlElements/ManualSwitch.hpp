@@ -39,11 +39,20 @@ public:
 	TYPE
 	getValue() const override;
 
+	void
+	setInputTrue(const AdaptiveElement<TYPE>& inputTrue);
+
+	void
+	setInputFalse(const AdaptiveElement<TYPE>& inputFalse);
+
+	void
+	setSelection(const bool& selection);
+
 private:
 
-	const AdaptiveElement<TYPE> inputTrue_;
-	const AdaptiveElement<TYPE> inputFalse_;
-	const bool& selection_;
+	AdaptiveElement<TYPE> inputTrue_;
+	AdaptiveElement<TYPE> inputFalse_;
+	bool selection_;
 };
 
 template<typename TYPE>
@@ -66,6 +75,27 @@ ManualSwitch<TYPE>::getValue() const
 	{
 		return inputFalse_->getValue();
 	}
+}
+
+template<typename TYPE>
+inline void
+ManualSwitch<TYPE>::setInputTrue(const AdaptiveElement<TYPE>& inputTrue)
+{
+	inputTrue_ = inputTrue;
+}
+
+template<typename TYPE>
+inline void
+ManualSwitch<TYPE>::setInputFalse(const AdaptiveElement<TYPE>& inputFalse)
+{
+	inputFalse_ = inputFalse;
+}
+
+template<typename TYPE>
+inline void
+ManualSwitch<TYPE>::setSelection(const bool& selection)
+{
+	selection_ = selection;
 }
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_ADAPTIVECONTROLELEMENTS_MANUALSWITCH_HPP_ */
