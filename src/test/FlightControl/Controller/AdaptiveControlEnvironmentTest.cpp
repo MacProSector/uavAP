@@ -30,6 +30,7 @@
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Constant.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Gain.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Input.hpp"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/ManualSwitch.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Sum.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/StateSpace.hpp"
 
@@ -89,6 +90,27 @@ BOOST_AUTO_TEST_CASE(InputElement)
 	BOOST_CHECK_EQUAL(result, value);
 }
 
+BOOST_AUTO_TEST_CASE(ManualSwitchElement)
+{
+	bool selection = true;
+	double valueInputTrue = 1.5;
+	double valueInputFalse = 2.0;
+	double result = 0;
+
+	auto inputTrue = std::make_shared<Input<double>>(valueInputTrue);
+	auto inputFalse = std::make_shared<Input<double>>(valueInputFalse);
+	auto manualSwitch = std::make_shared<ManualSwitch<double>>(inputTrue, inputFalse, selection);
+
+	result = manualSwitch->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueInputTrue);
+
+	selection = false;
+	result = manualSwitch->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueInputFalse);
+}
+
 BOOST_AUTO_TEST_CASE(SumElement)
 {
 	double valueInputOne = 1.5;
@@ -106,6 +128,46 @@ BOOST_AUTO_TEST_CASE(SumElement)
 
 	BOOST_CHECK_EQUAL(resultAdd, valueInputOne + valueInputTwo);
 	BOOST_CHECK_EQUAL(resultSub, valueInputOne - valueInputTwo);
+}
+
+BOOST_AUTO_TEST_CASE(StateSpaceElement)
+{
+	Vector2 vectorState;
+	Vector2 vectorInput;
+	Matrix2 matrixA;
+	Matrix2 matrixB;
+	RowVector2 matrixC;
+	RowVector2 matrixD;
+	Scalar scalarOutput;
+	double result = 0;
+
+	vectorState << 0, 0;
+	vectorInput << 1, 1;
+	matrixA << 0.2354, -0.3395, -0.2027, 0.8230;
+	matrixB << 0.0077, 0.0566, -0.0156, 0.0272;
+	matrixC << 6.5658, 2.0057;
+	matrixD << 0, 0;
+	scalarOutput << 0;
+
+	auto input = std::make_shared<Input<Vector2>>(vectorInput);
+	auto stateSpace = std::make_shared<
+			StateSpace<Vector2, Vector2, Matrix2, Matrix2, RowVector2, RowVector2, Scalar>>(
+			vectorState, input, matrixA, matrixB, matrixC, matrixD, scalarOutput);
+
+	stateSpace->evaluate();
+	result = stateSpace->getValue().x();
+
+	BOOST_CHECK_EQUAL(result, 0);
+
+	stateSpace->evaluate();
+	result = stateSpace->getValue().x();
+
+	BOOST_CHECK_CLOSE(result, 0.4453, 1);
+
+	stateSpace->evaluate();
+	result = stateSpace->getValue().x();
+
+	BOOST_CHECK_CLOSE(result, 0.5117, 1);
 }
 
 BOOST_AUTO_TEST_CASE(AdaptiveLaw)
@@ -141,6 +203,7 @@ BOOST_AUTO_TEST_CASE(ControlLaw)
 	RowVector2 matrixC;
 	RowVector2 matrixD;
 	Scalar output;
+	double result = 0;
 
 	r << 1;
 	state << 0, 0;
@@ -159,28 +222,36 @@ BOOST_AUTO_TEST_CASE(ControlLaw)
 			inputSighat, matrixA, matrixB, matrixC, matrixD, output);
 	auto sum = std::make_shared<Sum<Scalar, Scalar, Scalar>>(gain, stateSpace, false);
 
-	BOOST_CHECK_CLOSE(sum->getValue().x(), -0.1835, 1);
+	result = sum->getValue().x();
+
+	BOOST_CHECK_CLOSE(result, -0.1835, 1);
 
 	for (int i = 0; i < 5; i++)
 	{
 		stateSpace->evaluate();
 	}
 
-	BOOST_CHECK_CLOSE(sum->getValue().x(), -0.7229, 1);
+	result = sum->getValue().x();
+
+	BOOST_CHECK_CLOSE(result, -0.7229, 1);
 
 	for (int i = 0; i < 5; i++)
 	{
 		stateSpace->evaluate();
 	}
 
-	BOOST_CHECK_CLOSE(sum->getValue().x(), -0.7455, 1);
+	result = sum->getValue().x();
+
+	BOOST_CHECK_CLOSE(result, -0.7455, 1);
 
 	for (int i = 0; i < 5; i++)
 	{
 		stateSpace->evaluate();
 	}
 
-	BOOST_CHECK_CLOSE(sum->getValue().x(), -0.7605, 1);
+	result = sum->getValue().x();
+
+	BOOST_CHECK_CLOSE(result, -0.7605, 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
