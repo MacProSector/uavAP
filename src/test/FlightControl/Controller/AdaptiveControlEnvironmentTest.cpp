@@ -27,12 +27,86 @@
 #include <boost/test/unit_test.hpp>
 
 #include "uavAP/Core/LinearAlgebra.h"
-#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Input.hpp"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Constant.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Gain.hpp"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Input.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Sum.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/StateSpace.hpp"
 
 BOOST_AUTO_TEST_SUITE(AdaptiveControlEnvironmentTest)
+
+BOOST_AUTO_TEST_CASE(ConstantElement)
+{
+	double value = 1.5;
+	double valueCheck = value;
+	double result = 0;
+
+	auto constant = std::make_shared<Constant<double>>(value);
+
+	result = constant->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueCheck);
+
+	value = 2.0;
+	result = constant->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueCheck);
+}
+
+BOOST_AUTO_TEST_CASE(GainElement)
+{
+	double valueInput = 1.5;
+	double valueGain = 2.0;
+	double result = 0;
+
+	auto input = std::make_shared<Input<double>>(valueInput);
+	auto gain = std::make_shared<Gain<double, double, double>>(input, valueGain);
+
+	result = gain->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueInput * valueGain);
+
+	valueGain = 3.0;
+	result = gain->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueInput * valueGain);
+}
+
+BOOST_AUTO_TEST_CASE(InputElement)
+{
+	double value = 1.5;
+	double result = 0;
+
+	auto input = std::make_shared<Input<double>>(value);
+
+	result = input->getValue();
+
+	BOOST_CHECK_EQUAL(result, value);
+
+	value = 2.0;
+	result = input->getValue();
+
+	BOOST_CHECK_EQUAL(result, value);
+}
+
+BOOST_AUTO_TEST_CASE(SumElement)
+{
+	double valueInputOne = 1.5;
+	double valueInputTwo = 2.0;
+	double resultAdd = 0;
+	double resultSub = 0;
+
+	auto inputOne = std::make_shared<Input<double>>(valueInputOne);
+	auto inputTwo = std::make_shared<Input<double>>(valueInputTwo);
+	auto sumAdd = std::make_shared<Sum<double, double, double>>(inputOne, inputTwo, true);
+	auto sumSub = std::make_shared<Sum<double, double, double>>(inputOne, inputTwo, false);
+
+	resultAdd = sumAdd->getValue();
+	resultSub = sumSub->getValue();
+
+	BOOST_CHECK_EQUAL(resultAdd, valueInputOne + valueInputTwo);
+	BOOST_CHECK_EQUAL(resultSub, valueInputOne - valueInputTwo);
+}
 
 BOOST_AUTO_TEST_CASE(AdaptiveLaw)
 {
