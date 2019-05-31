@@ -79,7 +79,7 @@ LowPassDataFilter::filterData(double rawData)
 }
 
 double
-LowPassDataFilter::getFilteredData()
+LowPassDataFilter::getFilteredData() const
 {
 	return filteredData_;
 }

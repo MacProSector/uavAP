@@ -43,7 +43,7 @@ public:
 	filterData(double rawData) = 0;
 
 	virtual double
-	getFilteredData() = 0;
+	getFilteredData() const = 0;
 };
 
 #endif /* UAVAP_CORE_DATAPRESENTATION_DATAFILTER_IDATAFILTER_H_ */

@@ -27,12 +27,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include "uavAP/Core/LinearAlgebra.h"
+#include "uavAP/Core/DataPresentation/DataFilter/LowPassDataFilter/LowPassDataFilter.h"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Constant.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Gain.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Input.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/ManualSwitch.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Saturation.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Sum.hpp"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/LowPassFilter.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/StateSpace.hpp"
 
 BOOST_AUTO_TEST_SUITE(AdaptiveControlEnvironmentTest)
@@ -210,6 +212,68 @@ BOOST_AUTO_TEST_CASE(SumElement)
 	result = sum->getValue();
 
 	BOOST_CHECK_EQUAL(result, valueInputOneTwo + valueInputTwoTwo);
+}
+
+BOOST_AUTO_TEST_CASE(LowPassFilterElement)
+{
+	double valueInputOne = 1.0;
+	double valueInputTwo = 15;
+	double valueAlpha = 0.5;
+	double result = 0;
+	double resultCheck = 0;
+	LowPassDataFilter filterCheck(valueInputOne, valueAlpha);
+
+	auto inputOne = std::make_shared<Input<double>>(valueInputOne);
+	auto inputTwo = std::make_shared<Input<double>>(valueInputTwo);
+	auto filter = std::make_shared<LowPassFilter<double>>(inputOne, valueAlpha);
+
+	result = filter->getValue();
+	resultCheck = filterCheck.getFilteredData();
+
+	BOOST_CHECK_EQUAL(result, resultCheck);
+
+	for (double i = 0; i < 5; i ++)
+	{
+		valueInputOne += 0.1 * i;
+		filter->evaluate();
+		filterCheck.filterData(inputOne->getValue());
+	}
+
+	result = filter->getValue();
+	resultCheck = filterCheck.getFilteredData();
+
+	BOOST_CHECK_EQUAL(result, resultCheck);
+
+	filter->setAlpha(0.7);
+	filterCheck.tune(0.7);
+
+	for (double i = 0; i < 5; i ++)
+	{
+		valueInputOne += 0.2 * i;
+		filter->evaluate();
+		filterCheck.filterData(inputOne->getValue());
+	}
+
+	result = filter->getValue();
+	resultCheck = filterCheck.getFilteredData();
+
+	BOOST_CHECK_EQUAL(result, resultCheck);
+
+	filter->setInput(inputTwo);
+	filter->setInitialValue(inputTwo->getValue());
+	filterCheck.initialize(inputTwo->getValue());
+
+	for (double i = 0; i < 10; i ++)
+	{
+		valueInputOne += i;
+		filter->evaluate();
+		filterCheck.filterData(inputTwo->getValue());
+	}
+
+	result = filter->getValue();
+	resultCheck = filterCheck.getFilteredData();
+
+	BOOST_CHECK_EQUAL(result, resultCheck);
 }
 
 BOOST_AUTO_TEST_CASE(StateSpaceElement)

@@ -56,7 +56,7 @@ public:
 	filterData(double rawData) override;
 
 	double
-	getFilteredData() override;
+	getFilteredData() const override;
 
 private:
 
