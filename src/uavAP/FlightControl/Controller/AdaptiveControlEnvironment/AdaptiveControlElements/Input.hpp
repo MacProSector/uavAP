@@ -33,22 +33,22 @@ class Input: public IAdaptiveControlElement<TYPE>
 {
 public:
 
-	Input(TYPE& input);
+	Input(TYPE* input);
 
 	TYPE
 	getValue() const override;
 
 	void
-	setInput(TYPE& input);
+	setInput(TYPE* input);
 
 private:
 
-	TYPE& input_;
+	TYPE* input_;
 };
 
 template<typename TYPE>
 inline
-Input<TYPE>::Input(TYPE& input) :
+Input<TYPE>::Input(TYPE* input) :
 		input_(input)
 {
 }
@@ -57,12 +57,12 @@ template<typename TYPE>
 inline TYPE
 Input<TYPE>::getValue() const
 {
-	return input_;
+	return *input_;
 }
 
 template<typename TYPE>
 inline void
-Input<TYPE>::setInput(TYPE& input)
+Input<TYPE>::setInput(TYPE* input)
 {
 	input_ = input;
 }

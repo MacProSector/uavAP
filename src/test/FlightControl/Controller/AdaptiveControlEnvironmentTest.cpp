@@ -35,6 +35,7 @@
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Saturation.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Sum.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/LowPassFilter.hpp"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/Output.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/StateSpace.hpp"
 
 BOOST_AUTO_TEST_SUITE(AdaptiveControlEnvironmentTest)
@@ -64,8 +65,8 @@ BOOST_AUTO_TEST_CASE(GainElement)
 	double valueGain = 2.0;
 	double result = 0;
 
-	auto inputOne = std::make_shared<Input<double>>(valueInputOne);
-	auto inputTwo = std::make_shared<Input<double>>(valueInputTwo);
+	auto inputOne = std::make_shared<Input<double>>(&valueInputOne);
+	auto inputTwo = std::make_shared<Input<double>>(&valueInputTwo);
 	auto gain = std::make_shared<Gain<double, double, double>>(inputOne, valueGain);
 
 	result = gain->getValue();
@@ -90,7 +91,7 @@ BOOST_AUTO_TEST_CASE(InputElement)
 	double valueTwo = 3.0;
 	double result = 0;
 
-	auto input = std::make_shared<Input<double>>(valueOne);
+	auto input = std::make_shared<Input<double>>(&valueOne);
 
 	result = input->getValue();
 
@@ -101,7 +102,7 @@ BOOST_AUTO_TEST_CASE(InputElement)
 
 	BOOST_CHECK_EQUAL(result, valueOne);
 
-	input->setInput(valueTwo);
+	input->setInput(&valueTwo);
 	result = input->getValue();
 
 	BOOST_CHECK_EQUAL(result, valueTwo);
@@ -115,10 +116,10 @@ BOOST_AUTO_TEST_CASE(ManualSwitchElement)
 	double valueInputFalseTwo = 4.0;
 	double result = 0;
 
-	auto inputTrueOne = std::make_shared<Input<double>>(valueInputTrueOne);
-	auto inputTrueTwo = std::make_shared<Input<double>>(valueInputTrueTwo);
-	auto inputFalseOne = std::make_shared<Input<double>>(valueInputFalseOne);
-	auto inputFalseTwo = std::make_shared<Input<double>>(valueInputFalseTwo);
+	auto inputTrueOne = std::make_shared<Input<double>>(&valueInputTrueOne);
+	auto inputTrueTwo = std::make_shared<Input<double>>(&valueInputTrueTwo);
+	auto inputFalseOne = std::make_shared<Input<double>>(&valueInputFalseOne);
+	auto inputFalseTwo = std::make_shared<Input<double>>(&valueInputFalseTwo);
 	auto manualSwitch = std::make_shared<ManualSwitch<double>>(inputTrueOne, inputFalseOne, true);
 
 	result = manualSwitch->getValue();
@@ -153,8 +154,8 @@ BOOST_AUTO_TEST_CASE(SaturationElement)
 	double valueHardSaturationMax = 20;
 	double result = 0;
 
-	auto inputOne = std::make_shared<Input<double>>(valueInputOne);
-	auto inputTwo = std::make_shared<Input<double>>(valueInputTwo);
+	auto inputOne = std::make_shared<Input<double>>(&valueInputOne);
+	auto inputTwo = std::make_shared<Input<double>>(&valueInputTwo);
 	auto saturation = std::make_shared<Saturation<double>>(inputOne, valueSaturationMin,
 			valueSaturationMax, valueHardSaturationMin, valueHardSaturationMax);
 
@@ -191,10 +192,10 @@ BOOST_AUTO_TEST_CASE(SumElement)
 	double valueInputTwoTwo = 4.0;
 	double result = 0;
 
-	auto inputOneOne = std::make_shared<Input<double>>(valueInputOneOne);
-	auto inputTwoOne = std::make_shared<Input<double>>(valueInputTwoOne);
-	auto inputOneTwo = std::make_shared<Input<double>>(valueInputOneTwo);
-	auto inputTwoTwo = std::make_shared<Input<double>>(valueInputTwoTwo);
+	auto inputOneOne = std::make_shared<Input<double>>(&valueInputOneOne);
+	auto inputTwoOne = std::make_shared<Input<double>>(&valueInputTwoOne);
+	auto inputOneTwo = std::make_shared<Input<double>>(&valueInputOneTwo);
+	auto inputTwoTwo = std::make_shared<Input<double>>(&valueInputTwoTwo);
 	auto sum = std::make_shared<Sum<double, double, double>>(inputOneOne, inputTwoOne, true);
 
 	result = sum->getValue();
@@ -223,8 +224,8 @@ BOOST_AUTO_TEST_CASE(LowPassFilterElement)
 	double resultCheck = 0;
 	LowPassDataFilter filterCheck(valueInputOne, valueAlpha);
 
-	auto inputOne = std::make_shared<Input<double>>(valueInputOne);
-	auto inputTwo = std::make_shared<Input<double>>(valueInputTwo);
+	auto inputOne = std::make_shared<Input<double>>(&valueInputOne);
+	auto inputTwo = std::make_shared<Input<double>>(&valueInputTwo);
 	auto filter = std::make_shared<LowPassFilter<double>>(inputOne, valueAlpha);
 
 	result = filter->getValue();
@@ -276,6 +277,83 @@ BOOST_AUTO_TEST_CASE(LowPassFilterElement)
 	BOOST_CHECK_EQUAL(result, resultCheck);
 }
 
+BOOST_AUTO_TEST_CASE(OutputElement)
+{
+	double valueInputOne = 1.5;
+	double valueInputTwo = 3.0;
+	double resultOne = -5;
+	double resultTwo = 5;
+	double wavelength = 1000;
+	double time = 0;
+	TimePoint timestamp;
+	TimePoint current;
+
+	auto inputOne = std::make_shared<Input<double>>(&valueInputOne);
+	auto inputTwo = std::make_shared<Input<double>>(&valueInputTwo);
+	auto output = std::make_shared<Output<double, double>>(inputOne, &resultOne);
+
+	for (int i = 0; i < 5; i ++)
+	{
+		output->evaluate();
+	}
+
+	BOOST_CHECK_EQUAL(resultOne, valueInputOne);
+
+	output->setInput(inputTwo);
+	output->setOutput(&resultTwo);
+
+	for (int i = 0; i < 5; i ++)
+	{
+		output->evaluate();
+	}
+
+	BOOST_CHECK_EQUAL(resultTwo, valueInputTwo);
+
+	output->setWaveform(Waveforms::SINE);
+	output->setWavelength(wavelength);
+	output->setPhase(500);
+	output->overrideOutput(1);
+	timestamp = boost::posix_time::microsec_clock::local_time();
+	current = boost::posix_time::microsec_clock::local_time();
+	time = (current - timestamp).total_milliseconds();
+
+	while (time < (wavelength / 4))
+	{
+		current = boost::posix_time::microsec_clock::local_time();
+		time = (current - timestamp).total_milliseconds();
+		output->evaluate();
+	}
+
+	BOOST_CHECK_CLOSE(resultTwo, -1, 1);
+
+	while (time < (wavelength / 2))
+	{
+		current = boost::posix_time::microsec_clock::local_time();
+		time = (current - timestamp).total_milliseconds();
+		output->evaluate();
+	}
+
+	BOOST_CHECK_EQUAL(resultTwo < 0.00001, true);
+
+	while (time < (wavelength * 3 / 4))
+	{
+		current = boost::posix_time::microsec_clock::local_time();
+		time = (current - timestamp).total_milliseconds();
+		output->evaluate();
+	}
+
+	BOOST_CHECK_CLOSE(resultTwo, 1, 1);
+
+	while (time < wavelength)
+	{
+		current = boost::posix_time::microsec_clock::local_time();
+		time = (current - timestamp).total_milliseconds();
+		output->evaluate();
+	}
+
+	BOOST_CHECK_EQUAL(resultTwo < 0.00001, true);
+}
+
 BOOST_AUTO_TEST_CASE(StateSpaceElement)
 {
 	Vector2 vectorState;
@@ -305,8 +383,8 @@ BOOST_AUTO_TEST_CASE(StateSpaceElement)
 	matrixDTwo << 0, 0;
 	scalarOutput << 0;
 
-	auto inputOne = std::make_shared<Input<Vector2>>(vectorInputOne);
-	auto inputTwo = std::make_shared<Input<Vector2>>(vectorInputTwo);
+	auto inputOne = std::make_shared<Input<Vector2>>(&vectorInputOne);
+	auto inputTwo = std::make_shared<Input<Vector2>>(&vectorInputTwo);
 	auto stateSpace = std::make_shared<
 			StateSpace<Vector2, Vector2, Matrix2, Matrix2, RowVector2, RowVector2, Scalar>>(
 			vectorState, inputOne, matrixAOne, matrixBOne, matrixCOne, matrixDOne, scalarOutput);
@@ -361,7 +439,7 @@ BOOST_AUTO_TEST_CASE(AdaptiveLaw)
 	M << 0.9712, 0.0038;
 	phiInv << 14.0568, 87.7019, -19.9110, -3.4262;
 
-	auto input = std::make_shared<Input<double>>(yTilde);
+	auto input = std::make_shared<Input<double>>(&yTilde);
 	auto gainOne = std::make_shared<Gain<double, Vector2, Vector2>>(input, M);
 	auto gainTwo = std::make_shared<Gain<Vector2, Matrix2, Vector2>>(gainOne, phiInv);
 	auto gainThree = std::make_shared<Gain<Vector2, double, Vector2>>(gainTwo, negativeOne);
@@ -394,8 +472,8 @@ BOOST_AUTO_TEST_CASE(ControlLaw)
 	matrixD << 0, 0;
 	output << 0;
 
-	auto inputR = std::make_shared<Input<Scalar>>(r);
-	auto inputSighat = std::make_shared<Input<Vector2>>(sighat);
+	auto inputR = std::make_shared<Input<Scalar>>(&r);
+	auto inputSighat = std::make_shared<Input<Vector2>>(&sighat);
 	auto gain = std::make_shared<Gain<Scalar, double, Scalar>>(inputR, a0);
 	auto stateSpace = std::make_shared<
 			StateSpace<Vector2, Vector2, Matrix2, Matrix2, RowVector2, RowVector2, Scalar>>(state,
