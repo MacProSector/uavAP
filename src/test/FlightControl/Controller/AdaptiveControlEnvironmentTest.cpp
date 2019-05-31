@@ -31,6 +31,7 @@
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Gain.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Input.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/ManualSwitch.hpp"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Saturation.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Sum.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/StateSpace.hpp"
 
@@ -138,6 +139,46 @@ BOOST_AUTO_TEST_CASE(ManualSwitchElement)
 	result = manualSwitch->getValue();
 
 	BOOST_CHECK_EQUAL(result, valueInputFalseTwo);
+}
+
+BOOST_AUTO_TEST_CASE(SaturationElement)
+{
+	double valueInputOne = 25;
+	double valueInputTwo = -60;
+	double valueSaturationMin = -30;
+	double valueSaturationMax = 15;
+	double valueHardSaturationMin = -40;
+	double valueHardSaturationMax = 20;
+	double result = 0;
+
+	auto inputOne = std::make_shared<Input<double>>(valueInputOne);
+	auto inputTwo = std::make_shared<Input<double>>(valueInputTwo);
+	auto saturation = std::make_shared<Saturation<double>>(inputOne, valueSaturationMin,
+			valueSaturationMax, valueHardSaturationMin, valueHardSaturationMax);
+
+	result = saturation->getValue();
+
+	BOOST_CHECK_EQUAL(result, 15);
+
+	saturation->overrideSaturationValue(valueSaturationMin, valueSaturationMax * 2);
+	result = saturation->getValue();
+
+	BOOST_CHECK_EQUAL(result, 20);
+
+	saturation->setInput(inputTwo);
+	result = saturation->getValue();
+
+	BOOST_CHECK_EQUAL(result, -30);
+
+	saturation->overrideSaturationValue(valueSaturationMin * 2, valueSaturationMax);
+	result = saturation->getValue();
+
+	BOOST_CHECK_EQUAL(result, -40);
+
+	saturation->disableOverride();
+	result = saturation->getValue();
+
+	BOOST_CHECK_EQUAL(result, -30);
 }
 
 BOOST_AUTO_TEST_CASE(SumElement)
