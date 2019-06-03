@@ -42,8 +42,6 @@ public:
 	evaluate() = 0;
 };
 
-template<typename TYPE>
-using EvaluableAdaptiveElement = std::shared_ptr<IEvaluableAdaptiveControlElement<TYPE>>;
-using AdaptiveElementEvaluation = std::function<void(void)>;
+using EvaluableAdaptiveElement = std::function<void()>;
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_IEVALUABLEADAPTIVECONTROLELEMENT_H_ */

@@ -23,6 +23,37 @@
  *      Author: simonyu
  */
 
+#include "uavAP/Core/Logging/APLogger.h"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlEnvironment.h"
 
+AdaptiveControlEnvironment::AdaptiveControlEnvironment() : timestamp_(nullptr)
+{
+}
 
+AdaptiveControlEnvironment::AdaptiveControlEnvironment(const TimePoint* timestamp) :
+		timestamp_(timestamp)
+{
+}
 
+void
+AdaptiveControlEnvironment::evaluate()
+{
+	if (timestamp_)
+	{
+		if (lastTimestamp_.is_not_a_date_time())
+		{
+			duration_ = Microseconds(0);
+		}
+		else
+		{
+			duration_ = *timestamp_ - lastTimestamp_;
+		}
+
+		lastTimestamp_ = *timestamp_;
+	}
+
+	for (auto& it : evaluableAdaptiveElements_)
+	{
+		it();
+	}
+}

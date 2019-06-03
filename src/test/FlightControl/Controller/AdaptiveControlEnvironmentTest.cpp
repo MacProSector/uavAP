@@ -27,6 +27,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "uavAP/Core/LinearAlgebra.h"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlEnvironment.h"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Constant.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Gain.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Input.hpp"
@@ -43,8 +44,9 @@ BOOST_AUTO_TEST_CASE(ConstantElement)
 {
 	double value = 1.5;
 	double result = 0;
+	AdaptiveControlEnvironment controlEnvironment;
 
-	auto constant = std::make_shared<Constant<double>>(value);
+	auto constant = controlEnvironment.addConstant<double>(value);
 
 	result = constant->getValue();
 
@@ -63,10 +65,11 @@ BOOST_AUTO_TEST_CASE(GainElement)
 	double valueInputTwo = 3.0;
 	double valueGain = 2.0;
 	double result = 0;
+	AdaptiveControlEnvironment controlEnvironment;
 
-	auto inputOne = std::make_shared<Input<double>>(&valueInputOne);
-	auto inputTwo = std::make_shared<Input<double>>(&valueInputTwo);
-	auto gain = std::make_shared<Gain<double, double, double>>(inputOne, valueGain);
+	auto inputOne = controlEnvironment.addInput<double>(&valueInputOne);
+	auto inputTwo = controlEnvironment.addInput<double>(&valueInputTwo);
+	auto gain = controlEnvironment.addGain<double, double, double>(inputOne, valueGain);
 
 	result = gain->getValue();
 
@@ -89,8 +92,9 @@ BOOST_AUTO_TEST_CASE(InputElement)
 	double valueOne = 1.5;
 	double valueTwo = 3.0;
 	double result = 0;
+	AdaptiveControlEnvironment controlEnvironment;
 
-	auto input = std::make_shared<Input<double>>(&valueOne);
+	auto input = controlEnvironment.addInput<double>(&valueOne);
 
 	result = input->getValue();
 
@@ -114,12 +118,14 @@ BOOST_AUTO_TEST_CASE(ManualSwitchElement)
 	double valueInputFalseOne = 2.0;
 	double valueInputFalseTwo = 4.0;
 	double result = 0;
+	AdaptiveControlEnvironment controlEnvironment;
 
-	auto inputTrueOne = std::make_shared<Input<double>>(&valueInputTrueOne);
-	auto inputTrueTwo = std::make_shared<Input<double>>(&valueInputTrueTwo);
-	auto inputFalseOne = std::make_shared<Input<double>>(&valueInputFalseOne);
-	auto inputFalseTwo = std::make_shared<Input<double>>(&valueInputFalseTwo);
-	auto manualSwitch = std::make_shared<ManualSwitch<double>>(inputTrueOne, inputFalseOne, true);
+	auto inputTrueOne = controlEnvironment.addInput<double>(&valueInputTrueOne);
+	auto inputTrueTwo = controlEnvironment.addInput<double>(&valueInputTrueTwo);
+	auto inputFalseOne = controlEnvironment.addInput<double>(&valueInputFalseOne);
+	auto inputFalseTwo = controlEnvironment.addInput<double>(&valueInputFalseTwo);
+	auto manualSwitch = controlEnvironment.addManualSwitch<double>(inputTrueOne, inputFalseOne,
+			true);
 
 	result = manualSwitch->getValue();
 
@@ -152,10 +158,11 @@ BOOST_AUTO_TEST_CASE(SaturationElement)
 	double valueHardSaturationMin = -40;
 	double valueHardSaturationMax = 20;
 	double result = 0;
+	AdaptiveControlEnvironment controlEnvironment;
 
-	auto inputOne = std::make_shared<Input<double>>(&valueInputOne);
-	auto inputTwo = std::make_shared<Input<double>>(&valueInputTwo);
-	auto saturation = std::make_shared<Saturation<double>>(inputOne, valueSaturationMin,
+	auto inputOne = controlEnvironment.addInput<double>(&valueInputOne);
+	auto inputTwo = controlEnvironment.addInput<double>(&valueInputTwo);
+	auto saturation = controlEnvironment.addSaturation<double>(inputOne, valueSaturationMin,
 			valueSaturationMax, valueHardSaturationMin, valueHardSaturationMax);
 
 	result = saturation->getValue();
@@ -190,12 +197,13 @@ BOOST_AUTO_TEST_CASE(SumElement)
 	double valueInputOneTwo = 3.0;
 	double valueInputTwoTwo = 4.0;
 	double result = 0;
+	AdaptiveControlEnvironment controlEnvironment;
 
-	auto inputOneOne = std::make_shared<Input<double>>(&valueInputOneOne);
-	auto inputTwoOne = std::make_shared<Input<double>>(&valueInputTwoOne);
-	auto inputOneTwo = std::make_shared<Input<double>>(&valueInputOneTwo);
-	auto inputTwoTwo = std::make_shared<Input<double>>(&valueInputTwoTwo);
-	auto sum = std::make_shared<Sum<double, double, double>>(inputOneOne, inputTwoOne, true);
+	auto inputOneOne = controlEnvironment.addInput<double>(&valueInputOneOne);
+	auto inputTwoOne = controlEnvironment.addInput<double>(&valueInputTwoOne);
+	auto inputOneTwo = controlEnvironment.addInput<double>(&valueInputOneTwo);
+	auto inputTwoTwo = controlEnvironment.addInput<double>(&valueInputTwoTwo);
+	auto sum = controlEnvironment.addSum<double, double, double>(inputOneOne, inputTwoOne, true);
 
 	result = sum->getValue();
 
@@ -222,20 +230,21 @@ BOOST_AUTO_TEST_CASE(LowPassFilterElement)
 	double result = 0;
 	double resultCheck = 0;
 	LowPassDataFilter filterCheck(valueInputOne, valueAlpha);
+	AdaptiveControlEnvironment controlEnvironment;
 
-	auto inputOne = std::make_shared<Input<double>>(&valueInputOne);
-	auto inputTwo = std::make_shared<Input<double>>(&valueInputTwo);
-	auto filter = std::make_shared<LowPassFilter<double>>(inputOne, valueAlpha);
+	auto inputOne = controlEnvironment.addInput<double>(&valueInputOne);
+	auto inputTwo = controlEnvironment.addInput<double>(&valueInputTwo);
+	auto filter = controlEnvironment.addLowPassFilter<double>(inputOne, valueAlpha);
 
 	result = filter->getValue();
 	resultCheck = filterCheck.getFilteredData();
 
 	BOOST_CHECK_EQUAL(result, resultCheck);
 
-	for (double i = 0; i < 5; i ++)
+	for (double i = 0; i < 5; i++)
 	{
 		valueInputOne += 0.1 * i;
-		filter->evaluate();
+		controlEnvironment.evaluate();
 		filterCheck.filterData(inputOne->getValue());
 	}
 
@@ -247,10 +256,10 @@ BOOST_AUTO_TEST_CASE(LowPassFilterElement)
 	filter->setAlpha(0.7);
 	filterCheck.tune(0.7);
 
-	for (double i = 0; i < 5; i ++)
+	for (double i = 0; i < 5; i++)
 	{
 		valueInputOne += 0.2 * i;
-		filter->evaluate();
+		controlEnvironment.evaluate();
 		filterCheck.filterData(inputOne->getValue());
 	}
 
@@ -263,10 +272,10 @@ BOOST_AUTO_TEST_CASE(LowPassFilterElement)
 	filter->setInitialValue(inputTwo->getValue());
 	filterCheck.initialize(inputTwo->getValue());
 
-	for (double i = 0; i < 10; i ++)
+	for (double i = 0; i < 10; i++)
 	{
 		valueInputOne += i;
-		filter->evaluate();
+		controlEnvironment.evaluate();
 		filterCheck.filterData(inputTwo->getValue());
 	}
 
@@ -286,14 +295,15 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 	double time = 0;
 	TimePoint timestamp;
 	TimePoint current;
+	AdaptiveControlEnvironment controlEnvironment;
 
-	auto inputOne = std::make_shared<Input<double>>(&valueInputOne);
-	auto inputTwo = std::make_shared<Input<double>>(&valueInputTwo);
-	auto output = std::make_shared<Output<double, double>>(inputOne, &resultOne);
+	auto inputOne = controlEnvironment.addInput<double>(&valueInputOne);
+	auto inputTwo = controlEnvironment.addInput<double>(&valueInputTwo);
+	auto output = controlEnvironment.addOutput<double, double>(inputOne, &resultOne);
 
-	for (int i = 0; i < 5; i ++)
+	for (int i = 0; i < 5; i++)
 	{
-		output->evaluate();
+		controlEnvironment.evaluate();
 	}
 
 	BOOST_CHECK_EQUAL(resultOne, valueInputOne);
@@ -301,9 +311,9 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 	output->setInput(inputTwo);
 	output->setOutput(&resultTwo);
 
-	for (int i = 0; i < 5; i ++)
+	for (int i = 0; i < 5; i++)
 	{
-		output->evaluate();
+		controlEnvironment.evaluate();
 	}
 
 	BOOST_CHECK_EQUAL(resultTwo, valueInputTwo);
@@ -320,7 +330,7 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 	{
 		current = boost::posix_time::microsec_clock::local_time();
 		time = (current - timestamp).total_milliseconds();
-		output->evaluate();
+		controlEnvironment.evaluate();
 	}
 
 	BOOST_CHECK_CLOSE(resultTwo, -1, 1);
@@ -329,7 +339,7 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 	{
 		current = boost::posix_time::microsec_clock::local_time();
 		time = (current - timestamp).total_milliseconds();
-		output->evaluate();
+		controlEnvironment.evaluate();
 	}
 
 	BOOST_CHECK_EQUAL(resultTwo < 0.00001, true);
@@ -338,7 +348,7 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 	{
 		current = boost::posix_time::microsec_clock::local_time();
 		time = (current - timestamp).total_milliseconds();
-		output->evaluate();
+		controlEnvironment.evaluate();
 	}
 
 	BOOST_CHECK_CLOSE(resultTwo, 1, 1);
@@ -347,7 +357,7 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 	{
 		current = boost::posix_time::microsec_clock::local_time();
 		time = (current - timestamp).total_milliseconds();
-		output->evaluate();
+		controlEnvironment.evaluate();
 	}
 
 	BOOST_CHECK_EQUAL(resultTwo < 0.00001, true);
@@ -368,6 +378,7 @@ BOOST_AUTO_TEST_CASE(StateSpaceElement)
 	RowVector2 matrixDTwo;
 	Scalar scalarOutput;
 	double result = 0;
+	AdaptiveControlEnvironment controlEnvironment;
 
 	vectorState << 0, 0;
 	vectorInputOne << 1, 1;
@@ -382,23 +393,23 @@ BOOST_AUTO_TEST_CASE(StateSpaceElement)
 	matrixDTwo << 0, 0;
 	scalarOutput << 0;
 
-	auto inputOne = std::make_shared<Input<Vector2>>(&vectorInputOne);
-	auto inputTwo = std::make_shared<Input<Vector2>>(&vectorInputTwo);
-	auto stateSpace = std::make_shared<
-			StateSpace<Vector2, Vector2, Matrix2, Matrix2, RowVector2, RowVector2, Scalar>>(
-			vectorState, inputOne, matrixAOne, matrixBOne, matrixCOne, matrixDOne, scalarOutput);
+	auto inputOne = controlEnvironment.addInput<Vector2>(&vectorInputOne);
+	auto inputTwo = controlEnvironment.addInput<Vector2>(&vectorInputTwo);
+	auto stateSpace = controlEnvironment.addStateSpace<Vector2, Vector2, Matrix2, Matrix2,
+			RowVector2, RowVector2, Scalar>(vectorState, inputOne, matrixAOne, matrixBOne,
+			matrixCOne, matrixDOne, scalarOutput);
 
-	stateSpace->evaluate();
+	controlEnvironment.evaluate();
 	result = stateSpace->getValue().x();
 
 	BOOST_CHECK_EQUAL(result, 0);
 
-	stateSpace->evaluate();
+	controlEnvironment.evaluate();
 	result = stateSpace->getValue().x();
 
 	BOOST_CHECK_CLOSE(result, 0.4453, 1);
 
-	stateSpace->evaluate();
+	controlEnvironment.evaluate();
 	result = stateSpace->getValue().x();
 
 	BOOST_CHECK_CLOSE(result, 0.5117, 1);
@@ -411,17 +422,17 @@ BOOST_AUTO_TEST_CASE(StateSpaceElement)
 	stateSpace->setMatrixD(matrixDTwo);
 	stateSpace->setOutput(scalarOutput);
 
-	stateSpace->evaluate();
+	controlEnvironment.evaluate();
 	result = stateSpace->getValue().x();
 
 	BOOST_CHECK_EQUAL(result, 0);
 
-	stateSpace->evaluate();
+	controlEnvironment.evaluate();
 	result = stateSpace->getValue().x();
 
 	BOOST_CHECK_CLOSE(result, -0.1073, 1);
 
-	stateSpace->evaluate();
+	controlEnvironment.evaluate();
 	result = stateSpace->getValue().x();
 
 	BOOST_CHECK_CLOSE(result, -0.2182, 1);
@@ -434,14 +445,15 @@ BOOST_AUTO_TEST_CASE(AdaptiveLaw)
 	Matrix2 phiInv;
 	double negativeOne = -1;
 	Vector2 result;
+	AdaptiveControlEnvironment controlEnvironment;
 
 	M << 0.9712, 0.0038;
 	phiInv << 14.0568, 87.7019, -19.9110, -3.4262;
 
-	auto input = std::make_shared<Input<double>>(&yTilde);
-	auto gainOne = std::make_shared<Gain<double, Vector2, Vector2>>(input, M);
-	auto gainTwo = std::make_shared<Gain<Vector2, Matrix2, Vector2>>(gainOne, phiInv);
-	auto gainThree = std::make_shared<Gain<Vector2, double, Vector2>>(gainTwo, negativeOne);
+	auto input = controlEnvironment.addInput<double>(&yTilde);
+	auto gainOne = controlEnvironment.addGain<double, Vector2, Vector2>(input, M);
+	auto gainTwo = controlEnvironment.addGain<Vector2, Matrix2, Vector2>(gainOne, phiInv);
+	auto gainThree = controlEnvironment.addGain<Vector2, double, Vector2>(gainTwo, negativeOne);
 
 	result = gainThree->getValue();
 
@@ -461,6 +473,7 @@ BOOST_AUTO_TEST_CASE(ControlLaw)
 	RowVector2 matrixD;
 	Scalar output;
 	double result = 0;
+	AdaptiveControlEnvironment controlEnvironment;
 
 	r << 1;
 	state << 0, 0;
@@ -471,13 +484,12 @@ BOOST_AUTO_TEST_CASE(ControlLaw)
 	matrixD << 0, 0;
 	output << 0;
 
-	auto inputR = std::make_shared<Input<Scalar>>(&r);
-	auto inputSighat = std::make_shared<Input<Vector2>>(&sighat);
-	auto gain = std::make_shared<Gain<Scalar, double, Scalar>>(inputR, a0);
-	auto stateSpace = std::make_shared<
-			StateSpace<Vector2, Vector2, Matrix2, Matrix2, RowVector2, RowVector2, Scalar>>(state,
+	auto inputR = controlEnvironment.addInput<Scalar>(&r);
+	auto inputSighat = controlEnvironment.addInput<Vector2>(&sighat);
+	auto gain = controlEnvironment.addGain<Scalar, double, Scalar>(inputR, a0);
+	auto stateSpace = controlEnvironment.addStateSpace<Vector2, Vector2, Matrix2, Matrix2, RowVector2, RowVector2, Scalar>(state,
 			inputSighat, matrixA, matrixB, matrixC, matrixD, output);
-	auto sum = std::make_shared<Sum<Scalar, Scalar, Scalar>>(gain, stateSpace, false);
+	auto sum = controlEnvironment.addSum<Scalar, Scalar, Scalar>(gain, stateSpace, false);
 
 	result = sum->getValue().x();
 
@@ -485,7 +497,7 @@ BOOST_AUTO_TEST_CASE(ControlLaw)
 
 	for (int i = 0; i < 5; i++)
 	{
-		stateSpace->evaluate();
+		controlEnvironment.evaluate();
 	}
 
 	result = sum->getValue().x();
@@ -494,7 +506,7 @@ BOOST_AUTO_TEST_CASE(ControlLaw)
 
 	for (int i = 0; i < 5; i++)
 	{
-		stateSpace->evaluate();
+		controlEnvironment.evaluate();
 	}
 
 	result = sum->getValue().x();
@@ -503,7 +515,7 @@ BOOST_AUTO_TEST_CASE(ControlLaw)
 
 	for (int i = 0; i < 5; i++)
 	{
-		stateSpace->evaluate();
+		controlEnvironment.evaluate();
 	}
 
 	result = sum->getValue().x();

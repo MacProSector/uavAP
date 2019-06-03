@@ -43,7 +43,9 @@ class AdaptiveControlEnvironment
 {
 public:
 
-	AdaptiveControlEnvironment(const TimePoint& timestamp);
+	AdaptiveControlEnvironment();
+
+	AdaptiveControlEnvironment(const TimePoint* timestamp);
 
 	void
 	evaluate();
@@ -96,10 +98,103 @@ public:
 
 private:
 
-	const TimePoint& timestamp_;
+	const TimePoint* timestamp_;
 	TimePoint lastTimestamp_;
 	Duration duration_;
-	std::vector<AdaptiveElementEvaluation> evaluate_;
+	std::vector<EvaluableAdaptiveElement> evaluableAdaptiveElements_;
 };
+
+template<typename TYPE>
+inline std::shared_ptr<Constant<TYPE>>
+AdaptiveControlEnvironment::addConstant(const TYPE& constant)
+{
+	return std::make_shared<Constant<TYPE>>(constant);
+}
+
+template<typename INPUT, typename GAIN, typename OUTPUT>
+inline std::shared_ptr<Gain<INPUT, GAIN, OUTPUT>>
+AdaptiveControlEnvironment::addGain(const AdaptiveElement<INPUT>& input, const GAIN& gain)
+{
+	return std::make_shared<Gain<INPUT, GAIN, OUTPUT>>(input, gain);
+}
+
+template<typename TYPE>
+inline std::shared_ptr<Input<TYPE>>
+AdaptiveControlEnvironment::addInput(TYPE* input)
+{
+	return std::make_shared<Input<TYPE>>(input);
+}
+
+template<typename TYPE>
+inline std::shared_ptr<ManualSwitch<TYPE>>
+AdaptiveControlEnvironment::addManualSwitch(const AdaptiveElement<TYPE>& inputTrue,
+		const AdaptiveElement<TYPE>& inputFalse, const bool& selection)
+{
+	return std::make_shared<ManualSwitch<TYPE>>(inputTrue, inputFalse, selection);
+}
+
+template<typename TYPE>
+inline std::shared_ptr<Saturation<TYPE>>
+AdaptiveControlEnvironment::addSaturation(const AdaptiveElement<TYPE>& input, const TYPE& min,
+		const TYPE& max)
+{
+	return std::make_shared<Saturation<TYPE>>(input, min, max);
+}
+
+template<typename TYPE>
+inline std::shared_ptr<Saturation<TYPE>>
+AdaptiveControlEnvironment::addSaturation(const AdaptiveElement<TYPE>& input, const TYPE& min,
+		const TYPE& max, const TYPE& hardMin, const TYPE& hardMax)
+{
+	return std::make_shared<Saturation<TYPE>>(input, min, max, hardMin, hardMax);
+}
+
+template<typename INPUT_ONE, typename INPUT_TWO, typename OUTPUT>
+inline std::shared_ptr<Sum<INPUT_ONE, INPUT_TWO, OUTPUT>>
+AdaptiveControlEnvironment::addSum(const AdaptiveElement<INPUT_ONE>& inputOne,
+		const AdaptiveElement<INPUT_TWO>& inputTwo, const bool& addition)
+{
+	return std::make_shared<Sum<INPUT_ONE, INPUT_TWO, OUTPUT>>(inputOne, inputTwo, addition);
+}
+
+template<typename TYPE>
+inline std::shared_ptr<LowPassFilter<TYPE>>
+AdaptiveControlEnvironment::addLowPassFilter(const AdaptiveElement<TYPE>& input, const TYPE& alpha)
+{
+	auto lowPassFilter = std::make_shared<LowPassFilter<TYPE>>(input, alpha);
+	auto lowPassFilterEvaluation = std::bind(&LowPassFilter<TYPE>::evaluate, lowPassFilter);
+	evaluableAdaptiveElements_.push_back(lowPassFilterEvaluation);
+
+	return lowPassFilter;
+}
+
+template<typename INPUT, typename OUTPUT>
+inline std::shared_ptr<Output<INPUT, OUTPUT>>
+AdaptiveControlEnvironment::addOutput(const AdaptiveElement<INPUT>& input, OUTPUT* output)
+{
+	auto _output = std::make_shared<Output<INPUT, OUTPUT>>(input, output);
+	auto outputEvaluation = std::bind(&Output<INPUT, OUTPUT>::evaluate, _output);
+	evaluableAdaptiveElements_.push_back(outputEvaluation);
+
+	return _output;
+}
+
+template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
+		typename MATRIX_D, typename OUTPUT>
+inline std::shared_ptr<StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>>
+AdaptiveControlEnvironment::addStateSpace(const STATE& state, const AdaptiveElement<INPUT>& input,
+		const MATRIX_A& matrixA, const MATRIX_B& matrixB, const MATRIX_C& matrixC,
+		const MATRIX_D& matrixD, const OUTPUT& output)
+{
+	auto stateSpace = std::make_shared<
+			StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>>(state, input,
+			matrixA, matrixB, matrixC, matrixD, output);
+	auto stateSpaceEvaluation = std::bind(
+			&StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::evaluate,
+			stateSpace);
+	evaluableAdaptiveElements_.push_back(stateSpaceEvaluation);
+
+	return stateSpace;
+}
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_ADAPTIVECONTROLENVIRONMENT_H_ */
