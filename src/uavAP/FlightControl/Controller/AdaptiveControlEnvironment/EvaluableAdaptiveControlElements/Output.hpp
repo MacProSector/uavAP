@@ -50,7 +50,7 @@ public:
 	setWaveform(const Waveforms& waveform);
 
 	void
-	setWavelength(const OUTPUT& wavelength);
+	setPeriod(const OUTPUT& period);
 
 	void
 	setPhase(const OUTPUT& phase);
@@ -72,7 +72,7 @@ private:
 	AdaptiveElement<INPUT> input_;
 	TimePoint timestamp_;
 	Waveforms waveform_;
-	OUTPUT wavelength_;
+	OUTPUT period_;
 	OUTPUT phase_;
 	OUTPUT* output_;
 	OUTPUT amplitude_;
@@ -82,7 +82,7 @@ private:
 template<typename INPUT, typename OUTPUT>
 inline
 Output<INPUT, OUTPUT>::Output(const AdaptiveElement<INPUT>& input, OUTPUT* output) :
-		input_(input), timestamp_(), waveform_(Waveforms::NONE), wavelength_(), phase_(), output_(
+		input_(input), timestamp_(), waveform_(Waveforms::NONE), period_(), phase_(), output_(
 				output), amplitude_(), override_(false)
 {
 }
@@ -117,9 +117,9 @@ Output<INPUT, OUTPUT>::setWaveform(const Waveforms& waveform)
 
 template<typename INPUT, typename OUTPUT>
 inline void
-Output<INPUT, OUTPUT>::setWavelength(const OUTPUT& wavelength)
+Output<INPUT, OUTPUT>::setPeriod(const OUTPUT& period)
 {
-	wavelength_ = wavelength;
+	period_ = period;
 }
 
 template<typename INPUT, typename OUTPUT>
@@ -152,7 +152,7 @@ Output<INPUT, OUTPUT>::disableOverride()
 	override_ = false;
 	timestamp_ = TimePoint();
 	waveform_ = Waveforms::NONE;
-	wavelength_ = OUTPUT();
+	period_ = OUTPUT();
 	phase_ = OUTPUT();
 }
 
@@ -174,7 +174,7 @@ Output<INPUT, OUTPUT>::getWaveformOutput()
 	{
 		TimePoint current = boost::posix_time::microsec_clock::local_time();
 		double time = (current - timestamp_).total_milliseconds();
-		double period = (2 * M_PI) / wavelength_;
+		double period = (2 * M_PI) / period_;
 
 		waveformOutput = amplitude_ * sin(period * (time + phase_));
 
@@ -184,7 +184,7 @@ Output<INPUT, OUTPUT>::getWaveformOutput()
 	{
 		TimePoint current = boost::posix_time::microsec_clock::local_time();
 		double time = (current - timestamp_).total_milliseconds();
-		double period = (2 * M_PI) / wavelength_;
+		double period = (2 * M_PI) / period_;
 		double sine = sin(period * (time + phase_));
 
 		if (sine > 0)
@@ -206,8 +206,8 @@ Output<INPUT, OUTPUT>::getWaveformOutput()
 	{
 		TimePoint current = boost::posix_time::microsec_clock::local_time();
 		double time = (current - timestamp_).total_milliseconds();
-		double time_mod = fmod(time + phase_, wavelength_);
-		double slope = (2 * amplitude_) / wavelength_;
+		double time_mod = fmod(time + phase_, period_);
+		double slope = (2 * amplitude_) / period_;
 		double intercept = -amplitude_;
 
 		waveformOutput = slope * time_mod + intercept;
@@ -218,8 +218,8 @@ Output<INPUT, OUTPUT>::getWaveformOutput()
 	{
 		TimePoint current = boost::posix_time::microsec_clock::local_time();
 		double time = (current - timestamp_).total_milliseconds();
-		double time_mod = fmod(time + phase_, wavelength_);
-		double slope = -(2 * amplitude_) / wavelength_;
+		double time_mod = fmod(time + phase_, period_);
+		double slope = -(2 * amplitude_) / period_;
 		double intercept = amplitude_;
 
 		waveformOutput = slope * time_mod + intercept;

@@ -62,7 +62,7 @@ Filter::setAlpha(double alpha)
 }
 
 Output::Output(Element in, double* out) :
-		in_(in), start_(), waveform_(), out_(out), override_(false), overrideOut_(0), wavelength_(
+		in_(in), start_(), waveform_(), out_(out), override_(false), overrideOut_(0), period_(
 				0), phase_(0)
 {
 }
@@ -82,9 +82,9 @@ Output::setWaveform(Waveforms waveform)
 }
 
 void
-Output::setWavelength(double wavelength)
+Output::setPeriod(double period)
 {
-	wavelength_ = wavelength;
+	period_ = period;
 }
 
 void
@@ -99,7 +99,7 @@ Output::disableOverride()
 	override_ = false;
 	start_ = TimePoint();
 	waveform_ = Waveforms::NONE;
-	wavelength_ = 0;
+	period_ = 0;
 	phase_ = 0;
 }
 
@@ -132,7 +132,7 @@ Output::getWaveformOutput()
 	{
 		TimePoint current = boost::posix_time::microsec_clock::local_time();
 		double time = (current - start_).total_milliseconds();
-		double period = (2 * M_PI) / wavelength_;
+		double period = (2 * M_PI) / period_;
 
 		waveformOutput = overrideOut_ * sin(period * (time + phase_));
 
@@ -142,7 +142,7 @@ Output::getWaveformOutput()
 	{
 		TimePoint current = boost::posix_time::microsec_clock::local_time();
 		double time = (current - start_).total_milliseconds();
-		double period = (2 * M_PI) / wavelength_;
+		double period = (2 * M_PI) / period_;
 		double sine = sin(period * (time + phase_));
 
 		if (sine > 0)
@@ -164,8 +164,8 @@ Output::getWaveformOutput()
 	{
 		TimePoint current = boost::posix_time::microsec_clock::local_time();
 		double time = (current - start_).total_milliseconds();
-		double time_mod = fmod(time + phase_, wavelength_);
-		double slope = (2 * overrideOut_) / wavelength_;
+		double time_mod = fmod(time + phase_, period_);
+		double slope = (2 * overrideOut_) / period_;
 		double intercept = -overrideOut_;
 
 		waveformOutput = slope * time_mod + intercept;
@@ -176,8 +176,8 @@ Output::getWaveformOutput()
 	{
 		TimePoint current = boost::posix_time::microsec_clock::local_time();
 		double time = (current - start_).total_milliseconds();
-		double time_mod = fmod(time + phase_, wavelength_);
-		double slope = -(2 * overrideOut_) / wavelength_;
+		double time_mod = fmod(time + phase_, period_);
+		double slope = -(2 * overrideOut_) / period_;
 		double intercept = overrideOut_;
 
 		waveformOutput = slope * time_mod + intercept;

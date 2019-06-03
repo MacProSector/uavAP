@@ -99,7 +99,7 @@ private:
 	const TimePoint& timestamp_;
 	TimePoint lastTimestamp_;
 	Duration duration_;
-	// TODO store evaluable elements
+	std::vector<AdaptiveElementEvaluation> evaluate_;
 };
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_ADAPTIVECONTROLENVIRONMENT_H_ */

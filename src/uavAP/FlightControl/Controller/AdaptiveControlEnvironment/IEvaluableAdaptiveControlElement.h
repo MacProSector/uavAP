@@ -26,6 +26,8 @@
 #ifndef UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_IEVALUABLEADAPTIVECONTROLELEMENT_H_
 #define UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_IEVALUABLEADAPTIVECONTROLELEMENT_H_
 
+#include <functional>
+
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/IAdaptiveControlElement.h"
 
 template<typename TYPE>
@@ -42,5 +44,6 @@ public:
 
 template<typename TYPE>
 using EvaluableAdaptiveElement = std::shared_ptr<IEvaluableAdaptiveControlElement<TYPE>>;
+using AdaptiveElementEvaluation = std::function<void(void)>;
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_IEVALUABLEADAPTIVECONTROLELEMENT_H_ */

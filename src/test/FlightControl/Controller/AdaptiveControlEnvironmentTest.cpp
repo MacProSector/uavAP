@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 	double valueInputTwo = 3.0;
 	double resultOne = -5;
 	double resultTwo = 5;
-	double wavelength = 1000;
+	double period = 1000;
 	double time = 0;
 	TimePoint timestamp;
 	TimePoint current;
@@ -309,14 +309,14 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 	BOOST_CHECK_EQUAL(resultTwo, valueInputTwo);
 
 	output->setWaveform(Waveforms::SINE);
-	output->setWavelength(wavelength);
+	output->setPeriod(period);
 	output->setPhase(500);
 	output->overrideOutput(1);
 	timestamp = boost::posix_time::microsec_clock::local_time();
 	current = boost::posix_time::microsec_clock::local_time();
 	time = (current - timestamp).total_milliseconds();
 
-	while (time < (wavelength / 4))
+	while (time < (period / 4))
 	{
 		current = boost::posix_time::microsec_clock::local_time();
 		time = (current - timestamp).total_milliseconds();
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 
 	BOOST_CHECK_CLOSE(resultTwo, -1, 1);
 
-	while (time < (wavelength / 2))
+	while (time < (period / 2))
 	{
 		current = boost::posix_time::microsec_clock::local_time();
 		time = (current - timestamp).total_milliseconds();
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 
 	BOOST_CHECK_EQUAL(resultTwo < 0.00001, true);
 
-	while (time < (wavelength * 3 / 4))
+	while (time < (period * 3 / 4))
 	{
 		current = boost::posix_time::microsec_clock::local_time();
 		time = (current - timestamp).total_milliseconds();
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(OutputElement)
 
 	BOOST_CHECK_CLOSE(resultTwo, 1, 1);
 
-	while (time < wavelength)
+	while (time < period)
 	{
 		current = boost::posix_time::microsec_clock::local_time();
 		time = (current - timestamp).total_milliseconds();

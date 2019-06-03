@@ -343,7 +343,7 @@ RateCascade::setManeuverOverride(const Override& override)
 		if (auto out = findInMap(outputWaveforms_, it.first))
 		{
 			out->second->setWaveform(it.second);
-			out->second->setWavelength(override.wavelength);
+			out->second->setPeriod(override.period);
 			out->second->setPhase(override.phase);
 		}
 	}

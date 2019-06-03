@@ -42,9 +42,9 @@ Override::configure(const boost::property_tree::ptree& config)
 	{
 		override = it.first;
 
-		if (override == "wavelength")
+		if (override == "period")
 		{
-			pm.add<double>(override, wavelength, false);
+			pm.add<double>(override, period, false);
 			continue;
 		}
 		else if (override == "phase")

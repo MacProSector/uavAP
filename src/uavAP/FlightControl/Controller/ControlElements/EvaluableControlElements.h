@@ -80,7 +80,7 @@ public:
 	setWaveform(Waveforms waveform);
 
 	void
-	setWavelength(double wavelength);
+	setPeriod(double period);
 
 	void
 	setPhase(double phase);
@@ -105,7 +105,7 @@ private:
 	double* out_;
 	bool override_;
 	double overrideOut_;
-	double wavelength_;
+	double period_;
 	double phase_;
 };
 

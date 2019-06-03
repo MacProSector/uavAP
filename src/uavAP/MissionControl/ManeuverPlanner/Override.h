@@ -81,7 +81,7 @@ struct Override
 	ControllerOutputWaveformOverrides waveform;
 	ControllerConstraintOverrides constraint;
 	CustomOverrides custom;
-	double wavelength;
+	double period;
 	double phase;
 
 	bool
@@ -147,7 +147,7 @@ serialize(Archive& ar, Override& t)
 	ar & t.waveform;
 	ar & t.constraint;
 	ar & t.custom;
-	ar & t.wavelength;
+	ar & t.period;
 	ar & t.phase;
 }
 } /* dp */
