@@ -33,7 +33,7 @@
 struct PIDTuning
 {
 	int pid;
-	Control::PID::Parameters params;
+	PIDParameter params;
 };
 
 struct ConstraintParams

@@ -201,14 +201,14 @@ Output::getWaveformOutput()
 	return waveformOutput;
 }
 
-PID::PID(Element target, Element current, const Parameters& params, Duration* timeDiff) :
+PID::PID(Element target, Element current, const PIDParameter& params, Duration* timeDiff) :
 		target_(target), current_(current), params_(params), timeDiff_(timeDiff), targetValue_(0), currentError_(
 				0), integrator_(0), lastError_(0), output_(0), override_(false), overrideTarget_(0)
 {
 
 }
 
-PID::PID(Element target, Element current, Element derivative, const Parameters& params,
+PID::PID(Element target, Element current, Element derivative, const PIDParameter& params,
 		Duration* timeDiff) :
 		target_(target), current_(current), derivative_(derivative), params_(params), timeDiff_(
 				timeDiff), targetValue_(0), currentError_(0), integrator_(0), lastError_(0), output_(
@@ -218,7 +218,7 @@ PID::PID(Element target, Element current, Element derivative, const Parameters& 
 }
 
 void
-PID::setControlParameters(const Parameters& g)
+PID::setControlParameters(const PIDParameter& g)
 {
 	params_ = g;
 	integrator_ = 0;

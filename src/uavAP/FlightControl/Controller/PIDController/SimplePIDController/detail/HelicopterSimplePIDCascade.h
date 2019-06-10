@@ -45,7 +45,7 @@ public:
 	configure(const boost::property_tree::ptree& config) override;
 
 	bool
-	tunePID(int pid, const Control::PID::Parameters& params) override;
+	tunePID(int pid, const PIDParameter& params) override;
 
 	bool
 	tuneRollBounds(double min, double max) override;

@@ -35,7 +35,7 @@ HelicopterSimplePIDCascade::HelicopterSimplePIDCascade(SensorData* sensorData, C
 {
 	APLOG_TRACE << "Create HelicopterCascade";
 
-	Control::PID::Parameters defaultParams;
+	PIDParameter defaultParams;
 	defaultParams.kp = 1;
 
 	/* Velocity Y Control */
@@ -117,7 +117,7 @@ HelicopterSimplePIDCascade::configure(const boost::property_tree::ptree& config)
 	rollConstraint_->setContraintValue(hardRollConstraint_ * M_PI / 180.0);
 	pitchConstraint_->setContraintValue(hardPitchConstraint_ * M_PI / 180.0);
 
-	Control::PID::Parameters params;
+	PIDParameter params;
 	for (auto it : pidConfig)
 	{
 		if (!params.configure(it.second))
@@ -132,7 +132,7 @@ HelicopterSimplePIDCascade::configure(const boost::property_tree::ptree& config)
 }
 
 bool
-HelicopterSimplePIDCascade::tunePID(int pidIndicator, const Control::PID::Parameters& params)
+HelicopterSimplePIDCascade::tunePID(int pidIndicator, const PIDParameter& params)
 {
 	PIDs pid = static_cast<PIDs>(pidIndicator);
 

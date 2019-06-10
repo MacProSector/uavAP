@@ -26,13 +26,13 @@
 #ifndef CONTROL_EVALUABLECONTROLELEMENTS_H_
 #define CONTROL_EVALUABLECONTROLELEMENTS_H_
 
-#include <cmath>
 #include <iostream>
+
 #include "uavAP/Core/Time.h"
-#include <boost/property_tree/ptree.hpp>
 #include "uavAP/Core/PropertyMapper/PropertyMapper.h"
 #include "uavAP/FlightControl/Controller/ControlElements/IEvaluableControlElement.h"
 #include "uavAP/FlightControl/Controller/ControllerOutput.h"
+#include "uavAP/FlightControl/Controller/PIDController/PIDParameter.h"
 
 struct PIDStatus;
 
@@ -111,33 +111,12 @@ private:
 
 class PID: public IEvaluableControlElement
 {
+
 public:
 
-	struct Parameters
-	{
-		double kp, ki, kd, imax, ff;
+	PID(Element target, Element current, const PIDParameter& params, Duration* timeDiff);
 
-		Parameters() :
-				kp(0), ki(0), kd(0), imax(INFINITY), ff(0)
-		{
-		}
-
-		bool
-		configure(const boost::property_tree::ptree& p)
-		{
-			PropertyMapper pm(p);
-			pm.add<double>("kp", kp, true);
-			pm.add<double>("ki", ki, false);
-			pm.add<double>("kd", kd, false);
-			pm.add<double>("imax", imax, false);
-			pm.add<double>("ff", ff, false);
-			return pm.map();
-		}
-	};
-
-	PID(Element target, Element current, const Parameters& params, Duration* timeDiff);
-
-	PID(Element target, Element current, Element differential, const Parameters& params,
+	PID(Element target, Element current, Element differential, const PIDParameter& params,
 			Duration* timeDiff);
 
 	/*
@@ -145,7 +124,7 @@ public:
 	 */
 
 	void
-	setControlParameters(const Parameters& params);
+	setControlParameters(const PIDParameter& params);
 
 	void
 	overrideTarget(double newTarget);
@@ -184,7 +163,7 @@ private:
 	Element derivative_;
 
 	//PID Parameters
-	Parameters params_;
+	PIDParameter params_;
 
 	Duration* timeDiff_;
 
@@ -204,20 +183,6 @@ private:
 	double overrideTarget_;
 };
 
-}
-
-namespace dp
-{
-template<class Archive, typename Type>
-inline void
-serialize(Archive& ar, Control::PID::Parameters& t)
-{
-	ar & t.kp;
-	ar & t.ki;
-	ar & t.kd;
-	ar & t.imax;
-	ar & t.ff;
-}
 }
 
 #endif /* CONTROL_EVALUABLECONTROLELEMENT_H_ */

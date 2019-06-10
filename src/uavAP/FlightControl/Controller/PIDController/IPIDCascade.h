@@ -39,7 +39,7 @@ public:
 	configure(const boost::property_tree::ptree& config) = 0;
 
 	virtual bool
-	tunePID(PIDs pid, const Control::PID::Parameters& params) = 0;
+	tunePID(PIDs pid, const PIDParameter& params) = 0;
 
 	virtual bool
 	tuneRollBounds(double min, double max) = 0;

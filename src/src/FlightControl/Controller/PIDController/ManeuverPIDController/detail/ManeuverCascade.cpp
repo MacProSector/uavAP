@@ -41,7 +41,7 @@ ManeuverCascade::ManeuverCascade(SensorData* sensorData, Vector3& velInertial, V
 {
 	APLOG_TRACE << "Create ManeuverCascade";
 
-	Control::PID::Parameters defaultParams;
+	PIDParameter defaultParams;
 	defaultParams.kp = 1;
 
 	/* Roll Control */
@@ -137,7 +137,7 @@ ManeuverCascade::configure(const boost::property_tree::ptree& config)
 	rollConstraint_->setContraintValue(hardRollConstraint_ * M_PI / 180.0);
 	pitchConstraint_->setContraintValue(hardPitchConstraint_ * M_PI / 180.0);
 
-	Control::PID::Parameters params;
+	PIDParameter params;
 	for (auto it : pidConfig)
 	{
 		if (!params.configure(it.second))
@@ -152,7 +152,7 @@ ManeuverCascade::configure(const boost::property_tree::ptree& config)
 }
 
 bool
-ManeuverCascade::tunePID(PIDs pidIndicator, const Control::PID::Parameters& params)
+ManeuverCascade::tunePID(PIDs pidIndicator, const PIDParameter& params)
 {
 	auto it = pids_.find(pidIndicator);
 

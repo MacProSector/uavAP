@@ -34,7 +34,7 @@ AirplaneSimplePIDCascade::AirplaneSimplePIDCascade(SensorData* sensorData, Vecto
 {
 	APLOG_TRACE << "Create AirplaneCascade";
 
-	Control::PID::Parameters defaultParams;
+	PIDParameter defaultParams;
 	defaultParams.kp = 1;
 
 	/* Yaw Rate Control */
@@ -101,7 +101,7 @@ AirplaneSimplePIDCascade::configure(const boost::property_tree::ptree& config)
 	rollConstraint_->setContraintValue(hardRollConstraint_ * M_PI / 180.0);
 	pitchConstraint_->setContraintValue(hardPitchConstraint_ * M_PI / 180.0);
 
-	Control::PID::Parameters params;
+	PIDParameter params;
 	for (auto it : pidConfig)
 	{
 		if (!params.configure(it.second))
@@ -116,7 +116,7 @@ AirplaneSimplePIDCascade::configure(const boost::property_tree::ptree& config)
 }
 
 bool
-AirplaneSimplePIDCascade::tunePID(PIDs pid, const Control::PID::Parameters& params)
+AirplaneSimplePIDCascade::tunePID(PIDs pid, const PIDParameter& params)
 {
 	switch (pid)
 	{

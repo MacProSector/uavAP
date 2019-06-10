@@ -126,7 +126,7 @@ ControlEnvironment::addConstraint(Element in, double min, double max, double har
 }
 
 std::shared_ptr<PID>
-ControlEnvironment::addPID(Element target, Element current, const PID::Parameters& params)
+ControlEnvironment::addPID(Element target, Element current, const PIDParameter& params)
 {
 	auto pid = std::make_shared<PID>(target, current, params, &timeDiff_);
 	evaluableControlElements_.push_back(pid);
@@ -135,7 +135,7 @@ ControlEnvironment::addPID(Element target, Element current, const PID::Parameter
 
 std::shared_ptr<PID>
 ControlEnvironment::addPID(Element target, Element current, Element derivative,
-		const PID::Parameters& params)
+		const PIDParameter& params)
 {
 	auto pid = std::make_shared<PID>(target, current, derivative, params, &timeDiff_);
 	evaluableControlElements_.push_back(pid);

@@ -43,7 +43,7 @@ RateCascade::RateCascade(SensorData* sensorData, Vector3& velInertial, Vector3& 
 {
 	APLOG_TRACE << "Create RateCascade";
 
-	Control::PID::Parameters defaultParams;
+	PIDParameter defaultParams;
 	defaultParams.kp = 1;
 
 	/* Roll Control */
@@ -175,7 +175,7 @@ RateCascade::configure(const boost::property_tree::ptree& config)
 	rollRateTargetConstraint_->setContraintValue(degToRad(rollRateConstraint_));
 	pitchRateTargetConstraint_->setContraintValue(degToRad(pitchRateConstraint_));
 
-	Control::PID::Parameters params;
+	PIDParameter params;
 	for (auto it : pidConfig)
 	{
 		if (!params.configure(it.second))
@@ -190,7 +190,7 @@ RateCascade::configure(const boost::property_tree::ptree& config)
 }
 
 bool
-RateCascade::tunePID(PIDs pid, const Control::PID::Parameters& params)
+RateCascade::tunePID(PIDs pid, const PIDParameter& params)
 {
 	auto it = pids_.find(pid);
 
