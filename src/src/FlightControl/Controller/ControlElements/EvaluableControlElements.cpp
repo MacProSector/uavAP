@@ -296,7 +296,7 @@ PID::addDifferentialControl()
 	{
 		double derivative = (currentError_ - lastError_)
 				/ (timeDiff_->total_microseconds() * MUSEC_TO_SEC);
-		output_ += params_.kd * derivative;
+		output_ -= params_.kd * derivative;
 	}
 }
 

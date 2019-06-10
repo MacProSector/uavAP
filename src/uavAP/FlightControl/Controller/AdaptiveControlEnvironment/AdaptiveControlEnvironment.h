@@ -37,6 +37,7 @@
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Sum.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/LowPassFilter.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/Output.hpp"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/PID.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/StateSpace.hpp"
 
 class AdaptiveControlEnvironment
@@ -88,6 +89,16 @@ public:
 	template<typename INPUT, typename OUTPUT>
 	std::shared_ptr<Output<INPUT, OUTPUT>>
 	addOutput(const AdaptiveElement<INPUT>& input, OUTPUT* output);
+
+	template<typename TYPE>
+	std::shared_ptr<PID<TYPE>>
+	addPID(const AdaptiveElement<TYPE>& input, const AdaptiveElement<TYPE>& target,
+			const PIDParameter& parameter);
+
+	template<typename TYPE>
+	std::shared_ptr<PID<TYPE>>
+	addPID(const AdaptiveElement<TYPE>& input, const AdaptiveElement<TYPE>& target,
+			const AdaptiveElement<TYPE>& derivative, const PIDParameter& parameter);
 
 	template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B,
 			typename MATRIX_C, typename MATRIX_D, typename OUTPUT>
@@ -177,6 +188,31 @@ AdaptiveControlEnvironment::addOutput(const AdaptiveElement<INPUT>& input, OUTPU
 	evaluableAdaptiveElements_.push_back(outputEvaluation);
 
 	return _output;
+}
+
+template<typename TYPE>
+inline std::shared_ptr<PID<TYPE>>
+AdaptiveControlEnvironment::addPID(const AdaptiveElement<TYPE>& input,
+		const AdaptiveElement<TYPE>& target, const PIDParameter& parameter)
+{
+	auto pid = std::make_shared<PID<TYPE>>(input, target, parameter, &duration_);
+	auto pidEvaluation = std::bind(&PID<TYPE>::evaluate, pid);
+	evaluableAdaptiveElements_.push_back(pidEvaluation);
+
+	return pid;
+}
+
+template<typename TYPE>
+inline std::shared_ptr<PID<TYPE>>
+AdaptiveControlEnvironment::addPID(const AdaptiveElement<TYPE>& input,
+		const AdaptiveElement<TYPE>& target, const AdaptiveElement<TYPE>& derivative,
+		const PIDParameter& parameter)
+{
+	auto pid = std::make_shared<PID<TYPE>>(input, target, derivative, parameter, &duration_);
+	auto pidEvaluation = std::bind(&PID<TYPE>::evaluate, pid);
+	evaluableAdaptiveElements_.push_back(pidEvaluation);
+
+	return pid;
 }
 
 template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
