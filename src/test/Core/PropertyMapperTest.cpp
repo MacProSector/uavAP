@@ -23,20 +23,19 @@
  *      Author: mircot
  */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/test/unit_test.hpp>
-#include <uavAP/Core/PropertyMapper/PropertyMapper.h>
 
+#include "uavAP/Core/LinearAlgebra.h"
+#include "uavAP/Core/PropertyMapper/PropertyMapper.h"
 
 BOOST_AUTO_TEST_SUITE(PropertyMapperTest)
-
 
 BOOST_AUTO_TEST_CASE(vector_of_double)
 {
 	boost::property_tree::ptree config;
-	boost::property_tree::read_json("Core/config/pm_test.json",
-			config);
+	boost::property_tree::read_json("Core/config/pm_test.json", config);
 
 	PropertyMapper pm(config);
 	std::vector<double> vec;
@@ -53,8 +52,7 @@ BOOST_AUTO_TEST_CASE(vector_of_double)
 BOOST_AUTO_TEST_CASE(vector_of_vector2)
 {
 	boost::property_tree::ptree config;
-	boost::property_tree::read_json("Core/config/pm_test.json",
-			config);
+	boost::property_tree::read_json("Core/config/pm_test.json", config);
 
 	PropertyMapper pm(config);
 	std::vector<boost::property_tree::ptree> edges;
@@ -66,17 +64,61 @@ BOOST_AUTO_TEST_CASE(vector_of_vector2)
 	{
 		PropertyMapper edge(it);
 		Vector2 e;
-		if (edge.add("",e,true))
+		if (edge.add("", e, true))
 			vec.push_back(e);
 	}
 
 	BOOST_REQUIRE_EQUAL(vec.size(), 4);
-	BOOST_CHECK_EQUAL(vec[0], Vector2(1,1));
-	BOOST_CHECK_EQUAL(vec[1], Vector2(2,1));
-	BOOST_CHECK_EQUAL(vec[2], Vector2(1,2));
-	BOOST_CHECK_EQUAL(vec[3], Vector2(2,2));
+	BOOST_CHECK_EQUAL(vec[0], Vector2(1, 1));
+	BOOST_CHECK_EQUAL(vec[1], Vector2(2, 1));
+	BOOST_CHECK_EQUAL(vec[2], Vector2(1, 2));
+	BOOST_CHECK_EQUAL(vec[3], Vector2(2, 2));
 
 }
 
+BOOST_AUTO_TEST_CASE(eigen_vector)
+{
+	boost::property_tree::ptree config;
+	boost::property_tree::read_json("Core/config/pm_test.json", config);
+
+	PropertyMapper pm(config);
+	VectorX vector;
+	VectorX vectorCheck(5, 1);
+
+	pm.add<double>("eigen_vector", vector, true);
+	vectorCheck << 1, 2, 3, 4, 0;
+
+	BOOST_CHECK_EQUAL(vector, vectorCheck);
+}
+
+BOOST_AUTO_TEST_CASE(eigen_row_vector)
+{
+	boost::property_tree::ptree config;
+	boost::property_tree::read_json("Core/config/pm_test.json", config);
+
+	PropertyMapper pm(config);
+	RowVectorX rowVector;
+	RowVectorX rowVectorCheck(1, 5);
+
+	pm.add<double>("eigen_row_vector", rowVector, true);
+	rowVectorCheck << 5, 6, 7, 8, 0;
+
+	BOOST_CHECK_EQUAL(rowVector, rowVectorCheck);
+}
+
+BOOST_AUTO_TEST_CASE(eigen_matrix)
+{
+	boost::property_tree::ptree config;
+	boost::property_tree::read_json("Core/config/pm_test.json", config);
+
+	PropertyMapper pm(config);
+	MatrixX matrix;
+	MatrixX matrixCheck(4, 5);
+
+	pm.add<double>("eigen_matrix", matrix, true);
+	matrixCheck << 1, 2, 3, 4, 0, 5, 6, 7, 8, 0, 8, 7, 6, 5, 0, 4, 3, 2, 1, 0;
+
+	BOOST_CHECK_EQUAL(matrix, matrixCheck);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

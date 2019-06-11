@@ -38,10 +38,13 @@
 using Scalar = Eigen::Matrix<double, 1, 1>;
 using Vector2 = Eigen::Vector2d;
 using Vector3 = Eigen::Vector3d;
+using VectorX = Eigen::VectorXd;
 using RowVector2 = Eigen::RowVector2d;
 using RowVector3 = Eigen::RowVector3d;
+using RowVectorX = Eigen::RowVectorXd;
 using Matrix2 = Eigen::Matrix2d;
 using Matrix3 = Eigen::Matrix3d;
+using MatrixX = Eigen::MatrixXd;
 using Rotation2 = Eigen::Rotation2Dd;
 using EigenLine = Eigen::ParametrizedLine<double, 3>;
 using EigenLine2 = Eigen::ParametrizedLine<double, 2>;

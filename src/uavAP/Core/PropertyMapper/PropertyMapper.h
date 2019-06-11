@@ -86,11 +86,19 @@ public:
 
 	template <typename Type>
 	bool
+	add(const std::string& key, Eigen::Array<Type, Eigen::Dynamic, 1>& val, bool mandatory);
+
+	template <typename Type>
+	bool
 	add(const std::string& key, Eigen::Matrix<Type, Eigen::Dynamic, 1>& val, bool mandatory);
 
 	template <typename Type>
 	bool
-	add(const std::string& key, Eigen::Array<Type, Eigen::Dynamic, 1>& val, bool mandatory);
+	add(const std::string& key, Eigen::Matrix<Type, 1, Eigen::Dynamic>& val, bool mandatory);
+
+	template <typename Type>
+	bool
+	add(const std::string& key, Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>& val, bool mandatory);
 
 	template <typename Enum>
 	bool
@@ -203,6 +211,33 @@ PropertyMapper::addVector(const std::string& key, std::vector<T>& val, bool mand
 
 template<typename Type>
 inline bool
+PropertyMapper::add(const std::string& key, Eigen::Array<Type, Eigen::Dynamic, 1>& val,
+		bool mandatory)
+{
+	val = {};
+	auto value = p_.get_child_optional(key);
+	if (value)
+	{
+		boost::property_tree::ptree child = *value;
+		Eigen::Matrix<Type, -1, 1> values(child.size(), 1);
+		int k = 0;
+		for (auto& it : child)
+		{
+			values[k++] = it.second.get_value<Type>();
+		}
+		val = values.array();
+		return true;
+	}
+	if (mandatory)
+	{
+		APLOG_ERROR << "PM: mandatory " << key << " missing";
+		mandatoryCheck_ = false;
+	}
+	return false;
+}
+
+template<typename Type>
+inline bool
 PropertyMapper::add(const std::string& key, Eigen::Matrix<Type, Eigen::Dynamic, 1>& val,
 		bool mandatory)
 {
@@ -229,28 +264,83 @@ PropertyMapper::add(const std::string& key, Eigen::Matrix<Type, Eigen::Dynamic, 
 
 template<typename Type>
 inline bool
-PropertyMapper::add(const std::string& key, Eigen::Array<Type, Eigen::Dynamic, 1>& val,
+PropertyMapper::add(const std::string& key, Eigen::Matrix<Type, 1, Eigen::Dynamic>& val,
 		bool mandatory)
 {
-	val = {};
 	auto value = p_.get_child_optional(key);
+
 	if (value)
 	{
 		boost::property_tree::ptree child = *value;
-		Eigen::Matrix<Type, -1, 1> values(child.size(), 1);
+		Eigen::Matrix<Type, 1, -1>  values(1, child.size());
 		int k = 0;
+
 		for (auto& it : child)
 		{
 			values[k++] = it.second.get_value<Type>();
 		}
-		val = values.array();
+
+		val = values;
+
 		return true;
 	}
+
 	if (mandatory)
 	{
 		APLOG_ERROR << "PM: mandatory " << key << " missing";
 		mandatoryCheck_ = false;
 	}
+
+	return false;
+}
+
+template<typename Type>
+inline bool
+PropertyMapper::add(const std::string& key,
+		Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>& val, bool mandatory)
+{
+	auto matrixOptional = p_.get_child_optional(key);
+
+	if (matrixOptional)
+	{
+		boost::property_tree::ptree rows = *matrixOptional;
+		unsigned rowSize = rows.size();
+		unsigned colSize = 0;
+
+		for (const auto& it : rows)
+		{
+			boost::property_tree::ptree row = it.second;
+			colSize = row.size();
+			break;
+		}
+
+		Eigen::Matrix<Type, -1, -1>  matrix(rowSize, colSize);
+		int rowCounter = 0;
+		int colCounter = 0;
+
+		for (const auto& rowIt : rows)
+		{
+			boost::property_tree::ptree row = rowIt.second;
+
+			for (const auto& colIt : row)
+			{
+				matrix(rowCounter, colCounter ++) = colIt.second.get_value<Type>();
+			}
+			rowCounter ++;
+			colCounter = 0;
+		}
+
+		val = matrix;
+
+		return true;
+	}
+
+	if (mandatory)
+	{
+		APLOG_ERROR << "PM: mandatory " << key << " missing";
+		mandatoryCheck_ = false;
+	}
+
 	return false;
 }
 
