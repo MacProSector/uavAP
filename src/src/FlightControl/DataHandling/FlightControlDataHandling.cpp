@@ -32,8 +32,9 @@
 #include "uavAP/Core/Scheduler/IScheduler.h"
 #include "uavAP/Core/Logging/APLogger.h"
 #include "uavAP/Core/LockTypes.h"
-#include <uavAP/Core/DataPresentation/Content.h>
-#include <uavAP/FlightControl/Controller/AdvancedControl.h>
+#include "uavAP/Core/DataPresentation/Content.h"
+#include "uavAP/FlightControl/Controller/AdaptiveController/IAdaptiveController.h"
+#include "uavAP/FlightControl/Controller/AdvancedControl.h"
 #include "uavAP/FlightControl/Controller/IController.h"
 #include "uavAP/FlightControl/Controller/ControllerOutput.h"
 #include "uavAP/FlightControl/DataHandling/FlightControlDataHandling.h"
@@ -285,6 +286,10 @@ FlightControlDataHandling::tunePID(const PIDTuning& params)
 	{
 		pidController->getCascade()->tunePID(static_cast<PIDs>(params.pid), params.params);
 	}
+	else if (auto adaptiveController = std::dynamic_pointer_cast<IAdaptiveController>(controller))
+	{
+		adaptiveController->getCascade()->tunePID(static_cast<PIDs>(params.pid), params.params);
+	}
 	else
 	{
 		APLOG_ERROR << "Cannot tune pid for given controller type.";
@@ -307,6 +312,10 @@ FlightControlDataHandling::collectAndSendPIDStatus(
 	if (auto pidController = std::dynamic_pointer_cast<IPIDController>(controller))
 	{
 		status = pidController->getCascade()->getPIDStatus();
+	}
+	else if (auto adaptiveController = std::dynamic_pointer_cast<IAdaptiveController>(controller))
+	{
+		status = adaptiveController->getCascade()->getPIDStatus();
 	}
 	else
 	{

@@ -27,4 +27,6 @@ set(FLIGHT_CONTROL_SRC 	${FLIGHT_CONTROL_SRC}
 						${CMAKE_CURRENT_SOURCE_DIR}/PIDController/ManeuverPIDController/detail/ManeuverCascade.cpp
 						${CMAKE_CURRENT_SOURCE_DIR}/PIDController/RatePIDController/RatePIDController.cpp
 						${CMAKE_CURRENT_SOURCE_DIR}/PIDController/RatePIDController/detail/RateCascade.cpp
+						${CMAKE_CURRENT_SOURCE_DIR}/AdaptiveController/L1AdaptiveController/L1AdaptiveController.cpp
+						${CMAKE_CURRENT_SOURCE_DIR}/AdaptiveController/L1AdaptiveController/detail/L1AdaptiveCascade.cpp
 						PARENT_SCOPE)
