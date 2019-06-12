@@ -33,6 +33,7 @@
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Gain.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Input.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/ManualSwitch.hpp"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Mux.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Saturation.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Sum.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/LowPassFilter.hpp"
@@ -67,6 +68,10 @@ public:
 	std::shared_ptr<ManualSwitch<TYPE>>
 	addManualSwitch(const AdaptiveElement<TYPE>& inputTrue, const AdaptiveElement<TYPE>& inputFalse,
 			const bool& selection);
+
+	template<typename INPUT, typename OUTPUT>
+	std::shared_ptr<Mux<INPUT, OUTPUT>>
+	addMux(const std::vector<AdaptiveElement<INPUT>>& input);
 
 	template<typename TYPE>
 	std::shared_ptr<Saturation<TYPE>>
@@ -142,6 +147,13 @@ AdaptiveControlEnvironment::addManualSwitch(const AdaptiveElement<TYPE>& inputTr
 		const AdaptiveElement<TYPE>& inputFalse, const bool& selection)
 {
 	return std::make_shared<ManualSwitch<TYPE>>(inputTrue, inputFalse, selection);
+}
+
+template<typename INPUT, typename OUTPUT>
+inline std::shared_ptr<Mux<INPUT, OUTPUT>>
+AdaptiveControlEnvironment::addMux(const std::vector<AdaptiveElement<INPUT> >& input)
+{
+	return std::make_shared<Mux<INPUT, OUTPUT>>(input);
 }
 
 template<typename TYPE>

@@ -28,15 +28,6 @@
 
 #include "uavAP/Core/LinearAlgebra.h"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlEnvironment.h"
-#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Constant.hpp"
-#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Gain.hpp"
-#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Input.hpp"
-#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/ManualSwitch.hpp"
-#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Saturation.hpp"
-#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Sum.hpp"
-#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/LowPassFilter.hpp"
-#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/Output.hpp"
-#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/StateSpace.hpp"
 
 BOOST_AUTO_TEST_SUITE(AdaptiveControlEnvironmentTest)
 
@@ -147,6 +138,33 @@ BOOST_AUTO_TEST_CASE(ManualSwitchElement)
 	result = manualSwitch->getValue();
 
 	BOOST_CHECK_EQUAL(result, valueInputFalseTwo);
+}
+
+BOOST_AUTO_TEST_CASE(MuxElement)
+{
+	double valueInputOne = 1.5;
+	double valueInputTwo = 3.0;
+	double valueInputThree = 2.0;
+	std::vector<AdaptiveElement<double>> input;
+	Eigen::Matrix<double, 3, 1> result;
+	Eigen::Matrix<double, 3, 1> vectorCheck;
+	AdaptiveControlEnvironment controlEnvironment;
+
+	vectorCheck << valueInputOne, valueInputTwo, valueInputThree;
+
+	auto inputOne = controlEnvironment.addInput<double>(&valueInputOne);
+	auto inputTwo = controlEnvironment.addInput<double>(&valueInputTwo);
+	auto inputThree = controlEnvironment.addInput<double>(&valueInputThree);
+
+	input.push_back(inputOne);
+	input.push_back(inputTwo);
+	input.push_back(inputThree);
+
+	auto mux = controlEnvironment.addMux<double, Eigen::Matrix<double, 3, 1>>(input);
+
+	result = mux->getValue();
+
+	BOOST_CHECK_EQUAL(result, vectorCheck);
 }
 
 BOOST_AUTO_TEST_CASE(SaturationElement)
@@ -487,8 +505,9 @@ BOOST_AUTO_TEST_CASE(ControlLaw)
 	auto inputR = controlEnvironment.addInput<Scalar>(&r);
 	auto inputSighat = controlEnvironment.addInput<Vector2>(&sighat);
 	auto gain = controlEnvironment.addGain<Scalar, double, Scalar>(inputR, a0);
-	auto stateSpace = controlEnvironment.addStateSpace<Vector2, Vector2, Matrix2, Matrix2, RowVector2, RowVector2, Scalar>(state,
-			inputSighat, matrixA, matrixB, matrixC, matrixD, output);
+	auto stateSpace = controlEnvironment.addStateSpace<Vector2, Vector2, Matrix2, Matrix2,
+			RowVector2, RowVector2, Scalar>(state, inputSighat, matrixA, matrixB, matrixC, matrixD,
+			output);
 	auto sum = controlEnvironment.addSum<Scalar, Scalar, Scalar>(gain, stateSpace, false);
 
 	result = sum->getValue().x();
