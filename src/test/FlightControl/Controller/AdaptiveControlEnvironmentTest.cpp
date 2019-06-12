@@ -240,6 +240,43 @@ BOOST_AUTO_TEST_CASE(SumElement)
 	BOOST_CHECK_EQUAL(result, valueInputOneTwo + valueInputTwoTwo);
 }
 
+BOOST_AUTO_TEST_CASE(DemuxElement)
+{
+	double valueInputOne = 1.5;
+	double valueInputTwo = 3.0;
+	double valueInputThree = 2.0;
+	Eigen::Matrix<double, 3, 1> vectorInput;
+	std::vector<std::shared_ptr<Constant<double>>> output;
+	AdaptiveControlEnvironment controlEnvironment;
+
+	vectorInput << valueInputOne, valueInputTwo, valueInputThree;
+
+	auto input = controlEnvironment.addInput<Eigen::Matrix<double, 3, 1>>(&vectorInput);
+	auto constantOne = controlEnvironment.addConstant<double>(0);
+	auto constantTwo = controlEnvironment.addConstant<double>(0);
+	auto constantThree = controlEnvironment.addConstant<double>(0);
+
+	output.push_back(constantOne);
+	output.push_back(constantTwo);
+	output.push_back(constantThree);
+
+	auto demux = controlEnvironment.addDemux<Eigen::Matrix<double, 3, 1>, double>(input, output);
+
+	controlEnvironment.evaluate();
+
+	BOOST_CHECK_EQUAL(valueInputOne, constantOne->getValue());
+	BOOST_CHECK_EQUAL(valueInputTwo, constantTwo->getValue());
+	BOOST_CHECK_EQUAL(valueInputThree, constantThree->getValue());
+
+	vectorInput *= 2;
+
+	controlEnvironment.evaluate();
+
+	BOOST_CHECK_EQUAL(valueInputOne * 2, constantOne->getValue());
+	BOOST_CHECK_EQUAL(valueInputTwo * 2, constantTwo->getValue());
+	BOOST_CHECK_EQUAL(valueInputThree * 2, constantThree->getValue());
+}
+
 BOOST_AUTO_TEST_CASE(LowPassFilterElement)
 {
 	double valueInputOne = 1.0;

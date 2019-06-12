@@ -36,6 +36,7 @@
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Mux.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Saturation.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Sum.hpp"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/Demux.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/LowPassFilter.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/Output.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/PID.hpp"
@@ -86,6 +87,11 @@ public:
 	std::shared_ptr<Sum<INPUT_ONE, INPUT_TWO, OUTPUT>>
 	addSum(const AdaptiveElement<INPUT_ONE>& inputOne, const AdaptiveElement<INPUT_TWO>& inputTwo,
 			const bool& addition);
+
+	template<typename INPUT, typename OUTPUT>
+	std::shared_ptr<Demux<INPUT, OUTPUT>>
+	addDemux(const AdaptiveElement<INPUT>& input,
+			const std::vector<std::shared_ptr<Constant<OUTPUT>>>& output);
 
 	template<typename TYPE>
 	std::shared_ptr<LowPassFilter<TYPE>>
@@ -151,7 +157,7 @@ AdaptiveControlEnvironment::addManualSwitch(const AdaptiveElement<TYPE>& inputTr
 
 template<typename INPUT, typename OUTPUT>
 inline std::shared_ptr<Mux<INPUT, OUTPUT>>
-AdaptiveControlEnvironment::addMux(const std::vector<AdaptiveElement<INPUT> >& input)
+AdaptiveControlEnvironment::addMux(const std::vector<AdaptiveElement<INPUT>>& input)
 {
 	return std::make_shared<Mux<INPUT, OUTPUT>>(input);
 }
@@ -178,6 +184,18 @@ AdaptiveControlEnvironment::addSum(const AdaptiveElement<INPUT_ONE>& inputOne,
 		const AdaptiveElement<INPUT_TWO>& inputTwo, const bool& addition)
 {
 	return std::make_shared<Sum<INPUT_ONE, INPUT_TWO, OUTPUT>>(inputOne, inputTwo, addition);
+}
+
+template<typename INPUT, typename OUTPUT>
+inline std::shared_ptr<Demux<INPUT, OUTPUT>>
+AdaptiveControlEnvironment::addDemux(const AdaptiveElement<INPUT>& input,
+		const std::vector<std::shared_ptr<Constant<OUTPUT>>>& output)
+{
+	auto demux = std::make_shared<Demux<INPUT, OUTPUT>>(input, output);
+	auto demuxEvaluation = std::bind(&Demux<INPUT, OUTPUT>::evaluate, demux);
+	evaluableAdaptiveElements_.push_back(demuxEvaluation);
+
+	return demux;
 }
 
 template<typename TYPE>
