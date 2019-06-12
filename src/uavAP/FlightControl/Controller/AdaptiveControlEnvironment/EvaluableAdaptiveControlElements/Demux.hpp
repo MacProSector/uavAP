@@ -72,7 +72,7 @@ Demux<INPUT, OUTPUT>::evaluate()
 {
 	INPUT input = input_->getValue();
 
-	for (unsigned i = 0; i < input.size(); i ++)
+	for (unsigned i = 0; i < output_.size(); i ++)
 	{
 		output_[i]->setConstant(input[i]);
 	}

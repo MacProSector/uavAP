@@ -277,6 +277,30 @@ BOOST_AUTO_TEST_CASE(DemuxElement)
 	BOOST_CHECK_EQUAL(valueInputThree * 2, constantThree->getValue());
 }
 
+BOOST_AUTO_TEST_CASE(FeedbackElement)
+{
+	double valueInput = 1.5;
+	double valueGain = 2.0;
+	double result = 0;
+	int loop = 3;
+	AdaptiveControlEnvironment controlEnvironment;
+
+	auto feedback = controlEnvironment.addFeedback<double>();
+	auto gain = controlEnvironment.addGain<double, double, double>(feedback, valueGain);
+
+	feedback->setInput(gain);
+	feedback->setOutput(valueInput);
+
+	for (int i = 0; i < loop; i ++)
+	{
+		controlEnvironment.evaluate();
+	}
+
+	result = feedback->getValue();
+
+	BOOST_CHECK_EQUAL(result, valueInput * pow(valueGain, loop));
+}
+
 BOOST_AUTO_TEST_CASE(LowPassFilterElement)
 {
 	double valueInputOne = 1.0;

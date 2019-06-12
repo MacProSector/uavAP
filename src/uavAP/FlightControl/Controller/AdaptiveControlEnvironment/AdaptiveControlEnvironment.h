@@ -26,8 +26,6 @@
 #ifndef UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_ADAPTIVECONTROLENVIRONMENT_H_
 #define UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_ADAPTIVECONTROLENVIRONMENT_H_
 
-#include <vector>
-
 #include "uavAP/Core/Time.h"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Constant.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Gain.hpp"
@@ -37,6 +35,7 @@
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Saturation.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlElements/Sum.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/Demux.hpp"
+#include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/Feedback.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/LowPassFilter.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/Output.hpp"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/EvaluableAdaptiveControlElements/PID.hpp"
@@ -92,6 +91,14 @@ public:
 	std::shared_ptr<Demux<INPUT, OUTPUT>>
 	addDemux(const AdaptiveElement<INPUT>& input,
 			const std::vector<std::shared_ptr<Constant<OUTPUT>>>& output);
+
+	template<typename TYPE>
+	std::shared_ptr<Feedback<TYPE>>
+	addFeedback();
+
+	template<typename TYPE>
+	std::shared_ptr<Feedback<TYPE>>
+	addFeedback(const AdaptiveElement<TYPE>& input);
 
 	template<typename TYPE>
 	std::shared_ptr<LowPassFilter<TYPE>>
@@ -196,6 +203,28 @@ AdaptiveControlEnvironment::addDemux(const AdaptiveElement<INPUT>& input,
 	evaluableAdaptiveElements_.push_back(demuxEvaluation);
 
 	return demux;
+}
+
+template<typename TYPE>
+inline std::shared_ptr<Feedback<TYPE>>
+AdaptiveControlEnvironment::addFeedback()
+{
+	auto feedback = std::make_shared<Feedback<TYPE>>();
+	auto feedbackEvaluation = std::bind(&Feedback<TYPE>::evaluate, feedback);
+	evaluableAdaptiveElements_.push_back(feedbackEvaluation);
+
+	return feedback;
+}
+
+template<typename TYPE>
+inline std::shared_ptr<Feedback<TYPE>>
+AdaptiveControlEnvironment::addFeedback(const AdaptiveElement<TYPE>& input)
+{
+	auto feedback = std::make_shared<Feedback<TYPE>>(input);
+	auto feedbackEvaluation = std::bind(&Feedback<TYPE>::evaluate, feedback);
+	evaluableAdaptiveElements_.push_back(feedbackEvaluation);
+
+	return feedback;
 }
 
 template<typename TYPE>
