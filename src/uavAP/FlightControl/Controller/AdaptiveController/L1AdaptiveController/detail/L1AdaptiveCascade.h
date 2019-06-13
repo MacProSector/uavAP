@@ -27,9 +27,10 @@
 #define UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLLER_L1ADAPTIVECONTROLLER_DETAIL_L1ADAPTIVECASCADE_H_
 
 #include "uavAP/FlightControl/Controller/ControllerConstraint.h"
-#include "uavAP/FlightControl/Controller/ControlElements/ControlEnvironment.h"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlEnvironment.h"
 #include "uavAP/FlightControl/Controller/AdaptiveController/IAdaptiveCascade.h"
+#include "uavAP/FlightControl/Controller/AdaptiveController/AdaptiveMapping.h"
+#include "uavAP/FlightControl/Controller/AdaptiveController/L1AdaptiveController/L1AdaptiveParameter.h"
 
 class SensorData;
 class ControllerTarget;
@@ -60,11 +61,19 @@ public:
 
 private:
 
+	template<typename ENUM, typename PARAM>
+	PARAM
+	getParameter(const std::map<ENUM, PARAM>& parameterMap, const ENUM& parameterEnum);
+
+	void
+	createCascade();
+
 	void
 	calculateControl();
 
 	SensorData& sensorData_;
 	ControllerTarget& controllerTarget_;
+	ControllerOutput& controllerOutput_;
 	AdaptiveControlEnvironment controlEnvironment_;
 
 	std::map<PIDs, std::shared_ptr<PID<double>>> pids_;
@@ -72,24 +81,20 @@ private:
 	std::map<ControllerOutputsWaveforms, std::shared_ptr<Output<double, double>>> outputWaveforms_;
 	std::map<ControllerConstraints, std::shared_ptr<Saturation<double>>> saturations_;
 
-	std::shared_ptr<Saturation<double>> rollTargetSaturation_;
-	std::shared_ptr<Saturation<double>> rollRateTargetSaturation_;
-	std::shared_ptr<Saturation<double>> rollOutputSaturation_;
-	std::shared_ptr<Saturation<double>> pitchTargetSaturation_;
-	std::shared_ptr<Saturation<double>> pitchRateTargetSaturation_;
-	std::shared_ptr<Saturation<double>> pitchOutputSaturation_;
-	std::shared_ptr<Saturation<double>> yawOutputSaturation_;
-	std::shared_ptr<Saturation<double>> throttleOutputSaturation_;
+	std::map<Adaptives, L1AdaptiveParameter> adaptiveParameters_;
+	std::map<PIDs, PIDParameter> pidParameters_;
 
 	double hardRollSaturation_;
 	double hardRollRateSaturation_;
 	double hardPitchSaturation_;
 	double hardPitchRateSaturation_;
+
 	double rollSaturation_;
 	double rollRateSaturation_;
-	double rollOutSaturation_;
 	double pitchSaturation_;
 	double pitchRateSaturation_;
+
+	double rollOutSaturation_;
 	double pitchOutSaturation_;
 	double yawOutSaturation_;
 	double throttleOutSaturation_;
@@ -97,5 +102,19 @@ private:
 	double beta_;
 	double rollTarget_;
 };
+
+template<typename ENUM, typename PARAM>
+inline PARAM
+L1AdaptiveCascade::getParameter(const std::map<ENUM, PARAM>& parameterMap, const ENUM& parameterEnum)
+{
+	if (auto parameterPair = findInMap(parameterMap, parameterEnum))
+	{
+		return parameterPair->second;
+	}
+	else
+	{
+		return PARAM();
+	}
+}
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLLER_L1ADAPTIVECONTROLLER_DETAIL_L1ADAPTIVECASCADE_H_ */

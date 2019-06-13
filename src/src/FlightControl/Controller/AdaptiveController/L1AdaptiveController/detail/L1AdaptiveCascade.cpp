@@ -29,168 +29,23 @@
 
 L1AdaptiveCascade::L1AdaptiveCascade(SensorData& sensorData, ControllerTarget& controllerTarget,
 		ControllerOutput& controllerOutput) :
-		sensorData_(sensorData), controllerTarget_(controllerTarget), controlEnvironment_(
-				&sensorData.timestamp), hardRollSaturation_(30.0), hardRollRateSaturation_(30.0), hardPitchSaturation_(
-				30.0), hardPitchRateSaturation_(30.0), rollSaturation_(30.0), rollRateSaturation_(
-				30.0), rollOutSaturation_(1.0), pitchSaturation_(30.0), pitchRateSaturation_(30.0), pitchOutSaturation_(
-				1.0), yawOutSaturation_(1.0), throttleOutSaturation_(1.0), beta_(0), rollTarget_(0)
+		sensorData_(sensorData), controllerTarget_(controllerTarget), controllerOutput_(
+				controllerOutput), controlEnvironment_(&sensorData.timestamp), hardRollSaturation_(
+				30.0), hardRollRateSaturation_(30.0), hardPitchSaturation_(30.0), hardPitchRateSaturation_(
+				30.0), rollSaturation_(30.0), rollRateSaturation_(30.0), pitchSaturation_(30.0), pitchRateSaturation_(
+				30.0), rollOutSaturation_(1.0), pitchOutSaturation_(1.0), yawOutSaturation_(1.0), throttleOutSaturation_(
+				1.0), beta_(0), rollTarget_(0)
 {
-	PIDParameter defaultParameter;
-	defaultParameter.kp = 1;
-
-	/* Roll Control */
-	double* rollInputValue = &sensorData.attitude[0];
-	double* rollRateInputValue = &sensorData.angularRate[0];
-	double* rollTargetValue = &rollTarget_;
-
-	auto rollInput = controlEnvironment_.addInput<double>(rollInputValue);
-	auto rollRateInput = controlEnvironment_.addInput<double>(rollRateInputValue);
-	auto rollTarget = controlEnvironment_.addInput<double>(rollTargetValue);
-
-	rollTargetSaturation_ = controlEnvironment_.addSaturation<double>(rollTarget,
-			degToRad(-rollSaturation_), degToRad(rollSaturation_), degToRad(-hardRollSaturation_),
-			degToRad(hardRollSaturation_));
-
-	auto rollPID = controlEnvironment_.addPID<double>(rollInput, rollTargetSaturation_,
-			rollRateInput, defaultParameter);
-
-	/* Roll Rate Control */
-	rollRateTargetSaturation_ = controlEnvironment_.addSaturation<double>(rollPID,
-			degToRad(-rollRateSaturation_), degToRad(rollRateSaturation_),
-			degToRad(-hardRollRateSaturation_), degToRad(hardRollRateSaturation_));
-
-	auto rollRatePID = controlEnvironment_.addPID<double>(rollRateInput, rollRateTargetSaturation_,
-			defaultParameter);
-
-	/* Roll Output */
-	double* rollOutputValue = &controllerOutput.rollOutput;
-
-	rollOutputSaturation_ = controlEnvironment_.addSaturation<double>(rollRatePID, -1, 1);
-
-	auto rollOutput = controlEnvironment_.addOutput<double, double>(rollOutputSaturation_,
-			rollOutputValue);
-
-	/* Climb Angle Control */
-	double* aoaInputValue = &sensorData.angleOfAttack;
-	double* pitchInputValue = &sensorData.attitude[1];
-	double* climbAngleTargetValue = &controllerTarget.climbAngle;
-
-	auto aoaInput = controlEnvironment_.addInput<double>(aoaInputValue);
-	auto pitchInput = controlEnvironment_.addInput<double>(pitchInputValue);
-	auto climbAngleTarget = controlEnvironment_.addInput<double>(climbAngleTargetValue);
-
-	auto climbAngleSum = controlEnvironment_.addSum<double, double, double>(pitchInput, aoaInput,
-			false);
-
-	auto climbAnglePID = controlEnvironment_.addPID<double>(climbAngleSum, climbAngleTarget,
-			defaultParameter);
-
-	/* Pitch Control */
-	double* pitchRateInputValue = &sensorData.angularRate[1];
-
-	auto pitchRateInput = controlEnvironment_.addInput<double>(pitchRateInputValue);
-
-	pitchTargetSaturation_ = controlEnvironment_.addSaturation<double>(climbAnglePID,
-			degToRad(-pitchSaturation_), degToRad(pitchSaturation_),
-			degToRad(-hardPitchSaturation_), degToRad(hardPitchSaturation_));
-
-	auto pitchPID = controlEnvironment_.addPID<double>(pitchInput, pitchTargetSaturation_,
-			pitchRateInput, defaultParameter);
-
-	/* Pitch Rate Control */
-	pitchRateTargetSaturation_ = controlEnvironment_.addSaturation<double>(pitchPID,
-			degToRad(-pitchRateSaturation_), degToRad(pitchRateSaturation_),
-			degToRad(-hardPitchRateSaturation_), degToRad(hardPitchRateSaturation_));
-
-	auto pitchRatePID = controlEnvironment_.addPID<double>(pitchRateInput,
-			pitchRateTargetSaturation_, defaultParameter);
-
-	/* Pitch Output */
-	double* pitchOutputValue = &controllerOutput.pitchOutput;
-
-	pitchOutputSaturation_ = controlEnvironment_.addSaturation<double>(pitchRatePID, -1, 1);
-
-	auto pitchOutput = controlEnvironment_.addOutput<double, double>(pitchOutputSaturation_,
-			pitchOutputValue);
-
-	/* Beta Control */
-	double* betaInputValue = &beta_;
-
-	auto betaInput = controlEnvironment_.addInput<double>(betaInputValue);
-	auto betaTarget = controlEnvironment_.addConstant<double>(0);
-	auto betaPID = controlEnvironment_.addPID<double>(betaInput, betaTarget, defaultParameter);
-	auto betaPIDInverted = controlEnvironment_.addGain<double, double, double>(betaPID, -1);
-
-	/* Yaw Output */
-	double* yawOutputValue = &controllerOutput.yawOutput;
-
-	yawOutputSaturation_ = controlEnvironment_.addSaturation<double>(betaPIDInverted, -1, 1);
-
-	auto yawOutput = controlEnvironment_.addOutput<double, double>(yawOutputSaturation_,
-			yawOutputValue);
-
-	/* Velocity Control */
-	double* velocityInputValue = &sensorData.airSpeed;
-	double* accelerationInputValue = &sensorData.acceleration[0];
-	double* velocityTargetValue = &controllerTarget.velocity;
-
-	auto velocityInput = controlEnvironment_.addInput<double>(velocityInputValue);
-	auto accelerationInput = controlEnvironment_.addInput<double>(accelerationInputValue);
-	auto velocityTarget = controlEnvironment_.addInput<double>(velocityTargetValue);
-
-	auto velocityPID = controlEnvironment_.addPID<double>(velocityInput, velocityTarget,
-			accelerationInput, defaultParameter);
-
-	auto velocityOffset = controlEnvironment_.addConstant<double>(1);
-	auto velocitySum = controlEnvironment_.addSum<double, double, double>(velocityPID,
-			velocityOffset, false);
-
-	/* Throttle Output */
-	double* throttleOutputValue = &controllerOutput.throttleOutput;
-
-	throttleOutputSaturation_ = controlEnvironment_.addSaturation<double>(velocitySum, -1, 1);
-
-	auto throttleOutput = controlEnvironment_.addOutput<double, double>(throttleOutputSaturation_,
-			throttleOutputValue);
-
-	pids_.insert(std::make_pair(PIDs::ROLL, rollPID));
-	pids_.insert(std::make_pair(PIDs::ROLL_RATE, rollRatePID));
-	pids_.insert(std::make_pair(PIDs::CLIMB_ANGLE, climbAnglePID));
-	pids_.insert(std::make_pair(PIDs::PITCH, pitchPID));
-	pids_.insert(std::make_pair(PIDs::PITCH_RATE, pitchRatePID));
-	pids_.insert(std::make_pair(PIDs::VELOCITY, velocityPID));
-	pids_.insert(std::make_pair(PIDs::RUDDER, betaPID));
-
-	outputs_.insert(std::make_pair(ControllerOutputs::ROLL, rollOutput));
-	outputs_.insert(std::make_pair(ControllerOutputs::PITCH, pitchOutput));
-	outputs_.insert(std::make_pair(ControllerOutputs::YAW, yawOutput));
-	outputs_.insert(std::make_pair(ControllerOutputs::THROTTLE, throttleOutput));
-
-	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::ROLL, rollOutput));
-	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::PITCH, pitchOutput));
-	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::YAW, yawOutput));
-	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::THROTTLE, throttleOutput));
-
-	saturations_.insert(std::make_pair(ControllerConstraints::ROLL, rollTargetSaturation_));
-	saturations_.insert(
-			std::make_pair(ControllerConstraints::ROLL_RATE, rollRateTargetSaturation_));
-	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_OUTPUT, rollOutputSaturation_));
-	saturations_.insert(std::make_pair(ControllerConstraints::PITCH, pitchTargetSaturation_));
-	saturations_.insert(
-			std::make_pair(ControllerConstraints::PITCH_RATE, pitchRateTargetSaturation_));
-	saturations_.insert(
-			std::make_pair(ControllerConstraints::PITCH_OUTPUT, pitchOutputSaturation_));
-	saturations_.insert(std::make_pair(ControllerConstraints::YAW_OUTPUT, yawOutputSaturation_));
-	saturations_.insert(
-			std::make_pair(ControllerConstraints::THROTTLE_OUTPUT, throttleOutputSaturation_));
 }
 
 bool
 L1AdaptiveCascade::configure(const boost::property_tree::ptree& config)
 {
 	PropertyMapper pm(config);
-	PIDParameter params;
+	boost::property_tree::ptree adaptiveConfig;
 	boost::property_tree::ptree pidConfig;
+	L1AdaptiveParameter adaptiveParameter;
+	PIDParameter pidParameter;
 
 	pm.add<double>("hard_roll_constraint", hardRollSaturation_, false);
 	pm.add<double>("hard_pitch_constraint", hardPitchSaturation_, false);
@@ -202,28 +57,33 @@ L1AdaptiveCascade::configure(const boost::property_tree::ptree& config)
 	pm.add<double>("roll_rate_constraint", rollRateSaturation_, false);
 	pm.add<double>("pitch_rate_constraint", pitchRateSaturation_, false);
 
+	pm.add("adaptives", adaptiveConfig, false);
 	pm.add("pids", pidConfig, false);
 
-	rollTargetSaturation_->setHardSaturationValue(degToRad(hardRollSaturation_));
-	pitchTargetSaturation_->setHardSaturationValue(degToRad(hardPitchSaturation_));
-	rollRateTargetSaturation_->setHardSaturationValue(degToRad(hardRollRateSaturation_));
-	pitchRateTargetSaturation_->setHardSaturationValue(degToRad(hardPitchRateSaturation_));
+	for (const auto& it : adaptiveConfig)
+	{
+		if (!adaptiveParameter.configure(it.second))
+		{
+			APLOG_ERROR << "L1AdaptiveCascade: Invalid Adaptive Configuration " << it.first;
+			continue;
+		}
 
-	rollTargetSaturation_->setSaturationValue(degToRad(rollSaturation_));
-	pitchTargetSaturation_->setSaturationValue(degToRad(pitchSaturation_));
-	rollRateTargetSaturation_->setSaturationValue(degToRad(rollRateSaturation_));
-	pitchRateTargetSaturation_->setSaturationValue(degToRad(pitchRateSaturation_));
+		adaptiveParameters_.insert(
+				std::make_pair(EnumMap<Adaptives>::convert(it.first), adaptiveParameter));
+	}
 
 	for (auto it : pidConfig)
 	{
-		if (!params.configure(it.second))
+		if (!pidParameter.configure(it.second))
 		{
 			APLOG_ERROR << "L1AdaptiveCascade: Invalid PID Configuration " << it.first;
 			continue;
 		}
 
-		tunePID(EnumMap<PIDs>::convert(it.first), params);
+		pidParameters_.insert(std::make_pair(EnumMap<PIDs>::convert(it.first), pidParameter));
 	}
+
+	createCascade();
 
 	return true;
 }
@@ -320,6 +180,188 @@ L1AdaptiveCascade::overrideCascade(const Override& override)
 			saturation->second->overrideSaturationValue(it.second);
 		}
 	}
+}
+
+void
+L1AdaptiveCascade::createCascade()
+{
+	L1AdaptiveParameter rollAdaptiveParameter = getParameter(adaptiveParameters_, Adaptives::ROLL);
+	L1AdaptiveParameter pitchAdaptiveParameter = getParameter(adaptiveParameters_, Adaptives::PITCH);
+	PIDParameter rollPIDParameter = getParameter(pidParameters_, PIDs::ROLL);
+	PIDParameter rollRatePIDParameter = getParameter(pidParameters_, PIDs::ROLL_RATE);
+	PIDParameter climbAnglePIDParameter = getParameter(pidParameters_, PIDs::CLIMB_ANGLE);
+	PIDParameter pitchPIDParameter = getParameter(pidParameters_, PIDs::PITCH);
+	PIDParameter pitchRatePIDParameter = getParameter(pidParameters_, PIDs::PITCH_RATE);
+	PIDParameter betaPIDParameter = getParameter(pidParameters_, PIDs::RUDDER);
+	PIDParameter velocityPIDParameter = getParameter(pidParameters_, PIDs::VELOCITY);
+
+	/* Roll Control */
+	double* rollInputValue = &sensorData_.attitude[0];
+	double* rollRateInputValue = &sensorData_.angularRate[0];
+	double* rollTargetValue = &rollTarget_;
+
+	auto rollInput = controlEnvironment_.addInput<double>(rollInputValue);
+	auto rollRateInput = controlEnvironment_.addInput<double>(rollRateInputValue);
+	auto rollTarget = controlEnvironment_.addInput<double>(rollTargetValue);
+
+	auto rollTargetSaturation = controlEnvironment_.addSaturation<double>(rollTarget,
+			degToRad(-rollSaturation_), degToRad(rollSaturation_), degToRad(-hardRollSaturation_),
+			degToRad(hardRollSaturation_));
+
+	auto rollPID = controlEnvironment_.addPID<double>(rollInput, rollTargetSaturation,
+			rollRateInput, rollPIDParameter);
+
+	/* Roll Rate Control */
+	auto rollRateTargetSaturation = controlEnvironment_.addSaturation<double>(rollPID,
+			degToRad(-rollRateSaturation_), degToRad(rollRateSaturation_),
+			degToRad(-hardRollRateSaturation_), degToRad(hardRollRateSaturation_));
+
+	auto rollRatePID = controlEnvironment_.addPID<double>(rollRateInput, rollRateTargetSaturation,
+			rollRatePIDParameter);
+
+	/* Roll Output */
+	double* rollOutputValue = &controllerOutput_.rollOutput;
+
+	auto rollOutputSaturation = controlEnvironment_.addSaturation<double>(rollRatePID, -1, 1);
+
+	auto rollOutput = controlEnvironment_.addOutput<double, double>(rollOutputSaturation,
+			rollOutputValue);
+
+	/* Climb Angle Control */
+	double* aoaInputValue = &sensorData_.angleOfAttack;
+	double* pitchInputValue = &sensorData_.attitude[1];
+	double* pitchRateInputValue = &sensorData_.angularRate[1];
+	double* climbAngleTargetValue = &controllerTarget_.climbAngle;
+
+	auto aoaInput = controlEnvironment_.addInput<double>(aoaInputValue);
+	auto pitchInput = controlEnvironment_.addInput<double>(pitchInputValue);
+	auto pitchRateInput = controlEnvironment_.addInput<double>(pitchRateInputValue);
+	auto climbAngleTarget = controlEnvironment_.addInput<double>(climbAngleTargetValue);
+
+	auto climbAngleSum = controlEnvironment_.addSum<double, double, double>(pitchInput, aoaInput,
+			false);
+
+	auto climbAnglePID = controlEnvironment_.addPID<double>(climbAngleSum, climbAngleTarget,
+			climbAnglePIDParameter);
+
+	/* Pitch Control */
+	auto pitchTargetSaturation = controlEnvironment_.addSaturation<double>(climbAnglePID,
+			degToRad(-pitchSaturation_), degToRad(pitchSaturation_),
+			degToRad(-hardPitchSaturation_), degToRad(hardPitchSaturation_));
+
+	auto pitchPID = controlEnvironment_.addPID<double>(pitchInput, pitchTargetSaturation,
+			pitchRateInput, pitchPIDParameter);
+
+	/* Pitch Rate Control */
+	auto pitchRateTargetSaturation = controlEnvironment_.addSaturation<double>(pitchPID,
+			degToRad(-pitchRateSaturation_), degToRad(pitchRateSaturation_),
+			degToRad(-hardPitchRateSaturation_), degToRad(hardPitchRateSaturation_));
+
+	auto pitchRatePID = controlEnvironment_.addPID<double>(pitchRateInput,
+			pitchRateTargetSaturation, pitchRatePIDParameter);
+
+	/* Pitch Output */
+	double* pitchOutputValue = &controllerOutput_.pitchOutput;
+
+	auto pitchOutputSaturation = controlEnvironment_.addSaturation<double>(pitchRatePID, -1, 1);
+
+	auto pitchOutput = controlEnvironment_.addOutput<double, double>(pitchOutputSaturation,
+			pitchOutputValue);
+
+//	/* ------------------------- Pitch Adaptive Control ------------------------- */
+//	std::vector<AdaptiveElement<double>> longitudinalInput
+//	{ aoaInput, pitchRateInput, pitchInput };
+//
+//	auto longitudinalInputTrim = controlEnvironment_.addConstant<MatrixX>(
+//			pitchAdaptiveParameter.inputTrim);
+//
+//	auto longitudinalOutputTrim = controlEnvironment_.addConstant<MatrixX>(
+//			pitchAdaptiveParameter.outputTrim);
+//
+//	auto longitudinalInputMux = controlEnvironment_.addMux<double, MatrixX>(longitudinalInput);
+//
+//	auto longitudinalInputSum = controlEnvironment_.addSum<MatrixX, MatrixX, MatrixX>(
+//			longitudinalInputMux, longitudinalInputTrim, false);
+//
+//	auto longitudinalInputGain = controlEnvironment_.addGain<MatrixX, MatrixX, MatrixX>(
+//			longitudinalInputSum, pitchAdaptiveParameter.inputGain);
+//
+//	pitchTargetSaturation = controlEnvironment_.addSaturation<double>(climbAnglePID,
+//			degToRad(-pitchSaturation_), degToRad(pitchSaturation_),
+//			degToRad(-hardPitchSaturation_), degToRad(hardPitchSaturation_));
+//
+//	auto pitchTargetGain = controlEnvironment_.addGain<double, MatrixX, MatrixX>(
+//			pitchTargetSaturation, pitchAdaptiveParameter.targetGain);
+//	/* ------------------------- Pitch Adaptive Control ------------------------- */
+
+	/* Beta Control */
+	double* betaInputValue = &beta_;
+
+	auto betaInput = controlEnvironment_.addInput<double>(betaInputValue);
+	auto betaTarget = controlEnvironment_.addConstant<double>(0);
+	auto betaPID = controlEnvironment_.addPID<double>(betaInput, betaTarget, betaPIDParameter);
+	auto betaPIDInverted = controlEnvironment_.addGain<double, double, double>(betaPID, -1);
+
+	/* Yaw Output */
+	double* yawOutputValue = &controllerOutput_.yawOutput;
+
+	auto yawOutputSaturation = controlEnvironment_.addSaturation<double>(betaPIDInverted, -1, 1);
+
+	auto yawOutput = controlEnvironment_.addOutput<double, double>(yawOutputSaturation,
+			yawOutputValue);
+
+	/* Velocity Control */
+	double* velocityInputValue = &sensorData_.airSpeed;
+	double* accelerationInputValue = &sensorData_.acceleration[0];
+	double* velocityTargetValue = &controllerTarget_.velocity;
+
+	auto velocityInput = controlEnvironment_.addInput<double>(velocityInputValue);
+	auto accelerationInput = controlEnvironment_.addInput<double>(accelerationInputValue);
+	auto velocityTarget = controlEnvironment_.addInput<double>(velocityTargetValue);
+
+	auto velocityPID = controlEnvironment_.addPID<double>(velocityInput, velocityTarget,
+			accelerationInput, velocityPIDParameter);
+
+	auto velocityOffset = controlEnvironment_.addConstant<double>(1);
+	auto velocitySum = controlEnvironment_.addSum<double, double, double>(velocityPID,
+			velocityOffset, false);
+
+	/* Throttle Output */
+	double* throttleOutputValue = &controllerOutput_.throttleOutput;
+
+	auto throttleOutputSaturation = controlEnvironment_.addSaturation<double>(velocitySum, -1, 1);
+
+	auto throttleOutput = controlEnvironment_.addOutput<double, double>(throttleOutputSaturation,
+			throttleOutputValue);
+
+	pids_.insert(std::make_pair(PIDs::ROLL, rollPID));
+	pids_.insert(std::make_pair(PIDs::ROLL_RATE, rollRatePID));
+	pids_.insert(std::make_pair(PIDs::CLIMB_ANGLE, climbAnglePID));
+	pids_.insert(std::make_pair(PIDs::PITCH, pitchPID));
+	pids_.insert(std::make_pair(PIDs::PITCH_RATE, pitchRatePID));
+	pids_.insert(std::make_pair(PIDs::VELOCITY, velocityPID));
+	pids_.insert(std::make_pair(PIDs::RUDDER, betaPID));
+
+	outputs_.insert(std::make_pair(ControllerOutputs::ROLL, rollOutput));
+	outputs_.insert(std::make_pair(ControllerOutputs::PITCH, pitchOutput));
+	outputs_.insert(std::make_pair(ControllerOutputs::YAW, yawOutput));
+	outputs_.insert(std::make_pair(ControllerOutputs::THROTTLE, throttleOutput));
+
+	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::ROLL, rollOutput));
+	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::PITCH, pitchOutput));
+	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::YAW, yawOutput));
+	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::THROTTLE, throttleOutput));
+
+	saturations_.insert(std::make_pair(ControllerConstraints::ROLL, rollTargetSaturation));
+	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_RATE, rollRateTargetSaturation));
+	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_OUTPUT, rollOutputSaturation));
+	saturations_.insert(std::make_pair(ControllerConstraints::PITCH, pitchTargetSaturation));
+	saturations_.insert(
+			std::make_pair(ControllerConstraints::PITCH_RATE, pitchRateTargetSaturation));
+	saturations_.insert(std::make_pair(ControllerConstraints::PITCH_OUTPUT, pitchOutputSaturation));
+	saturations_.insert(std::make_pair(ControllerConstraints::YAW_OUTPUT, yawOutputSaturation));
+	saturations_.insert(
+			std::make_pair(ControllerConstraints::THROTTLE_OUTPUT, throttleOutputSaturation));
 }
 
 void

@@ -64,7 +64,7 @@ Mux<INPUT, OUTPUT>::getValue() const
 
 	for (const auto& it : input_)
 	{
-		output[i ++] = it->getValue();
+		output(i ++) = it->getValue();
 	}
 
 	return output;
