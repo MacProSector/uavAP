@@ -100,6 +100,10 @@ public:
 	bool
 	add(const std::string& key, Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>& val, bool mandatory);
 
+	template <typename Matrix, typename Type>
+	bool
+	addMatrix(const std::string& key, Matrix& m, bool mandatory);
+
 	template <typename Enum>
 	bool
 	addEnum(const std::string& key, Enum& e, bool mandatory);
@@ -331,6 +335,55 @@ PropertyMapper::add(const std::string& key,
 		}
 
 		val = matrix;
+
+		return true;
+	}
+
+	if (mandatory)
+	{
+		APLOG_ERROR << "PM: mandatory " << key << " missing";
+		mandatoryCheck_ = false;
+	}
+
+	return false;
+}
+
+template<typename Matrix, typename Type>
+inline bool
+PropertyMapper::addMatrix(const std::string& key, Matrix& m, bool mandatory)
+{
+	auto matrixOptional = p_.get_child_optional(key);
+
+	if (matrixOptional)
+	{
+		boost::property_tree::ptree rows = *matrixOptional;
+		unsigned rowSize = rows.size();
+		unsigned colSize = 0;
+
+		for (const auto& it : rows)
+		{
+			boost::property_tree::ptree row = it.second;
+			colSize = row.size();
+			break;
+		}
+
+		Eigen::Matrix<Type, -1, -1>  matrix(rowSize, colSize);
+		int rowCounter = 0;
+		int colCounter = 0;
+
+		for (const auto& rowIt : rows)
+		{
+			boost::property_tree::ptree row = rowIt.second;
+
+			for (const auto& colIt : row)
+			{
+				matrix(rowCounter, colCounter ++) = colIt.second.get_value<Type>();
+			}
+			rowCounter ++;
+			colCounter = 0;
+		}
+
+		m = matrix;
 
 		return true;
 	}

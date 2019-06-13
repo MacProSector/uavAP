@@ -121,4 +121,19 @@ BOOST_AUTO_TEST_CASE(eigen_matrix)
 	BOOST_CHECK_EQUAL(matrix, matrixCheck);
 }
 
+BOOST_AUTO_TEST_CASE(eigen_matrix_type)
+{
+	boost::property_tree::ptree config;
+	boost::property_tree::read_json("Core/config/pm_test.json", config);
+
+	PropertyMapper pm(config);
+	Eigen::Matrix<double, 4, 5> matrix;
+	MatrixX matrixCheck(4, 5);
+
+	pm.addMatrix<Eigen::Matrix<double, 4, 5>, double>("eigen_matrix", matrix, true);
+	matrixCheck << 1, 2, 3, 4, 0, 5, 6, 7, 8, 0, 8, 7, 6, 5, 0, 4, 3, 2, 1, 0;
+
+	BOOST_CHECK_EQUAL(matrix, matrixCheck);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
