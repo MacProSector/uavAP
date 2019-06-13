@@ -44,7 +44,6 @@ L1AdaptiveCascade::configure(const boost::property_tree::ptree& config)
 	PropertyMapper pm(config);
 	boost::property_tree::ptree adaptiveConfig;
 	boost::property_tree::ptree pidConfig;
-	L1AdaptiveParameter adaptiveParameter;
 	PIDParameter pidParameter;
 
 	pm.add<double>("hard_roll_constraint", hardRollSaturation_, false);
@@ -58,19 +57,12 @@ L1AdaptiveCascade::configure(const boost::property_tree::ptree& config)
 	pm.add<double>("pitch_rate_constraint", pitchRateSaturation_, false);
 
 	pm.add("adaptives", adaptiveConfig, false);
+
+	PropertyMapper adaptivePm(adaptiveConfig);
+
+	adaptivePm.add<PitchL1AdaptiveParameter>("pitch", pitchAdaptiveParameter_, false);
+
 	pm.add("pids", pidConfig, false);
-
-	for (const auto& it : adaptiveConfig)
-	{
-		if (!adaptiveParameter.configure(it.second))
-		{
-			APLOG_ERROR << "L1AdaptiveCascade: Invalid Adaptive Configuration " << it.first;
-			continue;
-		}
-
-		adaptiveParameters_.insert(
-				std::make_pair(EnumMap<Adaptives>::convert(it.first), adaptiveParameter));
-	}
 
 	for (auto it : pidConfig)
 	{
@@ -185,13 +177,11 @@ L1AdaptiveCascade::overrideCascade(const Override& override)
 void
 L1AdaptiveCascade::createCascade()
 {
-	L1AdaptiveParameter rollAdaptiveParameter = getParameter(adaptiveParameters_, Adaptives::ROLL);
-	L1AdaptiveParameter pitchAdaptiveParameter = getParameter(adaptiveParameters_, Adaptives::PITCH);
 	PIDParameter rollPIDParameter = getParameter(pidParameters_, PIDs::ROLL);
 	PIDParameter rollRatePIDParameter = getParameter(pidParameters_, PIDs::ROLL_RATE);
 	PIDParameter climbAnglePIDParameter = getParameter(pidParameters_, PIDs::CLIMB_ANGLE);
-	PIDParameter pitchPIDParameter = getParameter(pidParameters_, PIDs::PITCH);
-	PIDParameter pitchRatePIDParameter = getParameter(pidParameters_, PIDs::PITCH_RATE);
+	//PIDParameter pitchPIDParameter = getParameter(pidParameters_, PIDs::PITCH);
+	//PIDParameter pitchRatePIDParameter = getParameter(pidParameters_, PIDs::PITCH_RATE);
 	PIDParameter betaPIDParameter = getParameter(pidParameters_, PIDs::RUDDER);
 	PIDParameter velocityPIDParameter = getParameter(pidParameters_, PIDs::VELOCITY);
 
@@ -244,55 +234,126 @@ L1AdaptiveCascade::createCascade()
 	auto climbAnglePID = controlEnvironment_.addPID<double>(climbAngleSum, climbAngleTarget,
 			climbAnglePIDParameter);
 
-	/* Pitch Control */
+//	/* Pitch Control */
+//	auto pitchTargetSaturation = controlEnvironment_.addSaturation<double>(climbAnglePID,
+//			degToRad(-pitchSaturation_), degToRad(pitchSaturation_),
+//			degToRad(-hardPitchSaturation_), degToRad(hardPitchSaturation_));
+//
+//	auto pitchPID = controlEnvironment_.addPID<double>(pitchInput, pitchTargetSaturation,
+//			pitchRateInput, pitchPIDParameter);
+//
+//	/* Pitch Rate Control */
+//	auto pitchRateTargetSaturation = controlEnvironment_.addSaturation<double>(pitchPID,
+//			degToRad(-pitchRateSaturation_), degToRad(pitchRateSaturation_),
+//			degToRad(-hardPitchRateSaturation_), degToRad(hardPitchRateSaturation_));
+//
+//	auto pitchRatePID = controlEnvironment_.addPID<double>(pitchRateInput,
+//			pitchRateTargetSaturation, pitchRatePIDParameter);
+//
+//	/* Pitch Output */
+//	double* pitchOutputValue = &controllerOutput_.pitchOutput;
+//
+//	auto pitchOutputSaturation = controlEnvironment_.addSaturation<double>(pitchRatePID, -1, 1);
+//
+//	auto pitchOutput = controlEnvironment_.addOutput<double, double>(pitchOutputSaturation,
+//			pitchOutputValue);
+
+	/* ------------------------- Pitch Adaptive Control ------------------------- */
+	/* Level 1 */
+	std::vector<AdaptiveElement<double>> longitudinalInput
+	{ aoaInput, pitchRateInput, pitchInput };
+
+	auto longitudinalInputTrim = controlEnvironment_.addConstant<Vector3>(
+			pitchAdaptiveParameter_.inputTrim);
+
+	auto longitudinalOutputTrim = controlEnvironment_.addConstant<Scalar>(
+			pitchAdaptiveParameter_.outputTrim);
+
+	auto longitudinalInputMux = controlEnvironment_.addMux<double, Vector3>(longitudinalInput);
+
+	auto longitudinalInputSum = controlEnvironment_.addSum<Vector3, Vector3, Vector3>(
+			longitudinalInputMux, longitudinalInputTrim, false);
+
+	auto longitudinalInputGain = controlEnvironment_.addGain<Vector3, RowVector3, Scalar>(
+			longitudinalInputSum, pitchAdaptiveParameter_.inputGain);
+
+	/* Level 2 */
 	auto pitchTargetSaturation = controlEnvironment_.addSaturation<double>(climbAnglePID,
 			degToRad(-pitchSaturation_), degToRad(pitchSaturation_),
 			degToRad(-hardPitchSaturation_), degToRad(hardPitchSaturation_));
 
-	auto pitchPID = controlEnvironment_.addPID<double>(pitchInput, pitchTargetSaturation,
-			pitchRateInput, pitchPIDParameter);
+	auto pitchTargetGain = controlEnvironment_.addGain<double, Scalar, Scalar>(
+			pitchTargetSaturation, pitchAdaptiveParameter_.targetGain);
 
-	/* Pitch Rate Control */
-	auto pitchRateTargetSaturation = controlEnvironment_.addSaturation<double>(pitchPID,
-			degToRad(-pitchRateSaturation_), degToRad(pitchRateSaturation_),
-			degToRad(-hardPitchRateSaturation_), degToRad(hardPitchRateSaturation_));
+	auto adaptiveFeedback = controlEnvironment_.addFeedback<Vector3>();
 
-	auto pitchRatePID = controlEnvironment_.addPID<double>(pitchRateInput,
-			pitchRateTargetSaturation, pitchRatePIDParameter);
+	auto controlLawStateSpace = controlEnvironment_.addStateSpace<Vector4, Vector3, Matrix4,
+			Matrix43, RowVector4, RowVector3, Scalar>(pitchAdaptiveParameter_.controlLawState,
+			adaptiveFeedback, pitchAdaptiveParameter_.controlLawMatrixA,
+			pitchAdaptiveParameter_.controlLawMatrixB, pitchAdaptiveParameter_.controlLawMatrixC,
+			pitchAdaptiveParameter_.controlLawMatrixD, Scalar());
+
+	auto controlLawSum = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(pitchTargetGain,
+			controlLawStateSpace, false);
+
+	/* Level 3 */
+	auto predictorGain = controlEnvironment_.addGain<Scalar, Vector3, Vector3>(controlLawSum,
+			pitchAdaptiveParameter_.predictorGain);
+
+	auto predictorInputSum = controlEnvironment_.addSum<Vector3, Vector3, Vector3>(predictorGain,
+			adaptiveFeedback, true);
+
+	auto predictorStateSpace = controlEnvironment_.addStateSpace<Vector3, Vector3, Matrix3, Matrix3,
+			RowVector3, RowVector3, Scalar>(pitchAdaptiveParameter_.predictorState,
+			predictorInputSum, pitchAdaptiveParameter_.predictorMatrixA,
+			pitchAdaptiveParameter_.predictorMatrixB, pitchAdaptiveParameter_.predictorMatrixC,
+			pitchAdaptiveParameter_.predictorMatrixD, Scalar());
+
+	auto aoaConstant = controlEnvironment_.addConstant<double>(0);
+
+	auto pitchRateConstant = controlEnvironment_.addConstant<double>(0);
+
+	auto pitchConstant = controlEnvironment_.addConstant<double>(0);
+
+	std::vector<std::shared_ptr<Constant<double>>> longitudinalInputVector
+		{ aoaConstant, pitchRateConstant, pitchConstant };
+
+	auto longitudinalInputDemux = controlEnvironment_.addDemux<Vector3, double>(longitudinalInputSum, longitudinalInputVector);
+
+	std::vector<AdaptiveElement<double>> pitchConstantVector{ pitchConstant };
+
+	auto pitchConstantMux = controlEnvironment_.addMux<double, Scalar>(pitchConstantVector);
+
+	auto predictorOutputSum = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(predictorStateSpace,
+			pitchConstantMux, false);
+
+	auto adaptiveGain = controlEnvironment_.addGain<Scalar, Vector3, Vector3>(predictorOutputSum,
+			pitchAdaptiveParameter_.adaptiveGain);
+
+	adaptiveFeedback->setInput(adaptiveGain);
 
 	/* Pitch Output */
+	auto outputControlLawSum = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(
+			longitudinalOutputTrim, controlLawSum, true);
+
+	auto outputSum = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(outputControlLawSum,
+			longitudinalInputGain, false);
+
+	auto outputConstant = controlEnvironment_.addConstant<double>(0);
+
+	std::vector<std::shared_ptr<Constant<double>>> outputVector
+	{ outputConstant };
+
+	auto outputDemux = controlEnvironment_.addDemux<Scalar, double>(outputSum, outputVector);
+
 	double* pitchOutputValue = &controllerOutput_.pitchOutput;
 
-	auto pitchOutputSaturation = controlEnvironment_.addSaturation<double>(pitchRatePID, -1, 1);
+	auto pitchOutputSaturation = controlEnvironment_.addSaturation<double>(outputConstant, -1, 1);
 
 	auto pitchOutput = controlEnvironment_.addOutput<double, double>(pitchOutputSaturation,
 			pitchOutputValue);
 
-//	/* ------------------------- Pitch Adaptive Control ------------------------- */
-//	std::vector<AdaptiveElement<double>> longitudinalInput
-//	{ aoaInput, pitchRateInput, pitchInput };
-//
-//	auto longitudinalInputTrim = controlEnvironment_.addConstant<MatrixX>(
-//			pitchAdaptiveParameter.inputTrim);
-//
-//	auto longitudinalOutputTrim = controlEnvironment_.addConstant<MatrixX>(
-//			pitchAdaptiveParameter.outputTrim);
-//
-//	auto longitudinalInputMux = controlEnvironment_.addMux<double, MatrixX>(longitudinalInput);
-//
-//	auto longitudinalInputSum = controlEnvironment_.addSum<MatrixX, MatrixX, MatrixX>(
-//			longitudinalInputMux, longitudinalInputTrim, false);
-//
-//	auto longitudinalInputGain = controlEnvironment_.addGain<MatrixX, MatrixX, MatrixX>(
-//			longitudinalInputSum, pitchAdaptiveParameter.inputGain);
-//
-//	pitchTargetSaturation = controlEnvironment_.addSaturation<double>(climbAnglePID,
-//			degToRad(-pitchSaturation_), degToRad(pitchSaturation_),
-//			degToRad(-hardPitchSaturation_), degToRad(hardPitchSaturation_));
-//
-//	auto pitchTargetGain = controlEnvironment_.addGain<double, MatrixX, MatrixX>(
-//			pitchTargetSaturation, pitchAdaptiveParameter.targetGain);
-//	/* ------------------------- Pitch Adaptive Control ------------------------- */
+	/* ------------------------- Pitch Adaptive Control ------------------------- */
 
 	/* Beta Control */
 	double* betaInputValue = &beta_;
@@ -337,8 +398,8 @@ L1AdaptiveCascade::createCascade()
 	pids_.insert(std::make_pair(PIDs::ROLL, rollPID));
 	pids_.insert(std::make_pair(PIDs::ROLL_RATE, rollRatePID));
 	pids_.insert(std::make_pair(PIDs::CLIMB_ANGLE, climbAnglePID));
-	pids_.insert(std::make_pair(PIDs::PITCH, pitchPID));
-	pids_.insert(std::make_pair(PIDs::PITCH_RATE, pitchRatePID));
+	//pids_.insert(std::make_pair(PIDs::PITCH, pitchPID));
+	//pids_.insert(std::make_pair(PIDs::PITCH_RATE, pitchRatePID));
 	pids_.insert(std::make_pair(PIDs::VELOCITY, velocityPID));
 	pids_.insert(std::make_pair(PIDs::RUDDER, betaPID));
 
@@ -356,8 +417,8 @@ L1AdaptiveCascade::createCascade()
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_RATE, rollRateTargetSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_OUTPUT, rollOutputSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::PITCH, pitchTargetSaturation));
-	saturations_.insert(
-			std::make_pair(ControllerConstraints::PITCH_RATE, pitchRateTargetSaturation));
+	//saturations_.insert(
+	//		std::make_pair(ControllerConstraints::PITCH_RATE, pitchRateTargetSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::PITCH_OUTPUT, pitchOutputSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::YAW_OUTPUT, yawOutputSaturation));
 	saturations_.insert(

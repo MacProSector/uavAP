@@ -81,7 +81,7 @@ private:
 	std::map<ControllerOutputsWaveforms, std::shared_ptr<Output<double, double>>> outputWaveforms_;
 	std::map<ControllerConstraints, std::shared_ptr<Saturation<double>>> saturations_;
 
-	std::map<Adaptives, L1AdaptiveParameter> adaptiveParameters_;
+	PitchL1AdaptiveParameter pitchAdaptiveParameter_;
 	std::map<PIDs, PIDParameter> pidParameters_;
 
 	double hardRollSaturation_;
