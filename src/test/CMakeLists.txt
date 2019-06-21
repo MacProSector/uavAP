@@ -61,6 +61,8 @@ add_executable(testman EXCLUDE_FROM_ALL TestRunner.cpp
 										
 target_link_libraries(testman boost_unit_test_framework.a)
 
+configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/Adaptive_Pitch.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/Adaptive_Pitch.json COPYONLY)
+
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/P_Airplane.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/P_Airplane.json COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/PD_Airplane.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/PD_Airplane.json COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/PFF_Airplane.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/PFF_Airplane.json COPYONLY)

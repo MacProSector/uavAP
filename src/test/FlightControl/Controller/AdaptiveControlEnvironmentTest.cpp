@@ -25,9 +25,15 @@
 
 #include <iostream>
 #include <boost/test/unit_test.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
+#include "uavAP/Core/SensorData.h"
 #include "uavAP/Core/LinearAlgebra.h"
+#include "uavAP/Core/PropertyMapper/PropertyMapper.h"
+#include "uavAP/FlightControl/Controller/ControllerTarget.h"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlEnvironment.h"
+#include "uavAP/FlightControl/Controller/AdaptiveController/L1AdaptiveController/L1AdaptiveParameter.h"
 
 BOOST_AUTO_TEST_SUITE(AdaptiveControlEnvironmentTest)
 
@@ -291,7 +297,7 @@ BOOST_AUTO_TEST_CASE(FeedbackElement)
 	feedback->setInput(gain);
 	feedback->setOutput(valueInput);
 
-	for (int i = 0; i < loop; i ++)
+	for (int i = 0; i < loop; i++)
 	{
 		controlEnvironment.evaluate();
 	}
@@ -601,6 +607,161 @@ BOOST_AUTO_TEST_CASE(ControlLaw)
 	result = sum->getValue().x();
 
 	BOOST_CHECK_CLOSE(result, -0.7605, 1);
+}
+
+BOOST_AUTO_TEST_CASE(PitchControl)
+{
+	PitchL1AdaptiveParameter parameter;
+	PitchL1AdaptiveParameter parameterCheck;
+	AdaptiveControlEnvironment controlEnvironment;
+	ControllerOutput controllerOutput;
+	boost::property_tree::ptree config;
+
+	/* Parameter configuration */
+	boost::property_tree::read_json("FlightControl/Controller/config/Adaptive_Pitch.json", config);
+
+	PropertyMapper pm(config);
+
+	pm.add<PitchL1AdaptiveParameter>("pitch", parameter, true);
+
+	/* Check parameter configuration */
+	parameterCheck.inputTrim << -0.0204, 0.000034859, -0.0204;
+	parameterCheck.outputTrim << -0.0096;
+	parameterCheck.inputGain << 0.432623897657296, -3.069112284374556, -3.162000908248524;
+	parameterCheck.targetGain << -3.162277690781023;
+	parameterCheck.predictorGain << -1.033800000000000, -38.008899999999997, -0.336100000000000;
+	parameterCheck.adaptiveGain << -15.068460043805631, -11.309920647165402, -99.431509092904790;
+	parameterCheck.controlLawMatrixA << 0.747910460324683, -0.083391970385317, -0.287771449143700, 0.182977708804847, -0.015382789122404, 0.905288017253303, 0.060295353347410, 0.234363993063759, -0.286248246258019, -0.102313310829525, 0.603639746521179, 0.208164671219345, 0.062680975691429, 0.023246448784124, 0.069627635633610, 0.856595887607014;
+	parameterCheck.controlLawMatrixB << 0.001997246246091,  0.000363286354825, -0.006609632644596, 0.000192018277151,  0.000034699815639, -0.021227058859546, -0.001118363689036,  0.000524567449641,  0.000965923975990, 0.000567451063383, -0.000149613118455,  0.028795195046024;
+	parameterCheck.controlLawMatrixC << 0.686236990612626, -4.150108169281860, -1.183070482982532, -3.362903471609596;
+	parameterCheck.controlLawMatrixD << 0, 0, 0;
+	parameterCheck.controlLawState << 0, 0, 0, 0;
+	parameterCheck.predictorMatrixA << 0.970661041677723, -0.013273900733976, -0.022466611112179, -0.125340305985425,  0.304078111546135, -0.695023036922366, -0.001021439481865, -0.000440607566581,  0.989763156489849;
+	parameterCheck.predictorMatrixB << 0.009850145373881, -0.000079849272022, -0.000126299264661, -0.000754866137152,  0.005840614982235, -0.004165238403006, -0.000005222019056, -0.000002657352984,  0.009948267008766;
+	parameterCheck.predictorMatrixC << 0, 0, 1;
+	parameterCheck.predictorMatrixD << 0, 0, 0;
+	parameterCheck.predictorState << 0, 0, 0;
+
+	/* Parameter configuration test */
+	BOOST_CHECK_EQUAL(parameter.inputTrim, parameterCheck.inputTrim);
+	BOOST_CHECK_EQUAL(parameter.outputTrim, parameterCheck.outputTrim);
+	BOOST_CHECK_EQUAL(parameter.inputGain, parameterCheck.inputGain);
+	BOOST_CHECK_EQUAL(parameter.targetGain, parameterCheck.targetGain);
+	BOOST_CHECK_EQUAL(parameter.predictorGain, parameterCheck.predictorGain);
+	BOOST_CHECK_EQUAL(parameter.adaptiveGain, parameterCheck.adaptiveGain);
+	BOOST_CHECK_EQUAL(parameter.controlLawMatrixA, parameterCheck.controlLawMatrixA);
+	BOOST_CHECK_EQUAL(parameter.controlLawMatrixB, parameterCheck.controlLawMatrixB);
+	BOOST_CHECK_EQUAL(parameter.controlLawMatrixC, parameterCheck.controlLawMatrixC);
+	BOOST_CHECK_EQUAL(parameter.controlLawMatrixD, parameterCheck.controlLawMatrixD);
+	BOOST_CHECK_EQUAL(parameter.controlLawState, parameterCheck.controlLawState);
+	BOOST_CHECK_EQUAL(parameter.predictorMatrixA, parameterCheck.predictorMatrixA);
+	BOOST_CHECK_EQUAL(parameter.predictorMatrixB, parameterCheck.predictorMatrixB);
+	BOOST_CHECK_EQUAL(parameter.predictorMatrixC, parameterCheck.predictorMatrixC);
+	BOOST_CHECK_EQUAL(parameter.predictorMatrixD, parameterCheck.predictorMatrixD);
+	BOOST_CHECK_EQUAL(parameter.predictorState, parameterCheck.predictorState);
+
+	/* Pitch control level 1 */
+	auto angleOfAttack = controlEnvironment.addConstant<double>(1);
+	auto pitchRate = controlEnvironment.addConstant<double>(1);
+	auto pitchAngle = controlEnvironment.addConstant<double>(1);
+
+	std::vector<AdaptiveElement<double>> pitchControlInputMuxVector
+	{ angleOfAttack, pitchRate, pitchAngle };
+
+	auto pitchControlInputTrim = controlEnvironment.addConstant<Vector3>(parameter.inputTrim);
+
+	auto pitchControlInputMux = controlEnvironment.addMux<double, Vector3>(pitchControlInputMuxVector);
+
+	auto pitchControlInputSum = controlEnvironment.addSum<Vector3, Vector3, Vector3>(
+			pitchControlInputMux, pitchControlInputTrim, false);
+
+	auto pitchControlInputGain = controlEnvironment.addGain<Vector3, RowVector3, Scalar>(
+			pitchControlInputSum, parameter.inputGain);
+
+	/* Pitch control level 2 */
+	auto pitchCommand = controlEnvironment.addConstant<double>(1);
+	double pitchCommandSaturationValue = 0.523598775598299;
+
+	auto pitchCommandSaturation = controlEnvironment.addSaturation<double>(pitchCommand,
+			-pitchCommandSaturationValue, pitchCommandSaturationValue);
+
+	auto pitchCommandGain = controlEnvironment.addGain<double, Scalar, Scalar>(pitchCommandSaturation,
+			parameter.targetGain);
+
+	auto adaptiveFeedback = controlEnvironment.addFeedback<Vector3>();
+
+	auto controlLawStateSpace = controlEnvironment.addStateSpace<Vector4, Vector3, Matrix4,
+			Matrix43, RowVector4, RowVector3, Scalar>(parameter.controlLawState, adaptiveFeedback,
+			parameter.controlLawMatrixA, parameter.controlLawMatrixB, parameter.controlLawMatrixC,
+			parameter.controlLawMatrixD, Scalar());
+
+	auto controlLawSum = controlEnvironment.addSum<Scalar, Scalar, Scalar>(pitchCommandGain,
+			controlLawStateSpace, false);
+
+	/* Pitch control level 3 */
+	auto predictorGain = controlEnvironment.addGain<Scalar, Vector3, Vector3>(controlLawSum,
+			parameter.predictorGain);
+
+	auto predictorInputSum = controlEnvironment.addSum<Vector3, Vector3, Vector3>(predictorGain,
+			adaptiveFeedback, true);
+
+	auto predictorStateSpace = controlEnvironment.addStateSpace<Vector3, Vector3, Matrix3, Matrix3,
+			RowVector3, RowVector3, Scalar>(parameter.predictorState, predictorInputSum,
+			parameter.predictorMatrixA, parameter.predictorMatrixB, parameter.predictorMatrixC,
+			parameter.predictorMatrixD, Scalar());
+
+	auto angleOfAttackConstant = controlEnvironment.addConstant<double>(0);
+	auto pitchRateConstant = controlEnvironment.addConstant<double>(0);
+	auto pitchAngleConstant = controlEnvironment.addConstant<double>(0);
+
+	std::vector<std::shared_ptr<Constant<double>>> pitchControlInputDemuxVector
+	{ angleOfAttackConstant, pitchRateConstant, pitchAngleConstant };
+
+	auto longitudinalInputDemux = controlEnvironment.addDemux<Vector3, double>(pitchControlInputSum,
+			pitchControlInputDemuxVector);
+
+	std::vector<AdaptiveElement<double>> pitchAngleConstantVector
+	{ pitchAngleConstant };
+
+	auto pitchAngleConstantMux = controlEnvironment.addMux<double, Scalar>(pitchAngleConstantVector);
+
+	auto predictorOutputSum = controlEnvironment.addSum<Scalar, Scalar, Scalar>(predictorStateSpace,
+			pitchAngleConstantMux, false);
+
+	auto adaptiveGain = controlEnvironment.addGain<Scalar, Vector3, Vector3>(predictorOutputSum,
+			parameter.adaptiveGain);
+
+	adaptiveFeedback->setInput(adaptiveGain);
+
+	/* Pitch control output */
+	auto pitchControlOutputTrim = controlEnvironment.addConstant<Scalar>(parameter.outputTrim);
+
+	auto pitchControlOutputSumOne = controlEnvironment.addSum<Scalar, Scalar, Scalar>(
+			pitchControlOutputTrim, controlLawSum, true);
+
+	auto pitchControlOutputSumTwo = controlEnvironment.addSum<Scalar, Scalar, Scalar>(pitchControlOutputSumOne,
+			pitchControlInputGain, false);
+
+	auto pitchControlOutputConstant = controlEnvironment.addConstant<double>(0);
+
+	std::vector<std::shared_ptr<Constant<double>>> pitchControlOutputVector
+	{ pitchControlOutputConstant };
+
+	auto pitchControlOutputDemux = controlEnvironment.addDemux<Scalar, double>(pitchControlOutputSumTwo, pitchControlOutputVector);
+
+	double* pitchControlOutputValue = &controllerOutput.pitchOutput;
+
+	auto pitchOutput = controlEnvironment.addOutput<double, double>(pitchControlOutputConstant,
+			pitchControlOutputValue);
+
+	controlEnvironment.evaluate();
+
+	for (int i = 0; i < 100; i++)
+	{
+		controlEnvironment.evaluate();
+	}
+
+	BOOST_CHECK_CLOSE(controllerOutput.pitchOutput, 29.5, 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

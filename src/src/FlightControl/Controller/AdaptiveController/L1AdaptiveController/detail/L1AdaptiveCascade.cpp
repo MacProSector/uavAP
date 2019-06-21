@@ -98,6 +98,7 @@ L1AdaptiveCascade::evaluate()
 {
 	calculateControl();
 	controlEnvironment_.evaluate();
+	//APLOG_ERROR << "pitch: " << controllerOutput_.pitchOutput;
 }
 
 bool
@@ -348,7 +349,9 @@ L1AdaptiveCascade::createCascade()
 
 	double* pitchOutputValue = &controllerOutput_.pitchOutput;
 
-	auto pitchOutputSaturation = controlEnvironment_.addSaturation<double>(outputConstant, -1, 1);
+	auto pitchOutputGain = controlEnvironment_.addGain<double, double, double>(outputConstant, -0.06666667);
+
+	auto pitchOutputSaturation = controlEnvironment_.addSaturation<double>(pitchOutputGain, -1, 1);
 
 	auto pitchOutput = controlEnvironment_.addOutput<double, double>(pitchOutputSaturation,
 			pitchOutputValue);
