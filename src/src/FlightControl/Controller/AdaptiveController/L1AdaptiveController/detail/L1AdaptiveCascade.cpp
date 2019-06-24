@@ -157,6 +157,7 @@ L1AdaptiveCascade::configureAdaptive(const boost::property_tree::ptree& config)
 {
 	PropertyMapper pm(config);
 
+	pm.add<RollL1AdaptiveParameter>("roll", rollAdaptiveParameter_, false);
 	pm.add<PitchL1AdaptiveParameter>("pitch", pitchAdaptiveParameter_, false);
 
 	return pm.map();
@@ -344,7 +345,7 @@ L1AdaptiveCascade::createCascade()
 	auto adaptiveFeedback = controlEnvironment_.addFeedback<Vector3>();
 
 	auto controlLawStateSpace = controlEnvironment_.addStateSpace<Vector4, Vector3, Matrix4,
-			Matrix43, RowVector4, RowVector3, Scalar>(pitchAdaptiveParameter_.controlLawState,
+			Matrix4x3, RowVector4, RowVector3, Scalar>(pitchAdaptiveParameter_.controlLawState,
 			adaptiveFeedback, pitchAdaptiveParameter_.controlLawMatrixA,
 			pitchAdaptiveParameter_.controlLawMatrixB, pitchAdaptiveParameter_.controlLawMatrixC,
 			pitchAdaptiveParameter_.controlLawMatrixD, Scalar());
