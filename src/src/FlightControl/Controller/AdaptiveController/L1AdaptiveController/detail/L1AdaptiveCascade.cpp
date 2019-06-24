@@ -30,11 +30,8 @@
 L1AdaptiveCascade::L1AdaptiveCascade(SensorData& sensorData, ControllerTarget& controllerTarget,
 		ControllerOutput& controllerOutput) :
 		sensorData_(sensorData), controllerTarget_(controllerTarget), controllerOutput_(
-				controllerOutput), controlEnvironment_(&sensorData.timestamp), hardRollSaturation_(
-				30.0), hardRollRateSaturation_(30.0), hardPitchSaturation_(30.0), hardPitchRateSaturation_(
-				30.0), rollSaturation_(30.0), rollRateSaturation_(30.0), pitchSaturation_(30.0), pitchRateSaturation_(
-				30.0), rollOutSaturation_(1.0), pitchOutSaturation_(1.0), yawOutSaturation_(1.0), throttleOutSaturation_(
-				1.0), beta_(0), rollTarget_(0)
+				controllerOutput), controlEnvironment_(&sensorData.timestamp), beta_(0), rollTarget_(
+				0)
 {
 }
 
@@ -42,42 +39,23 @@ bool
 L1AdaptiveCascade::configure(const boost::property_tree::ptree& config)
 {
 	PropertyMapper pm(config);
+	boost::property_tree::ptree saturationConfig;
 	boost::property_tree::ptree adaptiveConfig;
 	boost::property_tree::ptree pidConfig;
-	PIDParameter pidParameter;
+	bool configured = true;
 
-	pm.add<double>("hard_roll_constraint", hardRollSaturation_, false);
-	pm.add<double>("hard_pitch_constraint", hardPitchSaturation_, false);
-	pm.add<double>("hard_roll_rate_constraint", hardRollRateSaturation_, false);
-	pm.add<double>("hard_pitch_rate_constraint", hardPitchRateSaturation_, false);
+	pm.add("adaptive_controllers", adaptiveConfig, false);
+	pm.add("pid_controllers", pidConfig, false);
+	pm.add("controller_saturations", saturationConfig, false);
 
-	pm.add<double>("roll_constraint", rollSaturation_, false);
-	pm.add<double>("pitch_constraint", pitchSaturation_, false);
-	pm.add<double>("roll_rate_constraint", rollRateSaturation_, false);
-	pm.add<double>("pitch_rate_constraint", pitchRateSaturation_, false);
-
-	pm.add("adaptives", adaptiveConfig, false);
-
-	PropertyMapper adaptivePm(adaptiveConfig);
-
-	adaptivePm.add<PitchL1AdaptiveParameter>("pitch", pitchAdaptiveParameter_, false);
-
-	pm.add("pids", pidConfig, false);
-
-	for (auto it : pidConfig)
-	{
-		if (!pidParameter.configure(it.second))
-		{
-			APLOG_ERROR << "L1AdaptiveCascade: Invalid PID Configuration " << it.first;
-			continue;
-		}
-
-		pidParameters_.insert(std::make_pair(EnumMap<PIDs>::convert(it.first), pidParameter));
-	}
+	configured = configured && configureAdaptive(adaptiveConfig);
+	configured = configured && configurePID(pidConfig);
 
 	createCascade();
 
-	return true;
+	configured = configured && configureSaturation(saturationConfig);
+
+	return configured && pm.map();
 }
 
 PIDStati
@@ -174,6 +152,114 @@ L1AdaptiveCascade::overrideCascade(const Override& override)
 	}
 }
 
+bool
+L1AdaptiveCascade::configureAdaptive(const boost::property_tree::ptree& config)
+{
+	PropertyMapper pm(config);
+
+	pm.add<PitchL1AdaptiveParameter>("pitch", pitchAdaptiveParameter_, false);
+
+	return pm.map();
+}
+
+bool
+L1AdaptiveCascade::configurePID(const boost::property_tree::ptree& config)
+{
+	PIDParameter pidParameter;
+
+	for (const auto& it : config)
+	{
+		if (!pidParameter.configure(it.second))
+		{
+			APLOG_ERROR << "L1AdaptiveCascade: Invalid PID Controller Configuration " << it.first;
+			return false;
+		}
+
+		pidParameters_.insert(std::make_pair(EnumMap<PIDs>::convert(it.first), pidParameter));
+	}
+
+	return true;
+}
+
+bool
+L1AdaptiveCascade::configureSaturation(const boost::property_tree::ptree& config)
+{
+	bool configured = true;
+
+	for (const auto& it : config)
+	{
+		PropertyMapper pm(it.second);
+		ControllerConstraints saturationEnum = EnumMap<ControllerConstraints>::convert(it.first);
+		double hardSaturation = 0;
+		double softSaturation = 0;
+
+		pm.add<double>("hard", hardSaturation, false);
+		pm.add<double>("soft", softSaturation, false);
+
+		auto saturationPair = findInMap(saturations_, saturationEnum);
+
+		if (!saturationPair)
+		{
+			APLOG_ERROR << "L1AdaptiveCascade: Invalid Controller Saturation Configuration "
+					<< it.first;
+			return false;
+		}
+
+		auto saturation = saturationPair->second;
+
+		setSaturation(saturationEnum, saturation, hardSaturation, softSaturation);
+
+		configured = configured && pm.map();
+	}
+
+	return configured;
+}
+
+void
+L1AdaptiveCascade::setSaturation(const ControllerConstraints& saturationEnum,
+		std::shared_ptr<Saturation<double>> saturation, double& hardSaturation,
+		double& softSaturation)
+{
+	switch (saturationEnum)
+	{
+	case ControllerConstraints::ROLL:
+	{
+		hardSaturation = degToRad(hardSaturation);
+		softSaturation = degToRad(softSaturation);
+
+		break;
+	}
+	case ControllerConstraints::ROLL_RATE:
+	{
+		hardSaturation = degToRad(hardSaturation);
+		softSaturation = degToRad(softSaturation);
+
+		break;
+	}
+	case ControllerConstraints::PITCH:
+	{
+		hardSaturation = degToRad(hardSaturation);
+		softSaturation = degToRad(softSaturation);
+
+		break;
+	}
+	case ControllerConstraints::PITCH_RATE:
+	{
+		hardSaturation = degToRad(hardSaturation);
+		softSaturation = degToRad(softSaturation);
+
+		break;
+	}
+	default:
+	{
+		break;
+	}
+	}
+
+	saturation->setHardSaturationValue(hardSaturation);
+	saturation->setSaturationValue(softSaturation);
+}
+
 void
 L1AdaptiveCascade::createCascade()
 {
@@ -193,16 +279,14 @@ L1AdaptiveCascade::createCascade()
 	auto rollTarget = controlEnvironment_.addInput<double>(rollTargetValue);
 
 	auto rollTargetSaturation = controlEnvironment_.addSaturation<double>(rollTarget,
-			degToRad(-rollSaturation_), degToRad(rollSaturation_), degToRad(-hardRollSaturation_),
-			degToRad(hardRollSaturation_));
+			degToRad(-30.0), degToRad(30.0));
 
 	auto rollPID = controlEnvironment_.addPID<double>(rollInput, rollTargetSaturation,
 			rollRateInput, rollPIDParameter);
 
 	/* Roll Rate Control */
 	auto rollRateTargetSaturation = controlEnvironment_.addSaturation<double>(rollPID,
-			degToRad(-rollRateSaturation_), degToRad(rollRateSaturation_),
-			degToRad(-hardRollRateSaturation_), degToRad(hardRollRateSaturation_));
+			degToRad(-30.0), degToRad(30.0));
 
 	auto rollRatePID = controlEnvironment_.addPID<double>(rollRateInput, rollRateTargetSaturation,
 			rollRatePIDParameter);
@@ -252,8 +336,7 @@ L1AdaptiveCascade::createCascade()
 
 	/* Pitch control control law */
 	auto pitchTargetSaturation = controlEnvironment_.addSaturation<double>(climbAnglePID,
-			degToRad(-pitchSaturation_), degToRad(pitchSaturation_),
-			degToRad(-hardPitchSaturation_), degToRad(hardPitchSaturation_));
+			degToRad(-30.0), degToRad(30.0));
 
 	auto pitchTargetGain = controlEnvironment_.addGain<double, Scalar, Scalar>(
 			pitchTargetSaturation, pitchAdaptiveParameter_.targetGain);
@@ -396,8 +479,8 @@ L1AdaptiveCascade::createCascade()
 
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL, rollTargetSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_RATE, rollRateTargetSaturation));
-	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_OUTPUT, rollOutputSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::PITCH, pitchTargetSaturation));
+	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_OUTPUT, rollOutputSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::PITCH_OUTPUT, pitchOutputSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::YAW_OUTPUT, yawOutputSaturation));
 	saturations_.insert(

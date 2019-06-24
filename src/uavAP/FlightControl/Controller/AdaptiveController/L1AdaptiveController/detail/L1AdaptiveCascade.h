@@ -61,9 +61,23 @@ public:
 
 private:
 
+	bool
+	configureAdaptive(const boost::property_tree::ptree& config);
+
+	bool
+	configurePID(const boost::property_tree::ptree& config);
+
+	bool
+	configureSaturation(const boost::property_tree::ptree& config);
+
 	template<typename ENUM, typename PARAM>
 	PARAM
 	getParameter(const std::map<ENUM, PARAM>& parameterMap, const ENUM& parameterEnum);
+
+	void
+	setSaturation(const ControllerConstraints& saturationEnum,
+			std::shared_ptr<Saturation<double>> saturation, double& hardSaturation,
+			double& softSaturation);
 
 	void
 	createCascade();
@@ -84,28 +98,14 @@ private:
 	PitchL1AdaptiveParameter pitchAdaptiveParameter_;
 	std::map<PIDs, PIDParameter> pidParameters_;
 
-	double hardRollSaturation_;
-	double hardRollRateSaturation_;
-	double hardPitchSaturation_;
-	double hardPitchRateSaturation_;
-
-	double rollSaturation_;
-	double rollRateSaturation_;
-	double pitchSaturation_;
-	double pitchRateSaturation_;
-
-	double rollOutSaturation_;
-	double pitchOutSaturation_;
-	double yawOutSaturation_;
-	double throttleOutSaturation_;
-
 	double beta_;
 	double rollTarget_;
 };
 
 template<typename ENUM, typename PARAM>
 inline PARAM
-L1AdaptiveCascade::getParameter(const std::map<ENUM, PARAM>& parameterMap, const ENUM& parameterEnum)
+L1AdaptiveCascade::getParameter(const std::map<ENUM, PARAM>& parameterMap,
+		const ENUM& parameterEnum)
 {
 	if (auto parameterPair = findInMap(parameterMap, parameterEnum))
 	{
