@@ -334,95 +334,104 @@ L1AdaptiveCascade::createCascade()
 //	auto rollAngleTarget = controlEnvironment_.addInput<double>(rollAngleTargetValue);
 //	auto angleOfSideSlipTarget = controlEnvironment_.addConstant<double>(0);
 //
+//	auto rollAngleTargetSaturation = controlEnvironment_.addSaturation<double>(rollAngleTarget,
+//			degToRad(-30.0), degToRad(30.0));
+//
 //	std::vector<AdaptiveElement<double>> rollControlTargetMuxVector
-//	{ rollAngleTarget, angleOfSideSlipTarget };
+//	{ rollAngleTargetSaturation, angleOfSideSlipTarget };
 //
 //	auto rollControlTargetMux = controlEnvironment_.addMux<double, Vector2>(
 //			rollControlTargetMuxVector);
 //
-//	auto rollTargetSaturation = controlEnvironment_.addSaturation<double>(climbAnglePID,
-//			degToRad(-30.0), degToRad(30.0));
+//	auto rollControlTargetGain = controlEnvironment_.addGain<Vector2, Matrix2, Vector2>(
+//			rollControlTargetMux, rollAdaptiveParameter_.targetGain);
 //
-//	auto pitchTargetGain = controlEnvironment_.addGain<double, Scalar, Scalar>(
-//			pitchTargetSaturation, pitchAdaptiveParameter_.targetGain);
+//	auto rollControlAdaptiveFeedback = controlEnvironment_.addFeedback<Vector4>();
 //
-//	auto adaptiveFeedback = controlEnvironment_.addFeedback<Vector3>();
+//	auto rollControlControlLawStateSpace = controlEnvironment_.addStateSpace<Vector28, Vector4,
+//			Matrix28, Matrix28x4, Matrix2x28, Matrix2x4, Vector2>(
+//			rollAdaptiveParameter_.controlLawState, rollControlAdaptiveFeedback,
+//			rollAdaptiveParameter_.controlLawMatrixA, rollAdaptiveParameter_.controlLawMatrixB,
+//			rollAdaptiveParameter_.controlLawMatrixC, rollAdaptiveParameter_.controlLawMatrixD,
+//			Vector2());
 //
-//	auto controlLawStateSpace = controlEnvironment_.addStateSpace<Vector4, Vector3, Matrix4,
-//			Matrix4x3, RowVector4, RowVector3, Scalar>(pitchAdaptiveParameter_.controlLawState,
-//			adaptiveFeedback, pitchAdaptiveParameter_.controlLawMatrixA,
-//			pitchAdaptiveParameter_.controlLawMatrixB, pitchAdaptiveParameter_.controlLawMatrixC,
-//			pitchAdaptiveParameter_.controlLawMatrixD, Scalar());
-//
-//	auto controlLawSum = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(pitchTargetGain,
-//			controlLawStateSpace, false);
+//	auto rollControlControlLawSum = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
+//			rollControlTargetGain, rollControlControlLawStateSpace, false);
 //
 //	/* Pitch control output predictor */
-//	auto predictorGain = controlEnvironment_.addGain<Scalar, Vector3, Vector3>(controlLawSum,
-//			pitchAdaptiveParameter_.predictorGain);
+//	auto rollControlPredictorGain = controlEnvironment_.addGain<Vector2, Matrix4x2, Vector4>(
+//			rollControlControlLawSum, rollAdaptiveParameter_.predictorGain);
 //
-//	auto predictorInputSum = controlEnvironment_.addSum<Vector3, Vector3, Vector3>(predictorGain,
-//			adaptiveFeedback, true);
+//	auto rollControlPredictorInputSum = controlEnvironment_.addSum<Vector4, Vector4, Vector4>(
+//			rollControlPredictorGain, rollControlAdaptiveFeedback, true);
 //
-//	auto predictorStateSpace = controlEnvironment_.addStateSpace<Vector3, Vector3, Matrix3, Matrix3,
-//			RowVector3, RowVector3, Scalar>(pitchAdaptiveParameter_.predictorState,
-//			predictorInputSum, pitchAdaptiveParameter_.predictorMatrixA,
-//			pitchAdaptiveParameter_.predictorMatrixB, pitchAdaptiveParameter_.predictorMatrixC,
-//			pitchAdaptiveParameter_.predictorMatrixD, Scalar());
+//	auto rollControlPredictorStateSpace = controlEnvironment_.addStateSpace<Vector4, Vector4,
+//			Matrix4, Matrix4, Matrix2x4, Matrix2x4, Vector2>(rollAdaptiveParameter_.predictorState,
+//			rollControlPredictorInputSum, rollAdaptiveParameter_.predictorMatrixA,
+//			rollAdaptiveParameter_.predictorMatrixB, rollAdaptiveParameter_.predictorMatrixC,
+//			rollAdaptiveParameter_.predictorMatrixD, Vector2());
 //
-//	auto angleOfAttackConstant = controlEnvironment_.addConstant<double>(0);
+//	auto angleOfSideSlipConstant = controlEnvironment_.addConstant<double>(0);
+//	auto rollRateConstant = controlEnvironment_.addConstant<double>(0);
+//	auto yawRateConstant = controlEnvironment_.addConstant<double>(0);
+//	auto rollAngleConstant = controlEnvironment_.addConstant<double>(0);
 //
-//	auto pitchRateConstant = controlEnvironment_.addConstant<double>(0);
+//	std::vector<std::shared_ptr<Constant<double>>> rollControlInputDemuxVector
+//	{ angleOfSideSlipConstant, rollRateConstant, yawRateConstant, rollAngleConstant };
 //
-//	auto pitchAngleConstant = controlEnvironment_.addConstant<double>(0);
+//	auto rollControlInputDemux = controlEnvironment_.addDemux<Vector4, double>(rollControlInputSum,
+//			rollControlInputDemuxVector);
 //
-//	std::vector<std::shared_ptr<Constant<double>>> pitchControlInputDemuxVector
-//	{ angleOfAttackConstant, pitchRateConstant, pitchAngleConstant };
+//	std::vector<AdaptiveElement<double>> rollControlPredictorOutputVector
+//	{ rollAngleConstant, angleOfSideSlipConstant };
 //
-//	auto longitudinalInputDemux = controlEnvironment_.addDemux<Vector3, double>(
-//			pitchControlInputSum, pitchControlInputDemuxVector);
+//	auto rollControlPredictorOutputMux = controlEnvironment_.addMux<double, Vector2>(
+//			rollControlPredictorOutputVector);
 //
-//	std::vector<AdaptiveElement<double>> pitchAngleConstantVector
-//	{ pitchAngleConstant };
+//	auto rollControlPredictorOutputSum = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
+//			rollControlPredictorStateSpace, rollControlPredictorOutputMux, false);
 //
-//	auto pitchAngleConstantMux = controlEnvironment_.addMux<double, Scalar>(
-//			pitchAngleConstantVector);
+//	auto rollControlAdaptiveGain = controlEnvironment_.addGain<Vector2, Matrix4x2, Vector4>(
+//			rollControlPredictorOutputSum, rollAdaptiveParameter_.adaptiveGain);
 //
-//	auto predictorOutputSum = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(
-//			predictorStateSpace, pitchAngleConstantMux, false);
-//
-//	auto adaptiveGain = controlEnvironment_.addGain<Scalar, Vector3, Vector3>(predictorOutputSum,
-//			pitchAdaptiveParameter_.adaptiveGain);
-//
-//	adaptiveFeedback->setInput(adaptiveGain);
+//	rollControlAdaptiveFeedback->setInput(rollControlAdaptiveGain);
 //
 //	/* Pitch control output */
-//	auto pitchControlOutputTrim = controlEnvironment_.addConstant<Scalar>(
-//			pitchAdaptiveParameter_.outputTrim);
+//	auto rollControlOutputTrim = controlEnvironment_.addConstant<Vector2>(
+//			rollAdaptiveParameter_.outputTrim);
 //
-//	auto pitchControlOutputSumOne = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(
-//			pitchControlOutputTrim, controlLawSum, true);
+//	auto rollControlOutputSumOne = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
+//			rollControlOutputTrim, rollControlControlLawSum, true);
 //
-//	auto pitchControlOutputSumTwo = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(
-//			pitchControlOutputSumOne, pitchControlInputGain, false);
+//	auto rollControlOutputSumTwo = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
+//			rollControlOutputSumOne, rollControlInputGain, false);
 //
-//	auto pitchControlOutputConstant = controlEnvironment_.addConstant<double>(0);
+//	auto rollOutputConstant = controlEnvironment_.addConstant<double>(0);
+//	auto yawOutputConstant = controlEnvironment_.addConstant<double>(0);
 //
-//	std::vector<std::shared_ptr<Constant<double>>> pitchControlOutputVector
-//	{ pitchControlOutputConstant };
+//	std::vector<std::shared_ptr<Constant<double>>> rollControlOutputVector
+//	{ rollOutputConstant, yawOutputConstant };
 //
-//	auto pitchControlOutputDemux = controlEnvironment_.addDemux<Scalar, double>(
-//			pitchControlOutputSumTwo, pitchControlOutputVector);
+//	auto rollControlOutputDemux = controlEnvironment_.addDemux<Vector2, double>(
+//			rollControlOutputSumTwo, rollControlOutputVector);
 //
-//	double* pitchOutputValue = &controllerOutput_.pitchOutput;
+//	double* rollOutputValue = &controllerOutput_.rollOutput;
+//	double* yawOutputValue = &controllerOutput_.yawOutput;
 //
-//	auto pitchOutputGain = controlEnvironment_.addGain<double, double, double>(
-//			pitchControlOutputConstant, -0.06666667);
+//	auto rollOutputGain = controlEnvironment_.addGain<double, double, double>(rollOutputConstant,
+//			0.06666667);
 //
-//	auto pitchOutputSaturation = controlEnvironment_.addSaturation<double>(pitchOutputGain, -1, 1);
+//	auto yawOutputGain = controlEnvironment_.addGain<double, double, double>(yawOutputConstant,
+//			0.06666667);
 //
-//	auto pitchOutput = controlEnvironment_.addOutput<double, double>(pitchOutputSaturation,
-//			pitchOutputValue);
+//	auto rollOutputSaturation = controlEnvironment_.addSaturation<double>(rollOutputGain, -1, 1);
+//	auto yawOutputSaturation = controlEnvironment_.addSaturation<double>(yawOutputGain, -1, 1);
+//
+//	auto rollOutput = controlEnvironment_.addOutput<double, double>(rollOutputSaturation,
+//			rollOutputValue);
+//
+//	auto yawOutput = controlEnvironment_.addOutput<double, double>(yawOutputSaturation,
+//			yawOutputValue);
 
 	/* ------------------------- Roll adaptive control -------------------------- */
 
@@ -462,40 +471,40 @@ L1AdaptiveCascade::createCascade()
 			pitchControlInputSum, pitchAdaptiveParameter_.inputGain);
 
 	/* Pitch control control law */
-	auto pitchControlTargetSaturation = controlEnvironment_.addSaturation<double>(climbAnglePID,
+	auto pitchAngleTargetSaturation = controlEnvironment_.addSaturation<double>(climbAnglePID,
 			degToRad(-30.0), degToRad(30.0));
 
 	auto pitchControlTargetGain = controlEnvironment_.addGain<double, Scalar, Scalar>(
-			pitchControlTargetSaturation, pitchAdaptiveParameter_.targetGain);
+			pitchAngleTargetSaturation, pitchAdaptiveParameter_.targetGain);
 
 	auto pitchControlAdaptiveFeedback = controlEnvironment_.addFeedback<Vector3>();
 
-	auto pitchControlControlLawStateSpace = controlEnvironment_.addStateSpace<Vector4, Vector3, Matrix4,
-			Matrix4x3, RowVector4, RowVector3, Scalar>(pitchAdaptiveParameter_.controlLawState,
-			pitchControlAdaptiveFeedback, pitchAdaptiveParameter_.controlLawMatrixA,
-			pitchAdaptiveParameter_.controlLawMatrixB, pitchAdaptiveParameter_.controlLawMatrixC,
-			pitchAdaptiveParameter_.controlLawMatrixD, Scalar());
+	auto pitchControlControlLawStateSpace = controlEnvironment_.addStateSpace<Vector4, Vector3,
+			Matrix4, Matrix4x3, RowVector4, RowVector3, Scalar>(
+			pitchAdaptiveParameter_.controlLawState, pitchControlAdaptiveFeedback,
+			pitchAdaptiveParameter_.controlLawMatrixA, pitchAdaptiveParameter_.controlLawMatrixB,
+			pitchAdaptiveParameter_.controlLawMatrixC, pitchAdaptiveParameter_.controlLawMatrixD,
+			Scalar());
 
-	auto pitchControlControlLawSum = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(pitchControlTargetGain,
-			pitchControlControlLawStateSpace, false);
+	auto pitchControlControlLawSum = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(
+			pitchControlTargetGain, pitchControlControlLawStateSpace, false);
 
 	/* Pitch control output predictor */
-	auto pitchControlPredictorGain = controlEnvironment_.addGain<Scalar, Vector3, Vector3>(pitchControlControlLawSum,
-			pitchAdaptiveParameter_.predictorGain);
+	auto pitchControlPredictorGain = controlEnvironment_.addGain<Scalar, Vector3, Vector3>(
+			pitchControlControlLawSum, pitchAdaptiveParameter_.predictorGain);
 
-	auto pitchControlPredictorInputSum = controlEnvironment_.addSum<Vector3, Vector3, Vector3>(pitchControlPredictorGain,
-			pitchControlAdaptiveFeedback, true);
+	auto pitchControlPredictorInputSum = controlEnvironment_.addSum<Vector3, Vector3, Vector3>(
+			pitchControlPredictorGain, pitchControlAdaptiveFeedback, true);
 
-	auto pitchControlPredictorStateSpace = controlEnvironment_.addStateSpace<Vector3, Vector3, Matrix3, Matrix3,
-			RowVector3, RowVector3, Scalar>(pitchAdaptiveParameter_.predictorState,
-			pitchControlPredictorInputSum, pitchAdaptiveParameter_.predictorMatrixA,
-			pitchAdaptiveParameter_.predictorMatrixB, pitchAdaptiveParameter_.predictorMatrixC,
-			pitchAdaptiveParameter_.predictorMatrixD, Scalar());
+	auto pitchControlPredictorStateSpace = controlEnvironment_.addStateSpace<Vector3, Vector3,
+			Matrix3, Matrix3, RowVector3, RowVector3, Scalar>(
+			pitchAdaptiveParameter_.predictorState, pitchControlPredictorInputSum,
+			pitchAdaptiveParameter_.predictorMatrixA, pitchAdaptiveParameter_.predictorMatrixB,
+			pitchAdaptiveParameter_.predictorMatrixC, pitchAdaptiveParameter_.predictorMatrixD,
+			Scalar());
 
 	auto angleOfAttackConstant = controlEnvironment_.addConstant<double>(0);
-
 	auto pitchRateConstant = controlEnvironment_.addConstant<double>(0);
-
 	auto pitchAngleConstant = controlEnvironment_.addConstant<double>(0);
 
 	std::vector<std::shared_ptr<Constant<double>>> pitchControlInputDemuxVector
@@ -504,17 +513,17 @@ L1AdaptiveCascade::createCascade()
 	auto pitchControlInputDemux = controlEnvironment_.addDemux<Vector3, double>(
 			pitchControlInputSum, pitchControlInputDemuxVector);
 
-	std::vector<AdaptiveElement<double>> pitchAngleConstantVector
+	std::vector<AdaptiveElement<double>> pitchControlPredictorOutputVector
 	{ pitchAngleConstant };
 
-	auto pitchAngleConstantMux = controlEnvironment_.addMux<double, Scalar>(
-			pitchAngleConstantVector);
+	auto pitchControlPredictorOutputMux = controlEnvironment_.addMux<double, Scalar>(
+			pitchControlPredictorOutputVector);
 
 	auto pitchControlPredictorOutputSum = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(
-			pitchControlPredictorStateSpace, pitchAngleConstantMux, false);
+			pitchControlPredictorStateSpace, pitchControlPredictorOutputMux, false);
 
-	auto pitchControlAdaptiveGain = controlEnvironment_.addGain<Scalar, Vector3, Vector3>(pitchControlPredictorOutputSum,
-			pitchAdaptiveParameter_.adaptiveGain);
+	auto pitchControlAdaptiveGain = controlEnvironment_.addGain<Scalar, Vector3, Vector3>(
+			pitchControlPredictorOutputSum, pitchAdaptiveParameter_.adaptiveGain);
 
 	pitchControlAdaptiveFeedback->setInput(pitchControlAdaptiveGain);
 
@@ -528,18 +537,18 @@ L1AdaptiveCascade::createCascade()
 	auto pitchControlOutputSumTwo = controlEnvironment_.addSum<Scalar, Scalar, Scalar>(
 			pitchControlOutputSumOne, pitchControlInputGain, false);
 
-	auto pitchControlOutputConstant = controlEnvironment_.addConstant<double>(0);
+	auto pitchOutputConstant = controlEnvironment_.addConstant<double>(0);
 
 	std::vector<std::shared_ptr<Constant<double>>> pitchControlOutputVector
-	{ pitchControlOutputConstant };
+	{ pitchOutputConstant };
 
 	auto pitchControlOutputDemux = controlEnvironment_.addDemux<Scalar, double>(
 			pitchControlOutputSumTwo, pitchControlOutputVector);
 
 	double* pitchOutputValue = &controllerOutput_.pitchOutput;
 
-	auto pitchOutputGain = controlEnvironment_.addGain<double, double, double>(
-			pitchControlOutputConstant, -0.06666667);
+	auto pitchOutputGain = controlEnvironment_.addGain<double, double, double>(pitchOutputConstant,
+			-0.06666667);
 
 	auto pitchOutputSaturation = controlEnvironment_.addSaturation<double>(pitchOutputGain, -1, 1);
 
@@ -606,7 +615,7 @@ L1AdaptiveCascade::createCascade()
 
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL, rollTargetSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_RATE, rollRateTargetSaturation));
-	saturations_.insert(std::make_pair(ControllerConstraints::PITCH, pitchControlTargetSaturation));
+	saturations_.insert(std::make_pair(ControllerConstraints::PITCH, pitchAngleTargetSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_OUTPUT, rollOutputSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::PITCH_OUTPUT, pitchOutputSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::YAW_OUTPUT, yawOutputSaturation));
