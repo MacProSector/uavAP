@@ -302,7 +302,7 @@ L1AdaptiveCascade::createCascade()
 
 	/* ------------------------- Roll adaptive control -------------------------- */
 
-//	/* Pitch control input */
+//	/* Roll control input */
 //	double* angleOfSideSlipInputValue = &beta_;
 //	double* rollRateInputValue = &sensorData_.angularRate[0];
 //	double* yawRateInputValue = &sensorData_.angularRate[2];
@@ -328,7 +328,7 @@ L1AdaptiveCascade::createCascade()
 //	auto rollControlInputGain = controlEnvironment_.addGain<Vector4, Matrix2x4, Vector2>(
 //			rollControlInputSum, rollAdaptiveParameter_.inputGain);
 //
-//	/* Pitch control control law */
+//	/* Roll control control law */
 //	double* rollAngleTargetValue = &rollTarget_;
 //
 //	auto rollAngleTarget = controlEnvironment_.addInput<double>(rollAngleTargetValue);
@@ -348,8 +348,8 @@ L1AdaptiveCascade::createCascade()
 //
 //	auto rollControlAdaptiveFeedback = controlEnvironment_.addFeedback<Vector4>();
 //
-//	auto rollControlControlLawStateSpace = controlEnvironment_.addStateSpace<Vector28, Vector4,
-//			Matrix28, Matrix28x4, Matrix2x28, Matrix2x4, Vector2>(
+//	auto rollControlControlLawStateSpace = controlEnvironment_.addStateSpace<Vector22, Vector4,
+//			Matrix22, Matrix22x4, Matrix2x22, Matrix2x4, Vector2>(
 //			rollAdaptiveParameter_.controlLawState, rollControlAdaptiveFeedback,
 //			rollAdaptiveParameter_.controlLawMatrixA, rollAdaptiveParameter_.controlLawMatrixB,
 //			rollAdaptiveParameter_.controlLawMatrixC, rollAdaptiveParameter_.controlLawMatrixD,
@@ -358,7 +358,7 @@ L1AdaptiveCascade::createCascade()
 //	auto rollControlControlLawSum = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
 //			rollControlTargetGain, rollControlControlLawStateSpace, false);
 //
-//	/* Pitch control output predictor */
+//	/* Roll control output predictor */
 //	auto rollControlPredictorGain = controlEnvironment_.addGain<Vector2, Matrix4x2, Vector4>(
 //			rollControlControlLawSum, rollAdaptiveParameter_.predictorGain);
 //
@@ -396,7 +396,7 @@ L1AdaptiveCascade::createCascade()
 //
 //	rollControlAdaptiveFeedback->setInput(rollControlAdaptiveGain);
 //
-//	/* Pitch control output */
+//	/* Roll control output */
 //	auto rollControlOutputTrim = controlEnvironment_.addConstant<Vector2>(
 //			rollAdaptiveParameter_.outputTrim);
 //
@@ -548,7 +548,7 @@ L1AdaptiveCascade::createCascade()
 	double* pitchOutputValue = &controllerOutput_.pitchOutput;
 
 	auto pitchOutputGain = controlEnvironment_.addGain<double, double, double>(pitchOutputConstant,
-			-0.06666667);
+			-1 / degToRad(15));
 
 	auto pitchOutputSaturation = controlEnvironment_.addSaturation<double>(pitchOutputGain, -1, 1);
 
@@ -615,6 +615,7 @@ L1AdaptiveCascade::createCascade()
 
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL, rollTargetSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_RATE, rollRateTargetSaturation));
+//	saturations_.insert(std::make_pair(ControllerConstraints::ROLL, rollAngleTargetSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::PITCH, pitchAngleTargetSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_OUTPUT, rollOutputSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::PITCH_OUTPUT, pitchOutputSaturation));
