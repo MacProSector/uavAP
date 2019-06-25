@@ -70,6 +70,9 @@ private:
 	bool
 	configureSaturation(const boost::property_tree::ptree& config);
 
+	bool
+	configureDeflection(const boost::property_tree::ptree& config);
+
 	template<typename ENUM, typename PARAM>
 	PARAM
 	getParameter(const std::map<ENUM, PARAM>& parameterMap, const ENUM& parameterEnum);
@@ -98,6 +101,7 @@ private:
 	RollL1AdaptiveParameter rollAdaptiveParameter_;
 	PitchL1AdaptiveParameter pitchAdaptiveParameter_;
 	std::map<PIDs, PIDParameter> pidParameters_;
+	ControllerOutput deflections_;
 
 	double beta_;
 	double rollTarget_;

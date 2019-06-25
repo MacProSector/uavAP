@@ -33,23 +33,27 @@ L1AdaptiveCascade::L1AdaptiveCascade(SensorData& sensorData, ControllerTarget& c
 				controllerOutput), controlEnvironment_(&sensorData.timestamp), beta_(0), rollTarget_(
 				0)
 {
+	deflections_.throttleOutput = 0;
 }
 
 bool
 L1AdaptiveCascade::configure(const boost::property_tree::ptree& config)
 {
 	PropertyMapper pm(config);
-	boost::property_tree::ptree saturationConfig;
 	boost::property_tree::ptree adaptiveConfig;
 	boost::property_tree::ptree pidConfig;
+	boost::property_tree::ptree deflectionConfig;
+	boost::property_tree::ptree saturationConfig;
 	bool configured = true;
 
 	pm.add("adaptive_controllers", adaptiveConfig, false);
 	pm.add("pid_controllers", pidConfig, false);
+	pm.add("controller_deflections", deflectionConfig, false);
 	pm.add("controller_saturations", saturationConfig, false);
 
 	configured = configured && configureAdaptive(adaptiveConfig);
 	configured = configured && configurePID(pidConfig);
+	configured = configured && configureDeflection(deflectionConfig);
 
 	createCascade();
 
@@ -214,6 +218,63 @@ L1AdaptiveCascade::configureSaturation(const boost::property_tree::ptree& config
 	}
 
 	return configured;
+}
+
+bool
+L1AdaptiveCascade::configureDeflection(const boost::property_tree::ptree& config)
+{
+	PropertyMapper pm(config);
+	bool configured = true;
+
+	for (const auto& it : config)
+	{
+		ControllerOutputs deflectionEnum = EnumMap<ControllerOutputs>::convert(it.first);
+
+		switch (deflectionEnum)
+		{
+		case ControllerOutputs::ROLL:
+		{
+			pm.add<double>(it.first, deflections_.rollOutput, true);
+			deflections_.rollOutput = degToRad(deflections_.rollOutput);
+
+			break;
+		}
+		case ControllerOutputs::PITCH:
+		{
+			pm.add<double>(it.first, deflections_.pitchOutput, true);
+			deflections_.pitchOutput = degToRad(deflections_.pitchOutput);
+
+			break;
+		}
+		case ControllerOutputs::YAW:
+		{
+			pm.add<double>(it.first, deflections_.yawOutput, true);
+			deflections_.yawOutput = degToRad(deflections_.yawOutput);
+
+			break;
+		}
+		case ControllerOutputs::THROTTLE:
+		{
+			pm.add<double>(it.first, deflections_.throttleOutput, true);
+
+			break;
+		}
+		case ControllerOutputs::INVALID:
+		{
+			APLOG_ERROR << "L1AdaptiveCascade: Invalid Controller Deflection Configuration.";
+			configured = false;
+			break;
+		}
+		default:
+		{
+			APLOG_ERROR << "L1AdaptiveCascade: Unknown Controller Deflection Configuration.";
+			configured = false;
+			break;
+		}
+		}
+	}
+
+	return configured && pm.map();
 }
 
 void
@@ -419,10 +480,10 @@ L1AdaptiveCascade::createCascade()
 //	double* yawOutputValue = &controllerOutput_.yawOutput;
 //
 //	auto rollOutputGain = controlEnvironment_.addGain<double, double, double>(rollOutputConstant,
-//			0.06666667);
+//			1 / deflections_.rollOutput);
 //
 //	auto yawOutputGain = controlEnvironment_.addGain<double, double, double>(yawOutputConstant,
-//			0.06666667);
+//			1 / deflections_.yawOutput);
 //
 //	auto rollOutputSaturation = controlEnvironment_.addSaturation<double>(rollOutputGain, -1, 1);
 //	auto yawOutputSaturation = controlEnvironment_.addSaturation<double>(yawOutputGain, -1, 1);
@@ -548,7 +609,7 @@ L1AdaptiveCascade::createCascade()
 	double* pitchOutputValue = &controllerOutput_.pitchOutput;
 
 	auto pitchOutputGain = controlEnvironment_.addGain<double, double, double>(pitchOutputConstant,
-			-1 / degToRad(15));
+			-1 / deflections_.pitchOutput);
 
 	auto pitchOutputSaturation = controlEnvironment_.addSaturation<double>(pitchOutputGain, -1, 1);
 
@@ -592,7 +653,10 @@ L1AdaptiveCascade::createCascade()
 	/* Throttle Output */
 	double* throttleOutputValue = &controllerOutput_.throttleOutput;
 
-	auto throttleOutputSaturation = controlEnvironment_.addSaturation<double>(velocitySum, -1, 1);
+	auto throttleOutputGain = controlEnvironment_.addGain<double, double, double>(velocitySum,
+			1 / deflections_.throttleOutput);
+
+	auto throttleOutputSaturation = controlEnvironment_.addSaturation<double>(throttleOutputGain, -1, 1);
 
 	auto throttleOutput = controlEnvironment_.addOutput<double, double>(throttleOutputSaturation,
 			throttleOutputValue);
