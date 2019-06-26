@@ -82,7 +82,7 @@ struct L1AdaptiveParameter
 };
 
 using RollL1AdaptiveParameter = L1AdaptiveParameter<Vector4, Vector2, Matrix2x4, Matrix2, Matrix4x2,
-Matrix4x2, Matrix22, Matrix22x4, Matrix2x22, Matrix2x4, Vector22, Matrix4, Matrix4, Matrix2x4, Matrix2x4, Vector4>;
+Matrix4x2, Matrix25, Matrix25x4, Matrix2x25, Matrix2x4, Vector25, Matrix4, Matrix4, Matrix2x4, Matrix2x4, Vector4>;
 
 using PitchL1AdaptiveParameter = L1AdaptiveParameter<Vector3, Scalar, RowVector3, Scalar, Vector3,
 Vector3, Matrix4, Matrix4x3, RowVector4, RowVector3, Vector4, Matrix3, Matrix3, RowVector3, RowVector3, Vector3>;

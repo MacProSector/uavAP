@@ -409,8 +409,8 @@ L1AdaptiveCascade::createCascade()
 
 	auto rollControlAdaptiveFeedback = controlEnvironment_.addFeedback<Vector4>();
 
-	auto rollControlControlLawStateSpace = controlEnvironment_.addStateSpace<Vector22, Vector4,
-			Matrix22, Matrix22x4, Matrix2x22, Matrix2x4, Vector2>(
+	auto rollControlControlLawStateSpace = controlEnvironment_.addStateSpace<Vector25, Vector4,
+			Matrix25, Matrix25x4, Matrix2x25, Matrix2x4, Vector2>(
 			rollAdaptiveParameter_.controlLawState, rollControlAdaptiveFeedback,
 			rollAdaptiveParameter_.controlLawMatrixA, rollAdaptiveParameter_.controlLawMatrixB,
 			rollAdaptiveParameter_.controlLawMatrixC, rollAdaptiveParameter_.controlLawMatrixD,
