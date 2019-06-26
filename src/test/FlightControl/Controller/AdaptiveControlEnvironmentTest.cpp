@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(PitchControl)
 	auto adaptiveFeedback = controlEnvironment.addFeedback<Vector3>();
 
 	auto controlLawStateSpace = controlEnvironment.addStateSpace<Vector4, Vector3, Matrix4,
-			Matrix43, RowVector4, RowVector3, Scalar>(parameter.controlLawState, adaptiveFeedback,
+			Matrix4x3, RowVector4, RowVector3, Scalar>(parameter.controlLawState, adaptiveFeedback,
 			parameter.controlLawMatrixA, parameter.controlLawMatrixB, parameter.controlLawMatrixC,
 			parameter.controlLawMatrixD, Scalar());
 

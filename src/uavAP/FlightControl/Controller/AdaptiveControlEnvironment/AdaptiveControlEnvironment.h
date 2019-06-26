@@ -49,8 +49,16 @@ public:
 
 	AdaptiveControlEnvironment(const TimePoint* timestamp);
 
+	AdaptiveControlEnvironment(const bool* autopilotActive, const TimePoint* timestamp);
+
 	void
 	evaluate();
+
+	void
+	resetIntegrator();
+
+	void
+	resetState();
 
 	template<typename TYPE>
 	std::shared_ptr<Constant<TYPE>>
@@ -127,10 +135,14 @@ public:
 
 private:
 
+	const bool* autopilotActive_;
 	const TimePoint* timestamp_;
+	bool lastAutopilotActive_;
 	TimePoint lastTimestamp_;
 	Duration duration_;
 	std::vector<EvaluableAdaptiveElement> evaluableAdaptiveElements_;
+	std::vector<PIDElement> pidElements_;
+	std::vector<StateSpaceElement> stateSpaceElements_;
 };
 
 template<typename TYPE>
@@ -269,7 +281,9 @@ AdaptiveControlEnvironment::addPID(const AdaptiveElement<TYPE>& input,
 {
 	auto pid = std::make_shared<PID<TYPE>>(input, target, derivative, parameter, &duration_);
 	auto pidEvaluation = std::bind(&PID<TYPE>::evaluate, pid);
+	auto pidIntegratorReset = std::bind(&PID<TYPE>::resetIntegrator, pid);
 	evaluableAdaptiveElements_.push_back(pidEvaluation);
+	pidElements_.push_back(pidIntegratorReset);
 
 	return pid;
 }
@@ -287,7 +301,11 @@ AdaptiveControlEnvironment::addStateSpace(const STATE& state, const AdaptiveElem
 	auto stateSpaceEvaluation = std::bind(
 			&StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::evaluate,
 			stateSpace);
+	auto stateSpaceStateReset = std::bind(
+			&StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::resetState,
+			stateSpace);
 	evaluableAdaptiveElements_.push_back(stateSpaceEvaluation);
+	stateSpaceElements_.push_back(stateSpaceStateReset);
 
 	return stateSpace;
 }

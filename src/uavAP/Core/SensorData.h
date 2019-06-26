@@ -118,7 +118,7 @@ struct SensorData
 	TimePoint timestamp; 	//!< Timestamp of sensor data, Format: [2019-Mar-13 18:21:21.354043]
 	uint32_t sequenceNr; 	//!< Sequence number of the struct
 	bool hasGPSFix; 		//!< Shows whether the GPS has a fix
-	bool autopilotActive; 	//!< Shows if the autopilot is active, always true in simulation
+	bool autopilotActive; 	//!< Shows if the autopilot is active
 	double airSpeed; 		//!< total velocity w.r.t. wind
 	double groundSpeed; 	//!< total velocity w.r.t. ground
 	double angleOfAttack; 	//!< current angle of attack

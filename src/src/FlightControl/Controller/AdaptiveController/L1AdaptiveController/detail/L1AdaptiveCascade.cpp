@@ -30,8 +30,8 @@
 L1AdaptiveCascade::L1AdaptiveCascade(SensorData& sensorData, ControllerTarget& controllerTarget,
 		ControllerOutput& controllerOutput) :
 		sensorData_(sensorData), controllerTarget_(controllerTarget), controllerOutput_(
-				controllerOutput), controlEnvironment_(&sensorData.timestamp), beta_(0), rollTarget_(
-				0)
+				controllerOutput), controlEnvironment_(&sensorData.autopilotActive,
+				&sensorData.timestamp), beta_(0), rollTarget_(0)
 {
 	deflections_.throttleOutput = 0;
 }
@@ -493,7 +493,6 @@ L1AdaptiveCascade::createCascade()
 //
 //	auto yawOutput = controlEnvironment_.addOutput<double, double>(yawOutputSaturation,
 //			yawOutputValue);
-
 	/* ------------------------- Roll adaptive control -------------------------- */
 
 	/* ------------------------- Pitch adaptive control ------------------------- */
@@ -656,7 +655,8 @@ L1AdaptiveCascade::createCascade()
 	auto throttleOutputGain = controlEnvironment_.addGain<double, double, double>(velocitySum,
 			1 / deflections_.throttleOutput);
 
-	auto throttleOutputSaturation = controlEnvironment_.addSaturation<double>(throttleOutputGain, -1, 1);
+	auto throttleOutputSaturation = controlEnvironment_.addSaturation<double>(throttleOutputGain,
+			-1, 1);
 
 	auto throttleOutput = controlEnvironment_.addOutput<double, double>(throttleOutputSaturation,
 			throttleOutputValue);

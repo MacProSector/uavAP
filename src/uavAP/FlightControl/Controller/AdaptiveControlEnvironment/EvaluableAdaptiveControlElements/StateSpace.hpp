@@ -26,6 +26,8 @@
 #ifndef UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_EVALUABLEADAPTIVECONTROLELEMENTS_STATESPACE_HPP_
 #define UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_EVALUABLEADAPTIVECONTROLELEMENTS_STATESPACE_HPP_
 
+#include <mutex>
+
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/IEvaluableAdaptiveControlElement.h"
 
 template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
@@ -65,6 +67,9 @@ public:
 	void
 	setOutput(const OUTPUT& output);
 
+	void
+	resetState();
+
 private:
 
 	STATE state_;
@@ -74,7 +79,12 @@ private:
 	MATRIX_C matrixC_;
 	MATRIX_D matrixD_;
 	OUTPUT output_;
+
+	const STATE stateInit_;
+	const OUTPUT outputInit_;
 };
+
+using StateSpaceElement = std::function<void()>;
 
 template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
 		typename MATRIX_D, typename OUTPUT>
@@ -84,7 +94,7 @@ StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::StateS
 		const MATRIX_B& matrixB, const MATRIX_C& matrixC, const MATRIX_D& matrixD,
 		const OUTPUT& output) :
 		state_(state), input_(input), matrixA_(matrixA), matrixB_(matrixB), matrixC_(matrixC), matrixD_(
-				matrixD), output_(output)
+				matrixD), output_(output), stateInit_(state), outputInit_(output)
 {
 }
 
@@ -94,6 +104,7 @@ inline void
 StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::evaluate()
 {
 	INPUT input = input_->getValue();
+
 	output_ = matrixC_ * state_ + matrixD_ * input;
 	state_ = matrixA_ * state_ + matrixB_ * input;
 }
@@ -167,6 +178,15 @@ StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::setOut
 		const OUTPUT& output)
 {
 	output_ = output;
+}
+
+template<typename STATE, typename INPUT, typename MATRIX_A, typename MATRIX_B, typename MATRIX_C,
+		typename MATRIX_D, typename OUTPUT>
+inline void
+StateSpace<STATE, INPUT, MATRIX_A, MATRIX_B, MATRIX_C, MATRIX_D, OUTPUT>::resetState()
+{
+	state_ = stateInit_;
+	output_ = outputInit_;
 }
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLENVIRONMENT_EVALUABLEADAPTIVECONTROLELEMENTS_STATESPACE_HPP_ */

@@ -26,12 +26,19 @@
 #include "uavAP/Core/Logging/APLogger.h"
 #include "uavAP/FlightControl/Controller/AdaptiveControlEnvironment/AdaptiveControlEnvironment.h"
 
-AdaptiveControlEnvironment::AdaptiveControlEnvironment() : timestamp_(nullptr)
+AdaptiveControlEnvironment::AdaptiveControlEnvironment() :
+		autopilotActive_(nullptr), timestamp_(nullptr), lastAutopilotActive_(false)
 {
 }
 
 AdaptiveControlEnvironment::AdaptiveControlEnvironment(const TimePoint* timestamp) :
-		timestamp_(timestamp)
+		autopilotActive_(nullptr), timestamp_(timestamp), lastAutopilotActive_(false)
+{
+}
+
+AdaptiveControlEnvironment::AdaptiveControlEnvironment(const bool* autopilotActive,
+		const TimePoint* timestamp) :
+		autopilotActive_(autopilotActive), timestamp_(timestamp), lastAutopilotActive_(false)
 {
 }
 
@@ -52,7 +59,38 @@ AdaptiveControlEnvironment::evaluate()
 		lastTimestamp_ = *timestamp_;
 	}
 
+	if (autopilotActive_)
+	{
+		bool autopilotActive = *autopilotActive_;
+
+		if (!lastAutopilotActive_ && autopilotActive)
+		{
+			resetIntegrator();
+			resetState();
+		}
+
+		lastAutopilotActive_ = autopilotActive;
+	}
+
 	for (auto& it : evaluableAdaptiveElements_)
+	{
+		it();
+	}
+}
+
+void
+AdaptiveControlEnvironment::resetIntegrator()
+{
+	for (auto& it : pidElements_)
+	{
+		it();
+	}
+}
+
+void
+AdaptiveControlEnvironment::resetState()
+{
+	for (auto& it : stateSpaceElements_)
 	{
 		it();
 	}

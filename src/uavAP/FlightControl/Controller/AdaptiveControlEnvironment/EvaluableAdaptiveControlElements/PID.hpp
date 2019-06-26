@@ -67,6 +67,9 @@ public:
 	setDuration(Duration* duration);
 
 	void
+	resetIntegrator();
+
+	void
 	overrideTarget(const TYPE& target);
 
 	void
@@ -102,6 +105,8 @@ private:
 	bool override_;
 };
 
+using PIDElement = std::function<void()>;
+
 template<typename TYPE>
 inline
 PID<TYPE>::PID(const AdaptiveElement<TYPE>& input, const AdaptiveElement<TYPE>& target,
@@ -131,7 +136,7 @@ PID<TYPE>::evaluate()
 		return;
 	}
 
-	output_ = 0;
+	output_ = TYPE();
 	targetValue_ = override_ ? overrideTarget_ : target_->getValue();
 	error_ = targetValue_ - input_->getValue();
 
@@ -199,6 +204,13 @@ PID<TYPE>::setDuration(Duration* duration)
 
 template<typename TYPE>
 inline void
+PID<TYPE>::resetIntegrator()
+{
+	integrator_ = TYPE();
+}
+
+template<typename TYPE>
+inline void
 PID<TYPE>::overrideTarget(const TYPE& target)
 {
 	overrideTarget_ = target;
@@ -236,7 +248,7 @@ PID<TYPE>::calculateIntegralControl()
 	TYPE durationSecond = duration_->total_microseconds() / 1e6;
 	integrator_ += error_ * durationSecond;
 
-	if (integrator_ > 0)
+	if (integrator_ > TYPE())
 	{
 		integrator_ = std::min(integrator_, parameter_.imax);
 	}
