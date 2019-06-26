@@ -325,174 +325,175 @@ L1AdaptiveCascade::setSaturation(const ControllerConstraints& saturationEnum,
 void
 L1AdaptiveCascade::createCascade()
 {
-	PIDParameter rollPIDParameter = getParameter(pidParameters_, PIDs::ROLL);
-	PIDParameter rollRatePIDParameter = getParameter(pidParameters_, PIDs::ROLL_RATE);
+//	PIDParameter rollPIDParameter = getParameter(pidParameters_, PIDs::ROLL);
+//	PIDParameter rollRatePIDParameter = getParameter(pidParameters_, PIDs::ROLL_RATE);
 	PIDParameter climbAnglePIDParameter = getParameter(pidParameters_, PIDs::CLIMB_ANGLE);
-	PIDParameter betaPIDParameter = getParameter(pidParameters_, PIDs::RUDDER);
+//	PIDParameter betaPIDParameter = getParameter(pidParameters_, PIDs::RUDDER);
 	PIDParameter velocityPIDParameter = getParameter(pidParameters_, PIDs::VELOCITY);
 
-	/* Roll Control */
-	double* rollInputValue = &sensorData_.attitude[0];
+//	/* Roll Control */
+//	double* rollInputValue = &sensorData_.attitude[0];
+//	double* rollRateInputValue = &sensorData_.angularRate[0];
+//	double* rollTargetValue = &rollTarget_;
+//
+//	auto rollInput = controlEnvironment_.addInput<double>(rollInputValue);
+//	auto rollRateInput = controlEnvironment_.addInput<double>(rollRateInputValue);
+//	auto rollTarget = controlEnvironment_.addInput<double>(rollTargetValue);
+//
+//	auto rollTargetSaturation = controlEnvironment_.addSaturation<double>(rollTarget,
+//			degToRad(-30.0), degToRad(30.0));
+//
+//	auto rollPID = controlEnvironment_.addPID<double>(rollInput, rollTargetSaturation,
+//			rollRateInput, rollPIDParameter);
+//
+//	/* Roll Rate Control */
+//	auto rollRateTargetSaturation = controlEnvironment_.addSaturation<double>(rollPID,
+//			degToRad(-30.0), degToRad(30.0));
+//
+//	auto rollRatePID = controlEnvironment_.addPID<double>(rollRateInput, rollRateTargetSaturation,
+//			rollRatePIDParameter);
+//
+//	/* Roll Output */
+//	double* rollOutputValue = &controllerOutput_.rollOutput;
+//
+//	auto rollOutputSaturation = controlEnvironment_.addSaturation<double>(rollRatePID, -1, 1);
+//
+//	auto rollOutput = controlEnvironment_.addOutput<double, double>(rollOutputSaturation,
+//			rollOutputValue);
+
+	/* ------------------------- Roll adaptive control -------------------------- */
+
+	/* Roll control input */
+	double* angleOfSideSlipInputValue = &beta_;
 	double* rollRateInputValue = &sensorData_.angularRate[0];
-	double* rollTargetValue = &rollTarget_;
+	double* yawRateInputValue = &sensorData_.angularRate[2];
+	double* rollAngleInputValue = &sensorData_.attitude[0];
 
-	auto rollInput = controlEnvironment_.addInput<double>(rollInputValue);
+	auto angleOfSideSlipInput = controlEnvironment_.addInput<double>(angleOfSideSlipInputValue);
 	auto rollRateInput = controlEnvironment_.addInput<double>(rollRateInputValue);
-	auto rollTarget = controlEnvironment_.addInput<double>(rollTargetValue);
+	auto yawRateInput = controlEnvironment_.addInput<double>(yawRateInputValue);
+	auto rollAngleInput = controlEnvironment_.addInput<double>(rollAngleInputValue);
 
-	auto rollTargetSaturation = controlEnvironment_.addSaturation<double>(rollTarget,
+	std::vector<AdaptiveElement<double>> rollControlInputMuxVector
+	{ angleOfSideSlipInput, rollRateInput, yawRateInput, rollAngleInput };
+
+	auto rollControlInputTrim = controlEnvironment_.addConstant<Vector4>(
+			rollAdaptiveParameter_.inputTrim);
+
+	auto rollControlInputMux = controlEnvironment_.addMux<double, Vector4>(
+			rollControlInputMuxVector);
+
+	auto rollControlInputSum = controlEnvironment_.addSum<Vector4, Vector4, Vector4>(
+			rollControlInputMux, rollControlInputTrim, false);
+
+	auto rollControlInputGain = controlEnvironment_.addGain<Vector4, Matrix2x4, Vector2>(
+			rollControlInputSum, rollAdaptiveParameter_.inputGain);
+
+	/* Roll control control law */
+	double* rollAngleTargetValue = &rollTarget_;
+
+	auto rollAngleTarget = controlEnvironment_.addInput<double>(rollAngleTargetValue);
+	auto angleOfSideSlipTarget = controlEnvironment_.addConstant<double>(0);
+
+	auto rollAngleTargetSaturation = controlEnvironment_.addSaturation<double>(rollAngleTarget,
 			degToRad(-30.0), degToRad(30.0));
 
-	auto rollPID = controlEnvironment_.addPID<double>(rollInput, rollTargetSaturation,
-			rollRateInput, rollPIDParameter);
+	std::vector<AdaptiveElement<double>> rollControlTargetMuxVector
+	{ rollAngleTargetSaturation, angleOfSideSlipTarget };
 
-	/* Roll Rate Control */
-	auto rollRateTargetSaturation = controlEnvironment_.addSaturation<double>(rollPID,
-			degToRad(-30.0), degToRad(30.0));
+	auto rollControlTargetMux = controlEnvironment_.addMux<double, Vector2>(
+			rollControlTargetMuxVector);
 
-	auto rollRatePID = controlEnvironment_.addPID<double>(rollRateInput, rollRateTargetSaturation,
-			rollRatePIDParameter);
+	auto rollControlTargetGain = controlEnvironment_.addGain<Vector2, Matrix2, Vector2>(
+			rollControlTargetMux, rollAdaptiveParameter_.targetGain);
 
-	/* Roll Output */
+	auto rollControlAdaptiveFeedback = controlEnvironment_.addFeedback<Vector4>();
+
+	auto rollControlControlLawStateSpace = controlEnvironment_.addStateSpace<Vector22, Vector4,
+			Matrix22, Matrix22x4, Matrix2x22, Matrix2x4, Vector2>(
+			rollAdaptiveParameter_.controlLawState, rollControlAdaptiveFeedback,
+			rollAdaptiveParameter_.controlLawMatrixA, rollAdaptiveParameter_.controlLawMatrixB,
+			rollAdaptiveParameter_.controlLawMatrixC, rollAdaptiveParameter_.controlLawMatrixD,
+			Vector2());
+
+	auto rollControlControlLawSum = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
+			rollControlTargetGain, rollControlControlLawStateSpace, false);
+
+	/* Roll control output predictor */
+	auto rollControlPredictorGain = controlEnvironment_.addGain<Vector2, Matrix4x2, Vector4>(
+			rollControlControlLawSum, rollAdaptiveParameter_.predictorGain);
+
+	auto rollControlPredictorInputSum = controlEnvironment_.addSum<Vector4, Vector4, Vector4>(
+			rollControlPredictorGain, rollControlAdaptiveFeedback, true);
+
+	auto rollControlPredictorStateSpace = controlEnvironment_.addStateSpace<Vector4, Vector4,
+			Matrix4, Matrix4, Matrix2x4, Matrix2x4, Vector2>(rollAdaptiveParameter_.predictorState,
+			rollControlPredictorInputSum, rollAdaptiveParameter_.predictorMatrixA,
+			rollAdaptiveParameter_.predictorMatrixB, rollAdaptiveParameter_.predictorMatrixC,
+			rollAdaptiveParameter_.predictorMatrixD, Vector2());
+
+	auto angleOfSideSlipConstant = controlEnvironment_.addConstant<double>(0);
+	auto rollRateConstant = controlEnvironment_.addConstant<double>(0);
+	auto yawRateConstant = controlEnvironment_.addConstant<double>(0);
+	auto rollAngleConstant = controlEnvironment_.addConstant<double>(0);
+
+	std::vector<std::shared_ptr<Constant<double>>> rollControlInputDemuxVector
+	{ angleOfSideSlipConstant, rollRateConstant, yawRateConstant, rollAngleConstant };
+
+	auto rollControlInputDemux = controlEnvironment_.addDemux<Vector4, double>(rollControlInputSum,
+			rollControlInputDemuxVector);
+
+	std::vector<AdaptiveElement<double>> rollControlPredictorOutputVector
+	{ rollAngleConstant, angleOfSideSlipConstant };
+
+	auto rollControlPredictorOutputMux = controlEnvironment_.addMux<double, Vector2>(
+			rollControlPredictorOutputVector);
+
+	auto rollControlPredictorOutputSum = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
+			rollControlPredictorStateSpace, rollControlPredictorOutputMux, false);
+
+	auto rollControlAdaptiveGain = controlEnvironment_.addGain<Vector2, Matrix4x2, Vector4>(
+			rollControlPredictorOutputSum, rollAdaptiveParameter_.adaptiveGain);
+
+	rollControlAdaptiveFeedback->setInput(rollControlAdaptiveGain);
+
+	/* Roll control output */
+	auto rollControlOutputTrim = controlEnvironment_.addConstant<Vector2>(
+			rollAdaptiveParameter_.outputTrim);
+
+	auto rollControlOutputSumOne = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
+			rollControlOutputTrim, rollControlControlLawSum, true);
+
+	auto rollControlOutputSumTwo = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
+			rollControlOutputSumOne, rollControlInputGain, false);
+
+	auto rollOutputConstant = controlEnvironment_.addConstant<double>(0);
+	auto yawOutputConstant = controlEnvironment_.addConstant<double>(0);
+
+	std::vector<std::shared_ptr<Constant<double>>> rollControlOutputVector
+	{ rollOutputConstant, yawOutputConstant };
+
+	auto rollControlOutputDemux = controlEnvironment_.addDemux<Vector2, double>(
+			rollControlOutputSumTwo, rollControlOutputVector);
+
 	double* rollOutputValue = &controllerOutput_.rollOutput;
+	double* yawOutputValue = &controllerOutput_.yawOutput;
 
-	auto rollOutputSaturation = controlEnvironment_.addSaturation<double>(rollRatePID, -1, 1);
+	auto rollOutputGain = controlEnvironment_.addGain<double, double, double>(rollOutputConstant,
+			1 / deflections_.rollOutput);
+
+	auto yawOutputGain = controlEnvironment_.addGain<double, double, double>(yawOutputConstant,
+			1 / deflections_.yawOutput);
+
+	auto rollOutputSaturation = controlEnvironment_.addSaturation<double>(rollOutputGain, -1, 1);
+	auto yawOutputSaturation = controlEnvironment_.addSaturation<double>(yawOutputGain, -1, 1);
 
 	auto rollOutput = controlEnvironment_.addOutput<double, double>(rollOutputSaturation,
 			rollOutputValue);
 
-	/* ------------------------- Roll adaptive control -------------------------- */
+	auto yawOutput = controlEnvironment_.addOutput<double, double>(yawOutputSaturation,
+			yawOutputValue);
 
-//	/* Roll control input */
-//	double* angleOfSideSlipInputValue = &beta_;
-//	double* rollRateInputValue = &sensorData_.angularRate[0];
-//	double* yawRateInputValue = &sensorData_.angularRate[2];
-//	double* rollAngleInputValue = &sensorData_.attitude[0];
-//
-//	auto angleOfSideSlipInput = controlEnvironment_.addInput<double>(angleOfSideSlipInputValue);
-//	auto rollRateInput = controlEnvironment_.addInput<double>(rollRateInputValue);
-//	auto yawRateInput = controlEnvironment_.addInput<double>(yawRateInputValue);
-//	auto rollAngleInput = controlEnvironment_.addInput<double>(rollAngleInputValue);
-//
-//	std::vector<AdaptiveElement<double>> rollControlInputMuxVector
-//	{ angleOfSideSlipInput, rollRateInput, yawRateInput, rollAngleInput };
-//
-//	auto rollControlInputTrim = controlEnvironment_.addConstant<Vector4>(
-//			rollAdaptiveParameter_.inputTrim);
-//
-//	auto rollControlInputMux = controlEnvironment_.addMux<double, Vector4>(
-//			rollControlInputMuxVector);
-//
-//	auto rollControlInputSum = controlEnvironment_.addSum<Vector4, Vector4, Vector4>(
-//			rollControlInputMux, rollControlInputTrim, false);
-//
-//	auto rollControlInputGain = controlEnvironment_.addGain<Vector4, Matrix2x4, Vector2>(
-//			rollControlInputSum, rollAdaptiveParameter_.inputGain);
-//
-//	/* Roll control control law */
-//	double* rollAngleTargetValue = &rollTarget_;
-//
-//	auto rollAngleTarget = controlEnvironment_.addInput<double>(rollAngleTargetValue);
-//	auto angleOfSideSlipTarget = controlEnvironment_.addConstant<double>(0);
-//
-//	auto rollAngleTargetSaturation = controlEnvironment_.addSaturation<double>(rollAngleTarget,
-//			degToRad(-30.0), degToRad(30.0));
-//
-//	std::vector<AdaptiveElement<double>> rollControlTargetMuxVector
-//	{ rollAngleTargetSaturation, angleOfSideSlipTarget };
-//
-//	auto rollControlTargetMux = controlEnvironment_.addMux<double, Vector2>(
-//			rollControlTargetMuxVector);
-//
-//	auto rollControlTargetGain = controlEnvironment_.addGain<Vector2, Matrix2, Vector2>(
-//			rollControlTargetMux, rollAdaptiveParameter_.targetGain);
-//
-//	auto rollControlAdaptiveFeedback = controlEnvironment_.addFeedback<Vector4>();
-//
-//	auto rollControlControlLawStateSpace = controlEnvironment_.addStateSpace<Vector22, Vector4,
-//			Matrix22, Matrix22x4, Matrix2x22, Matrix2x4, Vector2>(
-//			rollAdaptiveParameter_.controlLawState, rollControlAdaptiveFeedback,
-//			rollAdaptiveParameter_.controlLawMatrixA, rollAdaptiveParameter_.controlLawMatrixB,
-//			rollAdaptiveParameter_.controlLawMatrixC, rollAdaptiveParameter_.controlLawMatrixD,
-//			Vector2());
-//
-//	auto rollControlControlLawSum = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
-//			rollControlTargetGain, rollControlControlLawStateSpace, false);
-//
-//	/* Roll control output predictor */
-//	auto rollControlPredictorGain = controlEnvironment_.addGain<Vector2, Matrix4x2, Vector4>(
-//			rollControlControlLawSum, rollAdaptiveParameter_.predictorGain);
-//
-//	auto rollControlPredictorInputSum = controlEnvironment_.addSum<Vector4, Vector4, Vector4>(
-//			rollControlPredictorGain, rollControlAdaptiveFeedback, true);
-//
-//	auto rollControlPredictorStateSpace = controlEnvironment_.addStateSpace<Vector4, Vector4,
-//			Matrix4, Matrix4, Matrix2x4, Matrix2x4, Vector2>(rollAdaptiveParameter_.predictorState,
-//			rollControlPredictorInputSum, rollAdaptiveParameter_.predictorMatrixA,
-//			rollAdaptiveParameter_.predictorMatrixB, rollAdaptiveParameter_.predictorMatrixC,
-//			rollAdaptiveParameter_.predictorMatrixD, Vector2());
-//
-//	auto angleOfSideSlipConstant = controlEnvironment_.addConstant<double>(0);
-//	auto rollRateConstant = controlEnvironment_.addConstant<double>(0);
-//	auto yawRateConstant = controlEnvironment_.addConstant<double>(0);
-//	auto rollAngleConstant = controlEnvironment_.addConstant<double>(0);
-//
-//	std::vector<std::shared_ptr<Constant<double>>> rollControlInputDemuxVector
-//	{ angleOfSideSlipConstant, rollRateConstant, yawRateConstant, rollAngleConstant };
-//
-//	auto rollControlInputDemux = controlEnvironment_.addDemux<Vector4, double>(rollControlInputSum,
-//			rollControlInputDemuxVector);
-//
-//	std::vector<AdaptiveElement<double>> rollControlPredictorOutputVector
-//	{ rollAngleConstant, angleOfSideSlipConstant };
-//
-//	auto rollControlPredictorOutputMux = controlEnvironment_.addMux<double, Vector2>(
-//			rollControlPredictorOutputVector);
-//
-//	auto rollControlPredictorOutputSum = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
-//			rollControlPredictorStateSpace, rollControlPredictorOutputMux, false);
-//
-//	auto rollControlAdaptiveGain = controlEnvironment_.addGain<Vector2, Matrix4x2, Vector4>(
-//			rollControlPredictorOutputSum, rollAdaptiveParameter_.adaptiveGain);
-//
-//	rollControlAdaptiveFeedback->setInput(rollControlAdaptiveGain);
-//
-//	/* Roll control output */
-//	auto rollControlOutputTrim = controlEnvironment_.addConstant<Vector2>(
-//			rollAdaptiveParameter_.outputTrim);
-//
-//	auto rollControlOutputSumOne = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
-//			rollControlOutputTrim, rollControlControlLawSum, true);
-//
-//	auto rollControlOutputSumTwo = controlEnvironment_.addSum<Vector2, Vector2, Vector2>(
-//			rollControlOutputSumOne, rollControlInputGain, false);
-//
-//	auto rollOutputConstant = controlEnvironment_.addConstant<double>(0);
-//	auto yawOutputConstant = controlEnvironment_.addConstant<double>(0);
-//
-//	std::vector<std::shared_ptr<Constant<double>>> rollControlOutputVector
-//	{ rollOutputConstant, yawOutputConstant };
-//
-//	auto rollControlOutputDemux = controlEnvironment_.addDemux<Vector2, double>(
-//			rollControlOutputSumTwo, rollControlOutputVector);
-//
-//	double* rollOutputValue = &controllerOutput_.rollOutput;
-//	double* yawOutputValue = &controllerOutput_.yawOutput;
-//
-//	auto rollOutputGain = controlEnvironment_.addGain<double, double, double>(rollOutputConstant,
-//			1 / deflections_.rollOutput);
-//
-//	auto yawOutputGain = controlEnvironment_.addGain<double, double, double>(yawOutputConstant,
-//			1 / deflections_.yawOutput);
-//
-//	auto rollOutputSaturation = controlEnvironment_.addSaturation<double>(rollOutputGain, -1, 1);
-//	auto yawOutputSaturation = controlEnvironment_.addSaturation<double>(yawOutputGain, -1, 1);
-//
-//	auto rollOutput = controlEnvironment_.addOutput<double, double>(rollOutputSaturation,
-//			rollOutputValue);
-//
-//	auto yawOutput = controlEnvironment_.addOutput<double, double>(yawOutputSaturation,
-//			yawOutputValue);
 	/* ------------------------- Roll adaptive control -------------------------- */
 
 	/* ------------------------- Pitch adaptive control ------------------------- */
@@ -617,23 +618,23 @@ L1AdaptiveCascade::createCascade()
 
 	/* ------------------------- Pitch adaptive control ------------------------- */
 
-	/* Beta Control */
-	double* betaInputValue = &beta_;
+//	/* Beta Control */
+//	double* betaInputValue = &beta_;
+//
+//	auto betaInput = controlEnvironment_.addInput<double>(betaInputValue);
+//	auto betaTarget = controlEnvironment_.addConstant<double>(0);
+//	auto betaPID = controlEnvironment_.addPID<double>(betaInput, betaTarget, betaPIDParameter);
+//	auto betaPIDInverted = controlEnvironment_.addGain<double, double, double>(betaPID, -1);
+//
+//	/* Yaw Output */
+//	double* yawOutputValue = &controllerOutput_.yawOutput;
+//
+//	auto yawOutputSaturation = controlEnvironment_.addSaturation<double>(betaPIDInverted, -1, 1);
+//
+//	auto yawOutput = controlEnvironment_.addOutput<double, double>(yawOutputSaturation,
+//			yawOutputValue);
 
-	auto betaInput = controlEnvironment_.addInput<double>(betaInputValue);
-	auto betaTarget = controlEnvironment_.addConstant<double>(0);
-	auto betaPID = controlEnvironment_.addPID<double>(betaInput, betaTarget, betaPIDParameter);
-	auto betaPIDInverted = controlEnvironment_.addGain<double, double, double>(betaPID, -1);
-
-	/* Yaw Output */
-	double* yawOutputValue = &controllerOutput_.yawOutput;
-
-	auto yawOutputSaturation = controlEnvironment_.addSaturation<double>(betaPIDInverted, -1, 1);
-
-	auto yawOutput = controlEnvironment_.addOutput<double, double>(yawOutputSaturation,
-			yawOutputValue);
-
-	/* Velocity Control */
+	/* Velocity control */
 	double* velocityInputValue = &sensorData_.airSpeed;
 	double* accelerationInputValue = &sensorData_.acceleration[0];
 	double* velocityTargetValue = &controllerTarget_.velocity;
@@ -649,7 +650,7 @@ L1AdaptiveCascade::createCascade()
 	auto velocitySum = controlEnvironment_.addSum<double, double, double>(velocityPID,
 			velocityOffset, false);
 
-	/* Throttle Output */
+	/* Throttle output */
 	double* throttleOutputValue = &controllerOutput_.throttleOutput;
 
 	auto throttleOutputGain = controlEnvironment_.addGain<double, double, double>(velocitySum,
@@ -661,11 +662,11 @@ L1AdaptiveCascade::createCascade()
 	auto throttleOutput = controlEnvironment_.addOutput<double, double>(throttleOutputSaturation,
 			throttleOutputValue);
 
-	pids_.insert(std::make_pair(PIDs::ROLL, rollPID));
-	pids_.insert(std::make_pair(PIDs::ROLL_RATE, rollRatePID));
+//	pids_.insert(std::make_pair(PIDs::ROLL, rollPID));
+//	pids_.insert(std::make_pair(PIDs::ROLL_RATE, rollRatePID));
 	pids_.insert(std::make_pair(PIDs::CLIMB_ANGLE, climbAnglePID));
 	pids_.insert(std::make_pair(PIDs::VELOCITY, velocityPID));
-	pids_.insert(std::make_pair(PIDs::RUDDER, betaPID));
+//	pids_.insert(std::make_pair(PIDs::RUDDER, betaPID));
 
 	outputs_.insert(std::make_pair(ControllerOutputs::ROLL, rollOutput));
 	outputs_.insert(std::make_pair(ControllerOutputs::PITCH, pitchOutput));
@@ -677,9 +678,9 @@ L1AdaptiveCascade::createCascade()
 	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::YAW, yawOutput));
 	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::THROTTLE, throttleOutput));
 
-	saturations_.insert(std::make_pair(ControllerConstraints::ROLL, rollTargetSaturation));
-	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_RATE, rollRateTargetSaturation));
-//	saturations_.insert(std::make_pair(ControllerConstraints::ROLL, rollAngleTargetSaturation));
+//	saturations_.insert(std::make_pair(ControllerConstraints::ROLL, rollTargetSaturation));
+//	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_RATE, rollRateTargetSaturation));
+	saturations_.insert(std::make_pair(ControllerConstraints::ROLL, rollAngleTargetSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::PITCH, pitchAngleTargetSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::ROLL_OUTPUT, rollOutputSaturation));
 	saturations_.insert(std::make_pair(ControllerConstraints::PITCH_OUTPUT, pitchOutputSaturation));
