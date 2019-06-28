@@ -384,6 +384,24 @@ ApExtManager::ap_sense(const data_sample_t* sample)
 		aoa = 0;
 	sens.angleOfAttack = aoa;
 
+	Eigen::Matrix3d rotationMatrix;
+	Vector3 velocityBody;
+	double velocityBodyTotal;
+	double velocityBodyLateral;
+	double roll = sens.attitude.x();
+	double pitch = -sens.attitude.y();
+	double yaw = sens.attitude.z();
+
+	rotationMatrix = Eigen::AngleAxisd(-roll, Vector3::UnitX())
+			* Eigen::AngleAxisd(-pitch, Vector3::UnitY())
+			* Eigen::AngleAxisd(-yaw, Vector3::UnitZ());
+
+	velocityBody = rotationMatrix * sens.velocity;
+	velocityBodyTotal = velocityBody.norm();
+	velocityBodyLateral = velocityBody[1];
+
+	sens.angleOfSideslip = asin(velocityBodyLateral / velocityBodyTotal);
+
 	if (courseAsHeading_)
 	{
 		sens.attitude[2] = boundAngleRad(-(courseAngle - M_PI/2));

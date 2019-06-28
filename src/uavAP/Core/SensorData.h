@@ -57,6 +57,7 @@ enum class Sensor
 	AIR_SPEED,
 	GROUND_SPEED,
 	ANGLE_OF_ATTACK,
+	ANGLE_OF_SIDESLIP,
 	PROPULSION_POWER,
 	CONSUMED_ENERGY,
 	BATTERY_VOLTAGE,
@@ -93,6 +94,7 @@ ENUMMAP_INIT(Sensor,
 		{Sensor::AIR_SPEED, "air_speed"},
 		{Sensor::GROUND_SPEED, "ground_speed"},
 		{Sensor::ANGLE_OF_ATTACK, "angle_of_attack"},
+		{Sensor::ANGLE_OF_SIDESLIP, "angle_of_sideslip"},
 		{Sensor::PROPULSION_POWER, "propulsion_power"},
 		{Sensor::CONSUMED_ENERGY, "consumed_energy"},
 		{Sensor::BATTERY_VOLTAGE, "battery_voltage"},
@@ -122,6 +124,7 @@ struct SensorData
 	double airSpeed; 		//!< total velocity w.r.t. wind
 	double groundSpeed; 	//!< total velocity w.r.t. ground
 	double angleOfAttack; 	//!< current angle of attack
+	double angleOfSideslip; //!< current angle of sideslip
 	double propulsionPower; //!< measured or estimated current propulsion power
 	double consumedEnergy; 	//!< measured or estimated total used energy for propulsion
 	double batteryVoltage;	//!< current battery voltage
@@ -133,10 +136,10 @@ struct SensorData
 	double rpm;				//!< current motor rotation speed
 
 	SensorData() :
-				position(0, 0, 0), velocity(0, 0, 0), acceleration(0, 0, 0), attitude(0, 0, 0), angularRate(
-						0, 0, 0), sequenceNr(0), hasGPSFix(false), autopilotActive(false), airSpeed(0), groundSpeed(
-						0), angleOfAttack(0), propulsionPower(0), consumedEnergy(0), batteryVoltage(0), batteryCurrent(
-						0), aileron(0), elevator(0), rudder(0), throttle(0), rpm(0)
+			position(0, 0, 0), velocity(0, 0, 0), acceleration(0, 0, 0), attitude(0, 0, 0), angularRate(
+					0, 0, 0), sequenceNr(0), hasGPSFix(false), autopilotActive(false), airSpeed(0), groundSpeed(
+					0), angleOfAttack(0), angleOfSideslip(0), propulsionPower(0), consumedEnergy(0), batteryVoltage(
+					0), batteryCurrent(0), aileron(0), elevator(0), rudder(0), throttle(0), rpm(0)
 	{
 	}
 };
@@ -163,6 +166,7 @@ serialize(Archive& ar, SensorData& t)
 	ar & t.hasGPSFix;
 	ar & t.autopilotActive;
 	ar & t.angleOfAttack;
+	ar & t.angleOfSideslip;
 	ar & t.sequenceNr;
 	ar & t.batteryVoltage;
 	ar & t.batteryCurrent;
