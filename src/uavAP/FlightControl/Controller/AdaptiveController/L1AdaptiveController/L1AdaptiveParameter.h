@@ -81,10 +81,13 @@ struct L1AdaptiveParameter
 	}
 };
 
-using RollL1AdaptiveParameter = L1AdaptiveParameter<Vector4, Vector2, Matrix2x4, Matrix2, Matrix4x2,
-Matrix4x2, Matrix25, Matrix25x4, Matrix2x25, Matrix2x4, Vector25, Matrix4, Matrix4, Matrix2x4, Matrix2x4, Vector4>;
+using RollL1AdaptiveParameter = L1AdaptiveParameter<Scalar, Scalar, Scalar, Scalar, Scalar,
+Scalar, Matrix2, Vector2, RowVector2, Scalar, Vector2, Scalar, Scalar, Scalar, Scalar, Scalar>;
 
 using PitchL1AdaptiveParameter = L1AdaptiveParameter<Scalar, Scalar, Scalar, Scalar, Scalar,
+Scalar, Matrix2, Vector2, RowVector2, Scalar, Vector2, Scalar, Scalar, Scalar, Scalar, Scalar>;
+
+using YawL1AdaptiveParameter = L1AdaptiveParameter<Scalar, Scalar, Scalar, Scalar, Scalar,
 Scalar, Matrix2, Vector2, RowVector2, Scalar, Vector2, Scalar, Scalar, Scalar, Scalar, Scalar>;
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLLER_L1ADAPTIVECONTROLLER_L1ADAPTIVEPARAMETER_H_ */
