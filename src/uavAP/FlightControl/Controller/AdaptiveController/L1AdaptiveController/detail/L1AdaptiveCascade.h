@@ -103,7 +103,6 @@ private:
 	std::map<PIDs, PIDParameter> pidParameters_;
 	ControllerOutput deflections_;
 
-	double beta_;
 	double rollTarget_;
 };
 
