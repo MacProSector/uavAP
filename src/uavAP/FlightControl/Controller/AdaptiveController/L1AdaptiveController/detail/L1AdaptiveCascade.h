@@ -86,7 +86,7 @@ private:
 	createCascade();
 
 	void
-	calculateControl();
+	calculateControllerTarget();
 
 	SensorData& sensorData_;
 	ControllerTarget& controllerTarget_;
@@ -100,10 +100,12 @@ private:
 
 	RollL1AdaptiveParameter rollAdaptiveParameter_;
 	PitchL1AdaptiveParameter pitchAdaptiveParameter_;
+	YawL1AdaptiveParameter yawAdaptiveParameter_;
 	std::map<PIDs, PIDParameter> pidParameters_;
 	ControllerOutput deflections_;
 
-	double rollTarget_;
+	double rollAngleTarget_;
+	double angleOfSideslipTarget_;
 };
 
 template<typename ENUM, typename PARAM>
