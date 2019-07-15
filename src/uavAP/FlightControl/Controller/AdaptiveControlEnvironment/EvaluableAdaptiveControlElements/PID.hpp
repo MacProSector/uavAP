@@ -193,6 +193,7 @@ inline void
 PID<TYPE>::setParameter(const PIDParameter& parameter)
 {
 	parameter_ = parameter;
+	resetIntegrator();
 }
 
 template<typename TYPE>
