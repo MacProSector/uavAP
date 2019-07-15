@@ -151,7 +151,7 @@ SerialHandler::receive(const boost::system::error_code& err, std::size_t bytes_t
 		APLOG_TRACE << "Receive Header CRC: " << header.crc << ", Packet CRC: " << crc;
 		if (header.crc != crc)
 		{
-			APLOG_ERROR << "CRC does not match";
+			APLOG_WARN << "CRC does not match";
 			return;
 		}
 	}
@@ -165,6 +165,6 @@ SerialHandler::sendStatus(const boost::system::error_code& ec, std::size_t bytes
 	APLOG_TRACE << "Serial " << bytes << " sent";
 	if (ec)
 	{
-		APLOG_ERROR << "Error while sending: " << ec.message();
+		APLOG_WARN << "Error while sending: " << ec.message();
 	}
 }

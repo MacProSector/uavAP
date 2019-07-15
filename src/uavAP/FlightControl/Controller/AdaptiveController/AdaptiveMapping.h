@@ -30,9 +30,10 @@
 
 enum class Adaptives
 {
-	INVALID = 0, ROLL, PITCH, NUM_ADAPTIVE
+	INVALID = 0, ROLL, PITCH, YAW, NUM_ADAPTIVE
 };
 
-ENUMMAP_INIT(Adaptives, {{Adaptives::ROLL, "roll"}, {Adaptives::PITCH, "pitch"}});
+ENUMMAP_INIT(Adaptives, {{Adaptives::ROLL, "roll"}, {Adaptives::PITCH, "pitch"}, {Adaptives::YAW,
+		"yaw"}});
 
 #endif /* UAVAP_FLIGHTCONTROL_CONTROLLER_ADAPTIVECONTROLLER_ADAPTIVEMAPPING_H_ */

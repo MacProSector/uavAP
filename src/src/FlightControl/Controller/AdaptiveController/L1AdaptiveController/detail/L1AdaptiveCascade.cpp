@@ -161,9 +161,41 @@ L1AdaptiveCascade::configureAdaptive(const boost::property_tree::ptree& config)
 {
 	PropertyMapper pm(config);
 
-	pm.add<RollL1AdaptiveParameter>("roll", rollAdaptiveParameter_, false);
-	pm.add<PitchL1AdaptiveParameter>("pitch", pitchAdaptiveParameter_, false);
-	pm.add<YawL1AdaptiveParameter>("yaw", yawAdaptiveParameter_, false);
+	for (const auto& it : config)
+	{
+		Adaptives adaptiveEnum = EnumMap<Adaptives>::convert(it.first);
+
+		switch (adaptiveEnum)
+		{
+		case Adaptives::ROLL:
+		{
+			pm.add<RollL1AdaptiveParameter>(it.first, rollAdaptiveParameter_, false);
+			break;
+		}
+		case Adaptives::PITCH:
+		{
+			pm.add<PitchL1AdaptiveParameter>(it.first, pitchAdaptiveParameter_, false);
+			break;
+		}
+		case Adaptives::YAW:
+		{
+			pm.add<YawL1AdaptiveParameter>(it.first, yawAdaptiveParameter_, false);
+			break;
+		}
+		case Adaptives::INVALID:
+		{
+			APLOG_WARN << "L1AdaptiveCascade: Invalid Adaptive Controller Configuration "
+					<< it.first;
+			break;
+		}
+		default:
+		{
+			APLOG_WARN << "L1AdaptiveCascade: Unknown Adaptive Controller Configuration "
+					<< it.first;
+			break;
+		}
+		}
+	}
 
 	return pm.map();
 }
@@ -261,12 +293,14 @@ L1AdaptiveCascade::configureDeflection(const boost::property_tree::ptree& config
 		}
 		case ControllerOutputs::INVALID:
 		{
-			APLOG_WARN << "L1AdaptiveCascade: Invalid Controller Deflection Configuration.";
+			APLOG_WARN << "L1AdaptiveCascade: Invalid Controller Deflection Configuration "
+					<< it.first;
 			break;
 		}
 		default:
 		{
-			APLOG_WARN << "L1AdaptiveCascade: Unknown Controller Deflection Configuration.";
+			APLOG_WARN << "L1AdaptiveCascade: Unknown Controller Deflection Configuration "
+					<< it.first;
 			break;
 		}
 		}
