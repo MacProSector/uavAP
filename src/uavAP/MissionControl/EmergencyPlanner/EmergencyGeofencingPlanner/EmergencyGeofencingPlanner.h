@@ -44,7 +44,7 @@ class Geofencing: public IAggregatableObject, public IRunnableObject
 {
 public:
 
-	static constexpr TypeId typeId = "geofencing";
+	static constexpr TypeId typeId = "emergency_geofencing_planner";
 
 	Geofencing();
 

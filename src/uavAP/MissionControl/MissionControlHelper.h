@@ -34,12 +34,12 @@
 #include "uavAP/Core/TimeProvider/TimeProviderFactory.h"
 #include "uavAP/MissionControl/DataHandling/MissionControlDataHandling.h"
 #include "uavAP/MissionControl/ConditionManager/ConditionManager.h"
-#include "uavAP/MissionControl/GlobalPlanner/GlobalPlannerFactory.h"
-#include "uavAP/MissionControl/MissionPlanner/MissionPlannerFactory.h"
 #include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/EmergencyGeofencingPlanner.h"
 #include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/GeofencingModelFactory.h"
+#include "uavAP/MissionControl/GlobalPlanner/GlobalPlannerFactory.h"
 #include "uavAP/MissionControl/LocalFrameManager/LocalFrameManager.h"
 #include "uavAP/MissionControl/ManeuverPlanner/ManeuverPlanner.h"
+#include "uavAP/MissionControl/MissionPlanner/MissionPlannerFactory.h"
 
 class MissionControlHelper: public Helper
 {
@@ -54,12 +54,12 @@ public:
 		addDefault<TimeProviderFactory>();
 		addDefault<DataPresentationFactory<Content, Target>>();
 
-		addCreator<ManeuverPlanner>();
-		addCreator<LocalFrameManager>();
-		addFactory<MissionPlannerFactory>();
-		addFactory<GlobalPlannerFactory>();
-		addFactory<GeofencingModelFactory>();
 		addCreator<Geofencing>();
+		addFactory<GeofencingModelFactory>();
+		addFactory<GlobalPlannerFactory>();
+		addCreator<LocalFrameManager>();
+		addCreator<ManeuverPlanner>();
+		addFactory<MissionPlannerFactory>();
 	}
 };
 
