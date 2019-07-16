@@ -22,9 +22,9 @@ add_subdirectory(MissionPlanner)
 add_subdirectory(GlobalPlanner)
 add_subdirectory(DataHandling)
 add_subdirectory(ManeuverPlanner)
+add_subdirectory(EmergencyPlanner)
 add_subdirectory(ConditionManager)
 add_subdirectory(LocalFrameManager)
-add_subdirectory(Geofencing)
 
 set(MISSION_CONTROL_SRC ${MISSION_CONTROL_SRC}
 						MissionControlPrint.cpp

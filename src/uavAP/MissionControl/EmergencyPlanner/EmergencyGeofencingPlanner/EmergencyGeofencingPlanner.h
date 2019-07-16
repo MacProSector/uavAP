@@ -25,6 +25,7 @@
 
 #ifndef UAVAP_MISSIONCONTROL_GEOFENCING_GEOFENCING_H_
 #define UAVAP_MISSIONCONTROL_GEOFENCING_GEOFENCING_H_
+
 #include <uavAP/Core/Object/IAggregatableObject.h>
 #include <uavAP/Core/Runner/IRunnableObject.h>
 #include <uavAP/Core/Logging/APLogger.h>

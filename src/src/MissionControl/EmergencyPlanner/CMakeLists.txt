@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-
 set(MISSION_CONTROL_SRC ${MISSION_CONTROL_SRC}
-						${CMAKE_CURRENT_SOURCE_DIR}/ConstRollRateModel.cpp
-						${CMAKE_CURRENT_SOURCE_DIR}/DirectRollModel.cpp
-						${CMAKE_CURRENT_SOURCE_DIR}/Geofencing.cpp
+						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyGeofencingPlanner/GeofencingModel/ConstRollRateGeofencingModel/ConstRollRateGeofencingModel.cpp
+						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyGeofencingPlanner/GeofencingModel/DirectRollGeofencingModel/DirectRollGeofencingModel.cpp
+						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyGeofencingPlanner/EmergencyGeofencingPlanner.cpp
+						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyLandingPlanner/EmergencyLandingPlanner.cpp
 						PARENT_SCOPE)
+						
