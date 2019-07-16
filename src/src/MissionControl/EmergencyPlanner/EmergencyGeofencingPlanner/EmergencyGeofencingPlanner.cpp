@@ -17,17 +17,19 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////////////////
 /*
- * Geofencing.cpp
+ * EmergencyGeofencingPlanner.cpp
  *
  *  Created on: Aug 20, 2018
  *      Author: mircot
  */
-#include <uavAP/Core/IPC/IPC.h>
-#include <uavAP/Core/PropertyMapper/PropertyMapper.h>
-#include <uavAP/Core/Scheduler/IScheduler.h>
-#include <uavAP/Core/SensorData.h>
-#include <uavAP/MissionControl/Geofencing/Geofencing.h>
-#include <uavAP/MissionControl/ManeuverPlanner/ManeuverPlanner.h>
+
+#include "uavAP/Core/IPC/IPC.h"
+#include "uavAP/Core/PropertyMapper/PropertyMapper.h"
+#include "uavAP/Core/Scheduler/IScheduler.h"
+#include "uavAP/Core/SensorData.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/IGeofencingModel.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/EmergencyGeofencingPlanner.h"
+#include "uavAP/MissionControl/ManeuverPlanner/ManeuverPlanner.h"
 
 Geofencing::Geofencing() :
 		leftSafe_(true), rightSafe_(true), safetyActiveLeft_(false), safetyActiveRight_(false), rollMax_(
@@ -190,7 +192,7 @@ Geofencing::evaluateSafety()
 		{
 			if (it.getDistance(points.head(2)) < distanceThreshold_)
 			{
-				APLOG_WARN << "Left not safe";
+				APLOG_DEBUG << "Left not safe";
 				leftSafe = false;
 				break;
 			}
@@ -200,7 +202,7 @@ Geofencing::evaluateSafety()
 		{
 			if (it.getDistance(points.head(2)) < distanceThreshold_)
 			{
-				APLOG_WARN << "Right not safe";
+				APLOG_DEBUG << "Right not safe";
 				rightSafe = false;
 				break;
 			}
@@ -214,13 +216,13 @@ Geofencing::evaluateSafety()
 		Override override;
 		if (leftSafe_)
 		{
-			APLOG_WARN << "Override left initiated";
+			APLOG_DEBUG << "Override left initiated";
 			override.pid.insert(std::make_pair(PIDs::ROLL, -rollMax_));
 			safetyActiveLeft_ = true;
 		}
 		else if (rightSafe_)
 		{
-			APLOG_WARN << "Override right initiated";
+			APLOG_DEBUG << "Override right initiated";
 			override.pid.insert(std::make_pair(PIDs::ROLL, rollMax_));
 			safetyActiveRight_ = true;
 		}

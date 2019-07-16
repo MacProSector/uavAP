@@ -17,15 +17,18 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////////////////
 /*
- * IModel.h
+ * IGeofencingModel.h
  *
  *  Created on: Aug 15, 2018
  *      Author: mircot
  */
 
-#ifndef UAVAP_MISSIONCONTROL_GEOFENCING_IGEOFENCINGMODEL_H_
-#define UAVAP_MISSIONCONTROL_GEOFENCING_IGEOFENCINGMODEL_H_
+#ifndef UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_IGEOFENCINGMODEL_H_
+#define UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_IGEOFENCINGMODEL_H_
+
 #include <vector>
+
+#include "uavAP/Core/LinearAlgebra.h"
 
 struct SensorData;
 struct Edge;
@@ -54,4 +57,4 @@ public:
 
 };
 
-#endif /* UAVAP_MISSIONCONTROL_GEOFENCING_IGEOFENCINGMODEL_H_ */
+#endif /* UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_IGEOFENCINGMODEL_H_ */

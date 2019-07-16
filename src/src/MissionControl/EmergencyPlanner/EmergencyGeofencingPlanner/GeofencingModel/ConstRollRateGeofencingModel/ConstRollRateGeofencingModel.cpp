@@ -17,17 +17,19 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////////////////
 /*
- * ConstRollRateModel.cpp
+ * ConstRollRateGeofencingModel.cpp
  *
  *  Created on: Aug 15, 2018
  *      Author: mircot
  */
+
 #include <acb_hypgeom.h>
-#include <uavAP/Core/Frames/InertialFrame.h>
-#include <uavAP/Core/PropertyMapper/PropertyMapper.h>
-#include <uavAP/Core/SensorData.h>
-#include <uavAP/MissionControl/Geofencing/ConstRollRateModel.h>
-#include <uavAP/MissionControl/Polygon.h>
+
+#include "uavAP/Core/Frames/InertialFrame.h"
+#include "uavAP/Core/PropertyMapper/PropertyMapper.h"
+#include "uavAP/Core/SensorData.h"
+#include "uavAP/MissionControl/Polygon.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/ConstRollRateGeofencingModel/ConstRollRateGeofencingModel.h"
 
 ConstRollRateModel::ConstRollRateModel() :
 		rollRate_(0), rollMax_(0), precision_(0), g_(9.81), currentRoll_(0), factor_(0), velocity_(

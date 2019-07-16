@@ -259,7 +259,7 @@ void
 FlightControlDataHandling::collectAndSendTrajectory(
 		std::shared_ptr<IDataPresentation<Content, Target>> dp)
 {
-	APLOG_WARN << "Collect and send Trajectory";
+	APLOG_DEBUG << "Collect and send Trajectory";
 	auto lp = localPlanner_.get();
 	if (!lp)
 	{

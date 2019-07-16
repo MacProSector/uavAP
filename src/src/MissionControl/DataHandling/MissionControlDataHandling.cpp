@@ -31,7 +31,7 @@
 #include "uavAP/MissionControl/DataHandling/MissionControlDataHandling.h"
 #include "uavAP/MissionControl/GlobalPlanner/IGlobalPlanner.h"
 #include "uavAP/MissionControl/ConditionManager/ConditionManager.h"
-#include "uavAP/MissionControl/Geofencing/Geofencing.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/EmergencyGeofencingPlanner.h"
 #include "uavAP/Core/DataPresentation/IDataPresentation.h"
 #include "uavAP/Core/DataPresentation/BinarySerialization.hpp"
 

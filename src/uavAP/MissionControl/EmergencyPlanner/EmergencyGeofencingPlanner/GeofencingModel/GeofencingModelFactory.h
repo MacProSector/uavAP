@@ -23,13 +23,13 @@
  *      Author: mircot
  */
 
-#ifndef UAVAP_MISSIONCONTROL_GEOFENCING_GEOFENCINGMODELFACTORY_H_
-#define UAVAP_MISSIONCONTROL_GEOFENCING_GEOFENCINGMODELFACTORY_H_
+#ifndef UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_GEOFENCINGMODELFACTORY_H_
+#define UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_GEOFENCINGMODELFACTORY_H_
 
 #include "uavAP/Core/Framework/Factory.h"
-#include "uavAP/MissionControl/Geofencing/ConstRollRateModel.h"
-#include "uavAP/MissionControl/Geofencing/DirectRollModel.h"
-#include "uavAP/MissionControl/Geofencing/IGeofencingModel.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/IGeofencingModel.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/ConstRollRateGeofencingModel/ConstRollRateGeofencingModel.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/DirectRollGeofencingModel/DirectRollGeofencingModel.h"
 
 class GeofencingModelFactory: public Factory<IGeofencingModel>
 {
@@ -42,4 +42,4 @@ public:
 	}
 };
 
-#endif /* UAVAP_MISSIONCONTROL_GEOFENCING_GEOFENCINGMODELFACTORY_H_ */
+#endif /* UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_GEOFENCINGMODELFACTORY_H_ */

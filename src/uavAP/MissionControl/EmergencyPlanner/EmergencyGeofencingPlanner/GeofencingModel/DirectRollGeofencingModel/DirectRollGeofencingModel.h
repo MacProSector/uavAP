@@ -17,14 +17,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////////////////
 /*
- * DirectRollModel.h
+ * DirectRollGeofencingModel.h
  *
  *  Created on: Aug 15, 2018
  *      Author: mircot
  */
 
-#ifndef UAVAP_MISSIONCONTROL_GEOFENCING_DIRECTROLLMODEL_H_
-#define UAVAP_MISSIONCONTROL_GEOFENCING_DIRECTROLLMODEL_H_
+#ifndef UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_DIRECTROLLGEOFENCINGMODEL_DIRECTROLLGEOFENCINGMODEL_H_
+#define UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_DIRECTROLLGEOFENCINGMODEL_DIRECTROLLGEOFENCINGMODEL_H_
 
 #include <acb.h>
 #include <boost/property_tree/ptree.hpp>
@@ -33,7 +33,7 @@
 #include "uavAP/Core/LinearAlgebra.h"
 #include "uavAP/Core/Frames/VehicleOneFrame.h"
 #include "uavAP/Core/Object/IAggregatableObject.h"
-#include "uavAP/MissionControl/Geofencing/IGeofencingModel.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/IGeofencingModel.h"
 #include "uavAP/MissionControl/Polygon.h"
 
 class DirectRollModel: public IGeofencingModel, public IAggregatableObject
@@ -70,4 +70,4 @@ private:
 	std::mutex queryMutex_;
 };
 
-#endif /* UAVAP_MISSIONCONTROL_GEOFENCING_DIRECTROLLMODEL_H_ */
+#endif /* UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_DIRECTROLLGEOFENCINGMODEL_DIRECTROLLGEOFENCINGMODEL_H_ */

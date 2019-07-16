@@ -17,27 +17,28 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////////////////
 /*
- * Geofencing.h
+ * EmergencyGeofencingPlanner.h
  *
  *  Created on: Aug 20, 2018
  *      Author: mircot
  */
 
-#ifndef UAVAP_MISSIONCONTROL_GEOFENCING_GEOFENCING_H_
-#define UAVAP_MISSIONCONTROL_GEOFENCING_GEOFENCING_H_
+#ifndef UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_EMERGENCYGEOFENCINGPLANNER_H_
+#define UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_EMERGENCYGEOFENCINGPLANNER_H_
 
-#include <uavAP/Core/Object/IAggregatableObject.h>
-#include <uavAP/Core/Runner/IRunnableObject.h>
-#include <uavAP/Core/Logging/APLogger.h>
-#include <uavAP/Core/Object/ObjectHandle.h>
-#include <uavAP/MissionControl/Geofencing/ConstRollRateModel.h>
-#include <uavAP/MissionControl/MissionPlanner/Mission.h>
-#include <uavAP/MissionControl/Polygon.h>
+#include "uavAP/Core/Time.h"
+#include "uavAP/Core/Object/IAggregatableObject.h"
+#include "uavAP/Core/Runner/IRunnableObject.h"
+#include "uavAP/Core/Logging/APLogger.h"
+#include "uavAP/Core/Object/ObjectHandle.h"
+#include "uavAP/MissionControl/MissionPlanner/Mission.h"
+#include "uavAP/MissionControl/Polygon.h"
 
 class IPC;
 class IScheduler;
-class ManeuverPlanner;
 class IGeofencingModel;
+class SensorData;
+class ManeuverPlanner;
 
 class Geofencing: public IAggregatableObject, public IRunnableObject
 {
@@ -85,10 +86,10 @@ private:
 	double rollMax_;
 
 	Polygon geoFence_;
-	double evaluationThreshold_; //!< Threshold for Edge distance to be evaluated
-	double distanceThreshold_;//!< Threshold for distance of evaluation to be considered as not safe
+	double evaluationThreshold_; 	//!< Threshold for Edge distance to be evaluated
+	double distanceThreshold_;		//!< Threshold for distance of evaluation to be considered as not safe
 	Duration period_;
 
 };
 
-#endif /* UAVAP_MISSIONCONTROL_GEOFENCING_GEOFENCING_H_ */
+#endif /* UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_EMERGENCYGEOFENCINGPLANNER_H_ */

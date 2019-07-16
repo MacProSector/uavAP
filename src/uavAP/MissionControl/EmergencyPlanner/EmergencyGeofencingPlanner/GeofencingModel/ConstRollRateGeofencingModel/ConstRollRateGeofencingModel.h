@@ -17,14 +17,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////////////////
 /*
- * ConstRollRateModel.h
+ * ConstRollRateGeofencingModel.h
  *
  *  Created on: Aug 15, 2018
  *      Author: mircot
  */
 
-#ifndef UAVAP_MISSIONCONTROL_GEOFENCING_CONSTROLLRATEMODEL_H_
-#define UAVAP_MISSIONCONTROL_GEOFENCING_CONSTROLLRATEMODEL_H_
+#ifndef UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_CONSTROLLRATEGEOFENCINGMODEL_CONSTROLLRATEGEOFENCINGMODEL_H_
+#define UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_CONSTROLLRATEGEOFENCINGMODEL_CONSTROLLRATEGEOFENCINGMODEL_H_
 
 #include <acb.h>
 #include <boost/property_tree/ptree.hpp>
@@ -32,7 +32,7 @@
 #include "uavAP/Core/LinearAlgebra.h"
 #include "uavAP/Core/Frames/VehicleOneFrame.h"
 #include "uavAP/Core/Object/IAggregatableObject.h"
-#include "uavAP/MissionControl/Geofencing/IGeofencingModel.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/IGeofencingModel.h"
 
 class ConstRollRateModel: public IGeofencingModel, public IAggregatableObject
 {
@@ -95,16 +95,16 @@ private:
 	Vector3 betaCompleteLeft_;
 	Vector3 betaCompleteRight_;
 
-	acb_t aLeft_; //!< 1/2 + i g/(2vr)
-	acb_t aRight_; //!< 1/2 - i g/(2vr)
-	acb_t b_; //!< 1/2
+	acb_t aLeft_; 		//!< 1/2 + i g/(2vr)
+	acb_t aRight_; 		//!< 1/2 - i g/(2vr)
+	acb_t b_; 			//!< 1/2
 
-	acb_t query_; //!< z used in beta functions
-	acb_t queryRes_; //!< result of beta functions
+	acb_t query_; 		//!< z used in beta functions
+	acb_t queryRes_; 	//!< result of beta functions
 
 	std::mutex queryMutex_;
 
-	double factor_; //!< v/(2r)
+	double factor_; 	//!< v/(2r)
 	double velocity_;
 
 	Vector3 centerOrbitLeft_;
@@ -115,4 +115,4 @@ private:
 	VehicleOneFrame frameRight_;
 };
 
-#endif /* UAVAP_MISSIONCONTROL_GEOFENCING_CONSTROLLRATEMODEL_H_ */
+#endif /* UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_GEOFENCINGMODEL_CONSTROLLRATEGEOFENCINGMODEL_CONSTROLLRATEGEOFENCINGMODEL_H_ */
