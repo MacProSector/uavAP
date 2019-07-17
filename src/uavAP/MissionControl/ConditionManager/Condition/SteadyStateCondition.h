@@ -31,7 +31,7 @@
 #include <uavAP/Core/Scheduler/Event.h>
 
 #include "uavAP/Core/DataPresentation/Packet.h"
-#include "uavAP/FlightAnalysis/StateAnalysis/Metrics.h"
+#include "uavAP/FlightAnalysis/SteadyStateAnalysis/Metrics.h"
 #include "uavAP/MissionControl/ConditionManager/ICondition.h"
 
 class ConditionManager;

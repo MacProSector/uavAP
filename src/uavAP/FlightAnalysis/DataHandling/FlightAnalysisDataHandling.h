@@ -33,8 +33,8 @@
 #include "uavAP/Core/Object/ObjectHandle.h"
 #include "uavAP/Core/Object/IAggregatableObject.h"
 #include "uavAP/Core/Runner/IRunnableObject.h"
-#include "uavAP/FlightAnalysis/StateAnalysis/Metrics.h"
-#include "uavAP/FlightAnalysis/StateAnalysis/SteadyStateAnalysis.h"
+#include "uavAP/FlightAnalysis/SteadyStateAnalysis/Metrics.h"
+#include "uavAP/FlightAnalysis/SteadyStateAnalysis/SteadyStateAnalysis.h"
 
 class FlightAnalysisDataHandling: public IAggregatableObject, public IRunnableObject
 {

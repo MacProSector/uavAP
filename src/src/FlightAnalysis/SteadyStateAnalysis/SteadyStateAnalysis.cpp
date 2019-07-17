@@ -24,7 +24,7 @@
  */
 
 #include "uavAP/Core/IPC/IPC.h"
-#include "uavAP/FlightAnalysis/StateAnalysis/SteadyStateAnalysis.h"
+#include "uavAP/FlightAnalysis/SteadyStateAnalysis/SteadyStateAnalysis.h"
 #include "uavAP/Core/DataPresentation/BinarySerialization.hpp"
 
 std::shared_ptr<SteadyStateAnalysis>

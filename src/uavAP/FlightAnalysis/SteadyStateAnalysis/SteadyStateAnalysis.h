@@ -23,8 +23,8 @@
  *      Author: simonyu
  */
 
-#ifndef UAVAP_FLIGHTANALYSIS_STATEANALYSIS_STEADYSTATEANALYSIS_H_
-#define UAVAP_FLIGHTANALYSIS_STATEANALYSIS_STEADYSTATEANALYSIS_H_
+#ifndef UAVAP_FLIGHTANALYSIS_STEADYSTATEANALYSIS_STEADYSTATEANALYSIS_H_
+#define UAVAP_FLIGHTANALYSIS_STEADYSTATEANALYSIS_STEADYSTATEANALYSIS_H_
 
 #include "uavAP/Core/Object/ObjectHandle.h"
 #include "uavAP/Core/IPC/Publisher.h"
@@ -33,7 +33,7 @@
 #include "uavAP/Core/SensorData.h"
 #include "uavAP/Core/Object/IAggregatableObject.h"
 #include "uavAP/Core/Runner/IRunnableObject.h"
-#include "uavAP/FlightAnalysis/StateAnalysis/Metrics.h"
+#include "uavAP/FlightAnalysis/SteadyStateAnalysis/Metrics.h"
 #include "uavAP/FlightControl/Controller/PIDController/PIDHandling.h"
 
 class IPC;
@@ -229,4 +229,4 @@ SteadyStateAnalysis::inSteadyState(const TimePoint& time, const std::map<Enum, d
 	return true;
 }
 
-#endif /* UAVAP_FLIGHTANALYSIS_STATEANALYSIS_STEADYSTATEANALYSIS_H_ */
+#endif /* UAVAP_FLIGHTANALYSIS_STEADYSTATEANALYSIS_STEADYSTATEANALYSIS_H_ */

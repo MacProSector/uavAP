@@ -34,7 +34,7 @@
 #include "uavAP/Core/protobuf/messages/LocalPlanner.pb.h"
 #include "uavAP/Core/DataPresentation/APDataPresentation/BasicSerialization.h"
 #include "uavAP/Core/SensorData.h"
-#include "uavAP/FlightAnalysis/StateAnalysis/Metrics.h"
+#include "uavAP/FlightAnalysis/SteadyStateAnalysis/Metrics.h"
 #include "uavAP/FlightControl/Controller/PIDController/PIDHandling.h"
 #include "uavAP/FlightControl/Controller/ControllerOutput.h"
 #include "uavAP/FlightControl/Controller/AdvancedControl.h"

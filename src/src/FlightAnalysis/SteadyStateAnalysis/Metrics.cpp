@@ -23,7 +23,7 @@
  *      Author: simonyu
  */
 
-#include "uavAP/FlightAnalysis/StateAnalysis/Metrics.h"
+#include "uavAP/FlightAnalysis/SteadyStateAnalysis/Metrics.h"
 
 template<class Group, typename Type>
 void

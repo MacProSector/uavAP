@@ -35,7 +35,7 @@
 #include "uavAP/Core/SensorData.h"
 #include "uavAP/Core/Object/IAggregatableObject.h"
 #include "uavAP/Core/Runner/IRunnableObject.h"
-#include "uavAP/FlightAnalysis/StateAnalysis/Metrics.h"
+#include "uavAP/FlightAnalysis/SteadyStateAnalysis/Metrics.h"
 #include "uavAP/MissionControl/ConditionManager/ICondition.h"
 
 class IPC;

@@ -32,10 +32,10 @@
 #include "uavAP/Core/Scheduler/SchedulerFactory.h"
 #include "uavAP/Core/TimeProvider/TimeProviderFactory.h"
 #include "uavAP/Core/Framework/Helper.h"
-#include "uavAP/FlightAnalysis/StateAnalysis/SteadyStateAnalysis.h"
-#include "uavAP/FlightAnalysis/ManeuverAnalysis/ManeuverAnalysis.h"
-#include "uavAP/FlightAnalysis/TrimAnalysis/TrimAnalysis.h"
 #include "uavAP/FlightAnalysis/DataHandling/FlightAnalysisDataHandling.h"
+#include "uavAP/FlightAnalysis/ManeuverAnalysis/ManeuverAnalysis.h"
+#include "uavAP/FlightAnalysis/SteadyStateAnalysis/SteadyStateAnalysis.h"
+#include "uavAP/FlightAnalysis/TrimAnalysis/TrimAnalysis.h"
 
 class FlightAnalysisHelper : public Helper
 {
