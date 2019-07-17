@@ -16,31 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-set(MISSION_CONTROL_SRC "")
-
-add_subdirectory(MissionPlanner)
-add_subdirectory(GlobalPlanner)
-add_subdirectory(DataHandling)
-add_subdirectory(ManeuverPlanner)
-add_subdirectory(EmergencyPlanner)
-add_subdirectory(ConditionManager)
-add_subdirectory(LocalFrameManager)
-
-set(MISSION_CONTROL_SRC ${MISSION_CONTROL_SRC}
-						MissionControlPrint.cpp
-						Polygon.cpp)
-
-add_library(uavap_mission_control SHARED ${MISSION_CONTROL_SRC})
-
-target_link_libraries(uavap_mission_control 	uavap_core
-												${ARB})
-
-add_executable(MissionControl   MissionControl.cpp
-								)
-
-target_link_libraries(MissionControl    uavap_mission_control
-                                        )
-                                        
-install(TARGETS MissionControl uavap_mission_control 
-		RUNTIME DESTINATION bin/uavAP
-		LIBRARY DESTINATION lib)
+set(FLIGHT_ANALYSIS_SRC		${FLIGHT_ANALYSIS_SRC}
+							${CMAKE_CURRENT_SOURCE_DIR}/FaultAnalysis.cpp
+							PARENT_SCOPE)

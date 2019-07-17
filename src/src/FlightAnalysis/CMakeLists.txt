@@ -18,9 +18,10 @@
 #-------------------------------------------------------------------------------
 set(FLIGHT_ANALYSIS_SRC)
 
-add_subdirectory (StateAnalysis)
-add_subdirectory (ManeuverAnalysis)
 add_subdirectory (DataHandling)
+add_subdirectory (FaultAnalysis)
+add_subdirectory (ManeuverAnalysis)
+add_subdirectory (StateAnalysis)
 add_subdirectory (TrimAnalysis)
 
 add_library(uavap_flight_analysis SHARED ${FLIGHT_ANALYSIS_SRC})
@@ -32,9 +33,7 @@ target_link_libraries(uavap_flight_analysis uavap_core
 add_executable(FlightAnalysis	FlightAnalysis.cpp
 								)
 
-target_link_libraries(FlightAnalysis 	uavap_core
-										uavap_flight_analysis
-										uavap_mission_control
+target_link_libraries(FlightAnalysis 	uavap_flight_analysis
 										)
 
 install(TARGETS FlightAnalysis uavap_flight_analysis

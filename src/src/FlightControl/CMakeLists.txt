@@ -25,7 +25,8 @@ add_subdirectory (DataHandling)
 
 add_library(uavap_flight_control SHARED ${FLIGHT_CONTROL_SRC})
 
-target_link_libraries(uavap_flight_control 	adaptive_control
+target_link_libraries(uavap_flight_control 	uavap_mission_control
+											adaptive_control
 											control
 											uavap_core
 											${BOOST}
@@ -36,8 +37,7 @@ target_link_libraries(uavap_flight_control 	adaptive_control
 add_executable(FlightControl    FlightControl.cpp
                                 )
 
-target_link_libraries(FlightControl	uavap_flight_analysis
-									uavap_flight_control
+target_link_libraries(FlightControl	uavap_flight_control
 									)
 
 install(TARGETS FlightControl uavap_flight_control 
