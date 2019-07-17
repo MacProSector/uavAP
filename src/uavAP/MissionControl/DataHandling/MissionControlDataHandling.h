@@ -47,11 +47,11 @@ class IDataPresentation;
 class IPC;
 class IScheduler;
 class IGlobalPlanner;
-class ManeuverPlanner;
 class IMissionPlanner;
-class LocalFrameManager;
 class ConditionManager;
-class Geofencing;
+class EmergencyGeofencingPlanner;
+class LocalFrameManager;
+class ManeuverPlanner;
 
 class MissionControlDataHandling: public IAggregatableObject, public IRunnableObject
 {
@@ -97,7 +97,7 @@ private:
 	ObjectHandle<IDataPresentation<Content, Target>> dataPresentation_;
 	ObjectHandle<LocalFrameManager> localFrameManager_;
 	ObjectHandle<ConditionManager> conditionManager_;
-	ObjectHandle<Geofencing> geofencing_;
+	ObjectHandle<EmergencyGeofencingPlanner> emergencyGeofencingPlanner_;
 
 	Subscription missionControlSubscription_;
 	Publisher publisher_;

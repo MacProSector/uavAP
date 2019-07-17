@@ -31,7 +31,7 @@
 #include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/EmergencyGeofencingPlanner.h"
 #include "uavAP/MissionControl/ManeuverPlanner/ManeuverPlanner.h"
 
-Geofencing::Geofencing() :
+EmergencyGeofencingPlanner::EmergencyGeofencingPlanner() :
 		leftSafe_(true), rightSafe_(true), safetyActiveLeft_(false), safetyActiveRight_(false), rollMax_(
 				0), evaluationThreshold_(
 		DBL_MAX), distanceThreshold_(0)
@@ -39,7 +39,7 @@ Geofencing::Geofencing() :
 }
 
 bool
-Geofencing::configure(const Configuration& config)
+EmergencyGeofencingPlanner::configure(const Configuration& config)
 {
 	PropertyMapper pm(config);
 	pm.add<double>("roll_max", rollMax_, true);
@@ -53,7 +53,7 @@ Geofencing::configure(const Configuration& config)
 }
 
 void
-Geofencing::notifyAggregationOnUpdate(const Aggregator& agg)
+EmergencyGeofencingPlanner::notifyAggregationOnUpdate(const Aggregator& agg)
 {
 	ipc_.setFromAggregationIfNotSet(agg);
 	scheduler_.setFromAggregationIfNotSet(agg);
@@ -62,7 +62,7 @@ Geofencing::notifyAggregationOnUpdate(const Aggregator& agg)
 }
 
 bool
-Geofencing::run(RunStage stage)
+EmergencyGeofencingPlanner::run(RunStage stage)
 {
 	switch (stage)
 	{
@@ -70,22 +70,22 @@ Geofencing::run(RunStage stage)
 	{
 		if (!ipc_.isSet())
 		{
-			APLOG_ERROR << "Geofencing: ipc not set";
+			APLOG_ERROR << "EmergencyGeofencingPlanner: IPC Missing.";
 			return true;
 		}
 		if (!scheduler_.isSet())
 		{
-			APLOG_ERROR << "Geofencing: Scheduler not set";
+			APLOG_ERROR << "EmergencyGeofencingPlanner: Scheduler Missing.";
 			return true;
 		}
 		if (!maneuverPlanner_.isSet())
 		{
-			APLOG_ERROR << "Geofencing: ManeuverPlanner not set";
+			APLOG_ERROR << "EmergencyGeofencingPlanner: ManeuverPlanner Missing.";
 			return true;
 		}
 		if (!geofencingModel_.isSet())
 		{
-			APLOG_ERROR << "Geofencing: Geofencing Model Missing.";
+			APLOG_ERROR << "EmergencyGeofencingPlanner: Geofencing Model Missing.";
 			return true;
 		}
 		break;
@@ -95,7 +95,7 @@ Geofencing::run(RunStage stage)
 		auto ipc = ipc_.get();
 
 		ipc->subscribeOnSharedMemory<SensorData>("sensor_data",
-				std::bind(&Geofencing::onSensorData, this, std::placeholders::_1));
+				std::bind(&EmergencyGeofencingPlanner::onSensorData, this, std::placeholders::_1));
 
 		auto mp = maneuverPlanner_.get();
 
@@ -103,7 +103,7 @@ Geofencing::run(RunStage stage)
 
 		auto scheduler = scheduler_.get();
 
-		scheduler->schedule(std::bind(&Geofencing::evaluateSafety, this), period_, period_);
+		scheduler->schedule(std::bind(&EmergencyGeofencingPlanner::evaluateSafety, this), period_, period_);
 
 		break;
 	}
@@ -118,7 +118,7 @@ Geofencing::run(RunStage stage)
 }
 
 Mission
-Geofencing::criticalPoints()
+EmergencyGeofencingPlanner::criticalPoints()
 {
 	Mission mission;
 
@@ -126,7 +126,7 @@ Geofencing::criticalPoints()
 
 	if (!geofencingModel)
 	{
-		APLOG_ERROR << "Geofencing: Geofencing Model Missing.";
+		APLOG_ERROR << "EmergencyGeofencingPlanner: Geofencing Model Missing.";
 		return Mission();
 	}
 
@@ -150,7 +150,7 @@ Geofencing::criticalPoints()
 }
 
 void
-Geofencing::onSensorData(const SensorData& data)
+EmergencyGeofencingPlanner::onSensorData(const SensorData& data)
 {
 	std::unique_lock<std::mutex> lock(sensorDataMutex_, std::try_to_lock);
 	if (!lock.owns_lock())
@@ -159,13 +159,13 @@ Geofencing::onSensorData(const SensorData& data)
 }
 
 void
-Geofencing::evaluateSafety()
+EmergencyGeofencingPlanner::evaluateSafety()
 {
   	auto geofencingModel = geofencingModel_.get();
 
 	if (!geofencingModel)
 	{
-		APLOG_ERROR << "Geofencing: Geofencing Model Missing.";
+		APLOG_ERROR << "EmergencyGeofencingPlanner: Geofencing Model Missing.";
 		return;
 	}
 
@@ -178,7 +178,7 @@ Geofencing::evaluateSafety()
 
 	if (!mp)
 	{
-		APLOG_ERROR << "Geofencing::evaluateSafety(): Manevuer planner missing";
+		APLOG_ERROR << "EmergencyGeofencingPlanner::evaluateSafety(): Manevuer planner missing";
 		return;
 	}
 

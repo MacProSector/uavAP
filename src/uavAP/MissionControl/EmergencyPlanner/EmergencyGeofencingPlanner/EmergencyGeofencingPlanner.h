@@ -40,18 +40,18 @@ class IGeofencingModel;
 class SensorData;
 class ManeuverPlanner;
 
-class Geofencing: public IAggregatableObject, public IRunnableObject
+class EmergencyGeofencingPlanner: public IAggregatableObject, public IRunnableObject
 {
 public:
 
 	static constexpr TypeId typeId = "emergency_geofencing_planner";
 
-	Geofencing();
+	EmergencyGeofencingPlanner();
 
 	bool
 	configure(const Configuration& config);
 
-	ADD_CREATE_WITH_CONFIG(Geofencing);
+	ADD_CREATE_WITH_CONFIG(EmergencyGeofencingPlanner);
 
 	void
 	notifyAggregationOnUpdate(const Aggregator& agg) override;

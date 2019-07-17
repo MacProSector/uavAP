@@ -54,7 +54,7 @@ public:
 		addDefault<TimeProviderFactory>();
 		addDefault<DataPresentationFactory<Content, Target>>();
 
-		addCreator<Geofencing>();
+		addCreator<EmergencyGeofencingPlanner>();
 		addFactory<GeofencingModelFactory>();
 		addFactory<GlobalPlannerFactory>();
 		addCreator<LocalFrameManager>();

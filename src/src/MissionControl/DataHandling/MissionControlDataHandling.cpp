@@ -145,7 +145,7 @@ MissionControlDataHandling::notifyAggregationOnUpdate(const Aggregator& agg)
 	missionPlanner_.setFromAggregationIfNotSet(agg);
 	localFrameManager_.setFromAggregationIfNotSet(agg);
 	conditionManager_.setFromAggregationIfNotSet(agg);
-	geofencing_.setFromAggregationIfNotSet(agg);
+	emergencyGeofencingPlanner_.setFromAggregationIfNotSet(agg);
 }
 
 void
@@ -173,7 +173,7 @@ MissionControlDataHandling::collectAndSend()
 	}
 
 	//Trajectory hack: Orbit of geofencing
-	auto geo = geofencing_.get();
+	auto geo = emergencyGeofencingPlanner_.get();
 	if (!geo)
 	{
 		return;
