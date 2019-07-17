@@ -36,15 +36,15 @@
 #include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/IGeofencingModel.h"
 #include "uavAP/MissionControl/Polygon.h"
 
-class DirectRollModel: public IGeofencingModel, public IAggregatableObject
+class DirectRollGeofencingModel: public IGeofencingModel, public IAggregatableObject
 {
 public:
 
 	static constexpr const char* const typeId = "direct_roll";
 
-	DirectRollModel();
+	DirectRollGeofencingModel();
 
-	static std::shared_ptr<DirectRollModel>
+	static std::shared_ptr<DirectRollGeofencingModel>
 	create(const boost::property_tree::ptree& config);
 
 	bool

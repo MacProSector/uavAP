@@ -34,17 +34,17 @@
 #include "uavAP/Core/Object/IAggregatableObject.h"
 #include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/IGeofencingModel.h"
 
-class ConstRollRateModel: public IGeofencingModel, public IAggregatableObject
+class ConstRollRateGeofencingModel: public IGeofencingModel, public IAggregatableObject
 {
 public:
 
-	static constexpr const char* const typeId = "roll_rate";
+	static constexpr const char* const typeId = "const_roll_rate";
 
-	ConstRollRateModel();
+	ConstRollRateGeofencingModel();
 
-	~ConstRollRateModel();
+	~ConstRollRateGeofencingModel();
 
-	static std::shared_ptr<ConstRollRateModel>
+	static std::shared_ptr<ConstRollRateGeofencingModel>
 	create(const boost::property_tree::ptree& config);
 
 	bool

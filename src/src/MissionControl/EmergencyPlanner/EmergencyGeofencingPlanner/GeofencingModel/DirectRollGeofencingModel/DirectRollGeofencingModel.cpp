@@ -26,26 +26,26 @@
 #include "uavAP/Core/PropertyMapper/PropertyMapper.h"
 #include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/DirectRollGeofencingModel/DirectRollGeofencingModel.h"
 
-DirectRollModel::DirectRollModel() :
+DirectRollGeofencingModel::DirectRollGeofencingModel() :
 		rollMax_(0), g_(9.81), radiusOrbit_(0)
 {
 }
 
-std::shared_ptr<DirectRollModel>
-DirectRollModel::create(const boost::property_tree::ptree& config)
+std::shared_ptr<DirectRollGeofencingModel>
+DirectRollGeofencingModel::create(const boost::property_tree::ptree& config)
 {
-	auto directRollModel = std::make_shared<DirectRollModel>();
+	auto directRollModel = std::make_shared<DirectRollGeofencingModel>();
 
 	if (!directRollModel->configure(config))
 	{
-		APLOG_ERROR << "DirectRollModel: Failed to Load Config.";
+		APLOG_ERROR << "DirectRollGeofencingModel: Failed to Load Config.";
 	}
 
 	return directRollModel;
 }
 
 bool
-DirectRollModel::configure(const boost::property_tree::ptree& config)
+DirectRollGeofencingModel::configure(const boost::property_tree::ptree& config)
 {
 	PropertyMapper pm(config);
 
@@ -58,12 +58,12 @@ DirectRollModel::configure(const boost::property_tree::ptree& config)
 }
 
 void
-DirectRollModel::notifyAggregationOnUpdate(const Aggregator& agg)
+DirectRollGeofencingModel::notifyAggregationOnUpdate(const Aggregator& agg)
 {
 }
 
 bool
-DirectRollModel::updateModel(const SensorData& data)
+DirectRollGeofencingModel::updateModel(const SensorData& data)
 {
 	std::unique_lock<std::mutex> lock(queryMutex_, std::try_to_lock);
 
@@ -86,7 +86,7 @@ DirectRollModel::updateModel(const SensorData& data)
 }
 
 std::vector<Vector3>
-DirectRollModel::getCriticalPoints(const Edge& edge, RollDirection dir)
+DirectRollGeofencingModel::getCriticalPoints(const Edge& edge, RollDirection dir)
 {
 	std::unique_lock<std::mutex> lock(queryMutex_);
 

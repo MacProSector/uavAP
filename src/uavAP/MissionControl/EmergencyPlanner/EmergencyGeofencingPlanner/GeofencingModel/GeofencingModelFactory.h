@@ -37,8 +37,8 @@ public:
 
 	GeofencingModelFactory()
 	{
-		addCreator<ConstRollRateModel>();
-		addCreator<DirectRollModel>();
+		addCreator<ConstRollRateGeofencingModel>();
+		addCreator<DirectRollGeofencingModel>();
 	}
 };
 

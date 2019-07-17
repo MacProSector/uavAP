@@ -89,7 +89,6 @@ private:
 	double evaluationThreshold_; 	//!< Threshold for Edge distance to be evaluated
 	double distanceThreshold_;		//!< Threshold for distance of evaluation to be considered as not safe
 	Duration period_;
-
 };
 
 #endif /* UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYGEOFENCINGPLANNER_EMERGENCYGEOFENCINGPLANNER_H_ */

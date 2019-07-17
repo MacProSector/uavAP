@@ -31,7 +31,7 @@
 #include "uavAP/MissionControl/Polygon.h"
 #include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/ConstRollRateGeofencingModel/ConstRollRateGeofencingModel.h"
 
-ConstRollRateModel::ConstRollRateModel() :
+ConstRollRateGeofencingModel::ConstRollRateGeofencingModel() :
 		rollRate_(0), rollMax_(0), precision_(0), g_(9.81), currentRoll_(0), factor_(0), velocity_(
 				0), radiusOrbit_(0)
 {
@@ -44,7 +44,7 @@ ConstRollRateModel::ConstRollRateModel() :
 	acb_set_d(b_, 0.5);
 }
 
-ConstRollRateModel::~ConstRollRateModel()
+ConstRollRateGeofencingModel::~ConstRollRateGeofencingModel()
 {
 	acb_clear(aLeft_);
 	acb_clear(aRight_);
@@ -53,21 +53,21 @@ ConstRollRateModel::~ConstRollRateModel()
 	acb_clear(queryRes_);
 }
 
-std::shared_ptr<ConstRollRateModel>
-ConstRollRateModel::create(const boost::property_tree::ptree& config)
+std::shared_ptr<ConstRollRateGeofencingModel>
+ConstRollRateGeofencingModel::create(const boost::property_tree::ptree& config)
 {
-	auto constRollRateModel = std::make_shared<ConstRollRateModel>();
+	auto constRollRateModel = std::make_shared<ConstRollRateGeofencingModel>();
 
 	if (!constRollRateModel->configure(config))
 	{
-		APLOG_ERROR << "ConstRollRateModel: Failed to Load Config.";
+		APLOG_ERROR << "ConstRollRateGeofencingModel: Failed to Load Config.";
 	}
 
 	return constRollRateModel;
 }
 
 bool
-ConstRollRateModel::configure(const boost::property_tree::ptree& config)
+ConstRollRateGeofencingModel::configure(const boost::property_tree::ptree& config)
 {
 	PropertyMapper pm(config);
 	pm.add<double>("roll_rate", rollRate_, true);
@@ -82,12 +82,12 @@ ConstRollRateModel::configure(const boost::property_tree::ptree& config)
 }
 
 void
-ConstRollRateModel::notifyAggregationOnUpdate(const Aggregator& agg)
+ConstRollRateGeofencingModel::notifyAggregationOnUpdate(const Aggregator& agg)
 {
 }
 
 bool
-ConstRollRateModel::updateModel(const SensorData& data)
+ConstRollRateGeofencingModel::updateModel(const SensorData& data)
 {
 	std::unique_lock<std::mutex> lock(queryMutex_, std::try_to_lock);
 	if (!lock.owns_lock())
@@ -155,7 +155,7 @@ ConstRollRateModel::updateModel(const SensorData& data)
 }
 
 std::vector<Vector3>
-ConstRollRateModel::getCriticalPoints(const Edge& edge, RollDirection dir)
+ConstRollRateGeofencingModel::getCriticalPoints(const Edge& edge, RollDirection dir)
 {
 	std::unique_lock<std::mutex> lock(queryMutex_);
 	std::vector<Vector3> result;
@@ -174,7 +174,7 @@ ConstRollRateModel::getCriticalPoints(const Edge& edge, RollDirection dir)
 }
 
 Vector3
-ConstRollRateModel::calculatePoint(double roll, RollDirection dir)
+ConstRollRateGeofencingModel::calculatePoint(double roll, RollDirection dir)
 {
 	acb_set_d(query_, pow(cos(roll), 2));
 	double sign = roll > 0 ? 1 : -1;
@@ -193,7 +193,7 @@ ConstRollRateModel::calculatePoint(double roll, RollDirection dir)
 }
 
 double
-ConstRollRateModel::calculateYaw(double roll, RollDirection dir)
+ConstRollRateGeofencingModel::calculateYaw(double roll, RollDirection dir)
 {
 	double psi = -g_ / (velocity_ * rollRate_) * log(cos(roll));
 	if (dir == RollDirection::LEFT)
@@ -204,7 +204,7 @@ ConstRollRateModel::calculateYaw(double roll, RollDirection dir)
 }
 
 std::vector<double>
-ConstRollRateModel::calculateRoll(double yaw, RollDirection dir)
+ConstRollRateGeofencingModel::calculateRoll(double yaw, RollDirection dir)
 {
 	std::vector<double> result;
 	double yawCenter;
@@ -246,7 +246,7 @@ ConstRollRateModel::calculateRoll(double yaw, RollDirection dir)
 }
 
 Vector3
-ConstRollRateModel::toVector(const acb_t& complex)
+ConstRollRateGeofencingModel::toVector(const acb_t& complex)
 {
 	double x = arf_get_d(arb_midref(acb_realref(complex)), ARF_RND_NEAR);
 	double y = arf_get_d(arb_midref(acb_imagref(complex)), ARF_RND_NEAR);
