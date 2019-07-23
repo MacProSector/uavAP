@@ -74,6 +74,12 @@ public:
 	setControllerOutputOffset(const ControllerOutput& offset);
 
 	void
+	publishEmergencyPlan(const Override& override);
+
+	void
+	cancelEmergencyPlan();
+
+	void
 	interruptOverride();
 
 	void

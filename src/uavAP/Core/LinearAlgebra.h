@@ -67,6 +67,7 @@ using Matrix22x4 = Eigen::Matrix<double, 22, 4>;
 using Matrix25x4 = Eigen::Matrix<double, 25, 4>;
 using Matrix28x4 = Eigen::Matrix<double, 28, 4>;
 using MatrixX = Eigen::MatrixXd;
+using MatrixXx3 = Eigen::Matrix<double, Eigen::Dynamic, 3>;
 using Rotation2 = Eigen::Rotation2Dd;
 using EigenLine = Eigen::ParametrizedLine<double, 3>;
 using EigenLine2 = Eigen::ParametrizedLine<double, 2>;

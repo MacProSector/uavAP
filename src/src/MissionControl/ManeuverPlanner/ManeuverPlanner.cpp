@@ -257,6 +257,27 @@ ManeuverPlanner::setControllerOutputOffset(const ControllerOutput& offset)
 }
 
 void
+ManeuverPlanner::publishEmergencyPlan(const Override& override)
+{
+	interruptOverride();
+	overridePublisher_.publish(dp::serialize(override));
+}
+
+void
+ManeuverPlanner::cancelEmergencyPlan()
+{
+	if (manualRestart_)
+	{
+		resumeOverride();
+	}
+	else
+	{
+		Override override;
+		overridePublisher_.publish(dp::serialize(override));
+	}
+}
+
+void
 ManeuverPlanner::interruptOverride()
 {
 	if (overrideInterrupted_)
