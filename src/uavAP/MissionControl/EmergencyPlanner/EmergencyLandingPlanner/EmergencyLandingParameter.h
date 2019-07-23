@@ -34,12 +34,12 @@
 
 enum class EmergencyLandingPhases
 {
-	INVALID, APPROACHING, DESCENDING, LANDING, NUM_PHASES
+	INVALID, CRUISING, DESCENDING, APPROACHING, NUM_PHASES
 };
 
-ENUMMAP_INIT(EmergencyLandingPhases, { { EmergencyLandingPhases::APPROACHING, "approaching"},
-		{ EmergencyLandingPhases::DESCENDING, "descending"}, { EmergencyLandingPhases::LANDING,
-		"landing"} });
+ENUMMAP_INIT(EmergencyLandingPhases, { { EmergencyLandingPhases::CRUISING, "cruising"},
+		{ EmergencyLandingPhases::DESCENDING, "descending"}, { EmergencyLandingPhases::APPROACHING,
+		"approaching"} });
 
 using Obstacle = std::pair<std::string, Vector3>;
 using Obstacles = std::vector<Obstacle>;

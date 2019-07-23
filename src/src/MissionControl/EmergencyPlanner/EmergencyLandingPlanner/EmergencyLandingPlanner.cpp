@@ -240,6 +240,9 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 	double minimumCost = 0;
 	double currentCost = 0;
 
+	APLOG_DEBUG << "EmergencyLandingPlanner: "
+			<< EnumMap<EmergencyLandingPhases>::convert(landingParameter.phase) << " Phase.";
+
 	velocityDelta = landingParameter.planningParameter.acceleration
 			* landingParameter.planningParameter.periodSecond
 			* (initialLandingStatus.climbAngle
@@ -390,7 +393,7 @@ EmergencyLandingPlanner::publishEmergencyLandingPlan(const EmergencyLandingPlan&
 }
 
 std::pair<double, EmergencyLandingPhases>
-EmergencyLandingPlanner::evaluateCost(EmergencyLandingParameter& landingParameter,
+EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingParameter,
 		const EmergencyLandingStatus& landingStatus)
 {
 	double lineTheta = 0;
@@ -406,7 +409,7 @@ EmergencyLandingPlanner::evaluateCost(EmergencyLandingParameter& landingParamete
 	double targetPositionX = 0;
 	double targetPositionY = 0;
 	double cost = 0;
-	EmergencyLandingPhases phase = EmergencyLandingPhases::APPROACHING;
+	EmergencyLandingPhases phase = EmergencyLandingPhases::CRUISING;
 
 	lineTheta = atan2(
 			landingStatus.position.y() - landingParameter.approachingParameter.position.y(),
@@ -433,7 +436,7 @@ EmergencyLandingPlanner::evaluateCost(EmergencyLandingParameter& landingParamete
 
 	if (approachDistance > landingParameter.searchingParameter.approachRadius
 			&& landingParameter.phase != EmergencyLandingPhases::DESCENDING
-			&& landingParameter.phase != EmergencyLandingPhases::LANDING)
+			&& landingParameter.phase != EmergencyLandingPhases::APPROACHING)
 	{
 		landingYawAngle = atan2(
 				landingParameter.approachingParameter.position.y() - landingStatus.position.y(),
@@ -456,7 +459,7 @@ EmergencyLandingPlanner::evaluateCost(EmergencyLandingParameter& landingParamete
 		cost += fabs(landingStatus.velocity - landingParameter.planningParameter.glidingVelocity)
 				/ landingParameter.searchingParameter.acceleration;
 
-		phase = EmergencyLandingPhases::APPROACHING;
+		phase = EmergencyLandingPhases::CRUISING;
 	}
 	else if (landingStatus.position.z() < landingParameter.searchingParameter.approachAltitude
 			&& std::min(fabs(landingParameter.approachingParameter.yawAngle - lineThetaNegative),
@@ -529,9 +532,9 @@ EmergencyLandingPlanner::evaluateCost(EmergencyLandingParameter& landingParamete
 					/ landingParameter.searchingParameter.climbRate;
 		}
 
-		phase = EmergencyLandingPhases::LANDING;
+		phase = EmergencyLandingPhases::APPROACHING;
 	}
-	else if (landingParameter.phase != EmergencyLandingPhases::LANDING)
+	else if (landingParameter.phase != EmergencyLandingPhases::APPROACHING)
 	{
 		targetPositionX = landingParameter.approachingParameter.position.x()
 				+ landingParameter.searchingParameter.loiterRadius

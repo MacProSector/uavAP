@@ -86,7 +86,7 @@ private:
 	publishEmergencyLandingPlan(const EmergencyLandingPlan& landingPlan);
 
 	std::pair<double, EmergencyLandingPhases>
-	evaluateCost(EmergencyLandingParameter& landingParameter,
+	evaluateCost(const EmergencyLandingParameter& landingParameter,
 			const EmergencyLandingStatus& landingStatus);
 
 	ObjectHandle<IPC> ipc_;
