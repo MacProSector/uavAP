@@ -64,12 +64,12 @@ struct SearchingParameter
 	double acceleration;
 	double climbRate;
 	double yawRate;
+	double cruiseRadius;
 	double loiterRadius;
 	double loiterLambda;
+	double approachAltitude;
 	double lineDistance;
 	double lineDelta;
-	double approachRadius;
-	double approachAltitude;
 	bool isDefault;
 
 	bool

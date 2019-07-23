@@ -51,12 +51,12 @@ SearchingParameter::configure(const boost::property_tree::ptree& config)
 	pm.add<double>("acceleration", acceleration, isDefault);
 	pm.add<double>("climb_rate", climbRate, isDefault);
 	pm.add<double>("yaw_rate", yawRate, isDefault);
+	pm.add<double>("cruise_radius", cruiseRadius, isDefault);
 	pm.add<double>("loiter_radius", loiterRadius, isDefault);
 	pm.add<double>("loiter_lambda", loiterLambda, isDefault);
+	pm.add<double>("approach_altitude", approachAltitude, isDefault);
 	pm.add<double>("line_distance", lineDistance, isDefault);
 	pm.add<double>("line_delta", lineDelta, isDefault);
-	pm.add<double>("approach_radius", approachRadius, isDefault);
-	pm.add<double>("approach_altitude", approachAltitude, isDefault);
 
 	return pm.map();
 }
