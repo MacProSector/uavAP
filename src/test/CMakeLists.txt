@@ -17,20 +17,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 set (TEST_SOURCES 	TestRunner.cpp
-			#Core/APLoggerTest.cpp
-			Core/RunnerTest.cpp
-                        Core/DataPresentationTest.cpp
-                        Core/IPCTest.cpp
-                        Core/SchedulerTest.cpp
-                        Core/PropertyMapperTest.cpp
-                        
-                        Math/BetaIncompleteTest.cpp
-                        Geofencing/GeneralTests.cpp
-                        #Core/FramesTest.cpp
-			#FlightControl/Controller/PIDControllerTest_Airplane.cpp
-			#FlightControl/Controller/PIDControllerTest_Helicopter.cpp
-			FlightControl/Controller/AdaptiveControlEnvironmentTest.cpp
 			API/ApExtTest.cpp
+#			Core/APLoggerTest.cpp
+#			Core/FramesTest.cpp
+            Core/DataPresentationTest.cpp
+            Core/IPCTest.cpp
+            Core/PropertyMapperTest.cpp
+            Core/RunnerTest.cpp
+            Core/SchedulerTest.cpp
+			FlightControl/Controller/AdaptiveControlEnvironmentTest.cpp
+#			FlightControl/Controller/PIDControllerTest_Airplane.cpp
+#			FlightControl/Controller/PIDControllerTest_Helicopter.cpp
+            Math/BetaIncompleteTest.cpp
+            MissionControl/EmergencyPlanner/EmergencyGeofencingPlannerTest.cpp
+            MissionControl/EmergencyPlanner/EmergencyLandingPlannerTest.cpp
 			)
 
 set (TEST_DEPENDENCIES 	boost_system
@@ -61,20 +61,17 @@ add_executable(testman EXCLUDE_FROM_ALL TestRunner.cpp
 										
 target_link_libraries(testman boost_unit_test_framework.a)
 
+configure_file(${PROJECT_SOURCE_DIR}/test/Core/config/pm_test.json ${CMAKE_BINARY_DIR}/test/Core/config/pm_test.json COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/Adaptive_Pitch.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/Adaptive_Pitch.json COPYONLY)
-
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/P_Airplane.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/P_Airplane.json COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/PD_Airplane.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/PD_Airplane.json COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/PFF_Airplane.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/PFF_Airplane.json COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/PI_Airplane.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/PI_Airplane.json COPYONLY)
-
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/P_Helicopter.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/P_Helicopter.json COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/PD_Helicopter.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/PD_Helicopter.json COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/PFF_Helicopter.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/PFF_Helicopter.json COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/FlightControl/Controller/config/PI_Helicopter.json ${CMAKE_BINARY_DIR}/test/FlightControl/Controller/config/PI_Helicopter.json COPYONLY)
-
-configure_file(${PROJECT_SOURCE_DIR}/test/Core/config/pm_test.json ${CMAKE_BINARY_DIR}/test/Core/config/pm_test.json COPYONLY)
-
+configure_file(${PROJECT_SOURCE_DIR}/test/MissionControl/EmergencyPlanner/config/mission_control.json ${CMAKE_BINARY_DIR}/test/MissionControl/EmergencyPlanner/config/mission_control.json COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/Plugin/test_config.json ${CMAKE_BINARY_DIR}/test/Plugin/test_config.json COPYONLY)
 
 

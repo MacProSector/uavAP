@@ -59,6 +59,10 @@ public:
 	add(const std::string& key, typename std::enable_if<!std::is_pod<Type>::value, Type>::type& val,
 			bool mandatory);
 
+	template <typename Struct>
+	bool
+	addStruct(const std::string& key, Struct& s, bool mandatory);
+
 	template<typename T>
 	bool
 	addVector(const std::string& key, std::vector<T>& val, bool mandatory);
@@ -175,6 +179,36 @@ PropertyMapper::add(const std::string& key, typename std::enable_if<!std::is_pod
 		if (!subtree.empty())
 		{
 			if (val.configure(subtree))
+				return true;
+		}
+		if (mandatory)
+		{
+			APLOG_ERROR << "PM: mandatory " << key << " missing";
+			mandatoryCheck_ = false;
+		}
+		return false;
+	}
+}
+
+template<typename Struct>
+inline bool
+PropertyMapper::addStruct(const std::string& key, Struct& s, bool mandatory)
+{
+	if (key.empty())
+	{
+		bool success = s.configure(p_);
+		if (mandatory)
+			mandatoryCheck_ &= success;
+
+		return success;
+	}
+	else
+	{
+		boost::property_tree::ptree subtree;
+		add(key, subtree, false);
+		if (!subtree.empty())
+		{
+			if (s.configure(subtree))
 				return true;
 		}
 		if (mandatory)

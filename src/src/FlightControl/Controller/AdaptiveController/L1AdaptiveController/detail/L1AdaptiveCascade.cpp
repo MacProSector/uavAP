@@ -169,17 +169,17 @@ L1AdaptiveCascade::configureAdaptive(const boost::property_tree::ptree& config)
 		{
 		case Adaptives::ROLL:
 		{
-			pm.add<RollL1AdaptiveParameter>(it.first, rollAdaptiveParameter_, false);
+			pm.addStruct<RollL1AdaptiveParameter>(it.first, rollAdaptiveParameter_, false);
 			break;
 		}
 		case Adaptives::PITCH:
 		{
-			pm.add<PitchL1AdaptiveParameter>(it.first, pitchAdaptiveParameter_, false);
+			pm.addStruct<PitchL1AdaptiveParameter>(it.first, pitchAdaptiveParameter_, false);
 			break;
 		}
 		case Adaptives::YAW:
 		{
-			pm.add<YawL1AdaptiveParameter>(it.first, yawAdaptiveParameter_, false);
+			pm.addStruct<YawL1AdaptiveParameter>(it.first, yawAdaptiveParameter_, false);
 			break;
 		}
 		case Adaptives::INVALID:
