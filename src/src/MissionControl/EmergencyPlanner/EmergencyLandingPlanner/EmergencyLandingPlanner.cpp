@@ -134,6 +134,12 @@ EmergencyLandingPlanner::run(RunStage stage)
 	{
 		auto ipc = ipc_.get();
 
+		if (!ipc)
+		{
+			APLOG_ERROR << "EmergencyLandingPlanner: IPC Missing.";
+			return true;
+		}
+
 		sensorDataSubscription_ = ipc->subscribeOnSharedMemory<SensorData>("sensor_data",
 				std::bind(&EmergencyLandingPlanner::onSensorData, this, std::placeholders::_1));
 
@@ -177,8 +183,6 @@ EmergencyLandingPlanner::onSensorData(const SensorData& sensorData)
 	std::unique_lock<std::mutex> lock(sensorDataMutex_);
 	if (!sensorData_.autopilotActive && sensorData.autopilotActive)
 	{
-		auto scheduler = scheduler_.get();
-
 		onFault(true);
 	}
 	else if (sensorData_.autopilotActive && !sensorData.autopilotActive)
@@ -195,8 +199,15 @@ EmergencyLandingPlanner::onFault(bool fault)
 {
 	if (fault)
 	{
-		auto scheduler = scheduler_.get();
 		double period = landingParameters_[0].planningParameter.period;
+
+		auto scheduler = scheduler_.get();
+
+		if (!scheduler)
+		{
+			APLOG_ERROR << "EmergencyLandingPlanner: Scheduler Missing.";
+			return;
+		}
 
 		landingParameters_[0].schedulingEvent = scheduler->schedule(
 				std::bind(&EmergencyLandingPlanner::calculateEmergencyLandingPlan, this,
@@ -205,6 +216,12 @@ EmergencyLandingPlanner::onFault(bool fault)
 	else
 	{
 		auto maneuverPlanner = maneuverPlanner_.get();
+
+		if (!maneuverPlanner)
+		{
+			APLOG_ERROR << "EmergencyLandingPlanner: Maneuver Planner Missing.";
+			return;
+		}
 
 		landingParameters_[0].schedulingEvent.cancel();
 		maneuverPlanner->cancelEmergencyPlan();
@@ -390,6 +407,12 @@ EmergencyLandingPlanner::publishEmergencyLandingPlan(const EmergencyLandingPlan&
 	override.controllerTarget.insert(yawRateOverride);
 
 	auto maneuverPlanner = maneuverPlanner_.get();
+
+	if (!maneuverPlanner)
+	{
+		APLOG_ERROR << "EmergencyLandingPlanner: Maneuver Planner Missing.";
+		return;
+	}
 
 	maneuverPlanner->publishEmergencyPlan(override);
 }
