@@ -266,15 +266,10 @@ ManeuverPlanner::publishEmergencyPlan(const Override& override)
 void
 ManeuverPlanner::cancelEmergencyPlan()
 {
-	if (manualRestart_)
-	{
-		resumeOverride();
-	}
-	else
-	{
-		Override override;
-		overridePublisher_.publish(dp::serialize(override));
-	}
+	Override override;
+
+	overridePublisher_.publish(dp::serialize(override));
+	resumeOverride();
 }
 
 void
