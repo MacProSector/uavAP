@@ -83,19 +83,19 @@ CustomPlanner::run(RunStage stage)
 	{
 		if (!ipc_.isSet())
 		{
-			APLOG_ERROR << "CustomPlanner: IPC Missing.";
+			APLOG_ERROR << "CustomMissionPlanner: IPC Missing.";
 			return true;
 		}
 
 		if (!scheduler_.isSet())
 		{
-			APLOG_ERROR << "CustomPlanner: Scheduler Missing.";
+			APLOG_ERROR << "CustomMissionPlanner: Scheduler Missing.";
 			return true;
 		}
 
 		if (!globalPlanner_.isSet())
 		{
-			APLOG_ERROR << "CustomPlanner: Global Planner Missing.";
+			APLOG_ERROR << "CustomMissionPlanner: Global Planner Missing.";
 			return true;
 		}
 
@@ -110,7 +110,7 @@ CustomPlanner::run(RunStage stage)
 
 		if (!sensorDataSubscription_.connected())
 		{
-			APLOG_ERROR << "Sensor Data Missing.";
+			APLOG_ERROR << "CustomMissionPlanner: Sensor Data Missing.";
 			return true;
 		}
 
@@ -135,7 +135,7 @@ CustomPlanner::missionRequest(const std::string& mission)
 
 	if (currentMission_ == missionMap_.end())
 	{
-		APLOG_ERROR << "Requested Mission " << mission << " Not Found.";
+		APLOG_ERROR << "CustomMissionPlanner: Unknown Mission " << mission << ".";
 		return;
 	}
 
@@ -147,7 +147,7 @@ CustomPlanner::publishMission()
 {
 	if (currentMission_ == missionMap_.end())
 	{
-		APLOG_ERROR << "No Mission Selected. Cannot Publish.";
+		APLOG_ERROR << "CustomMissionPlanner: Mission Missing.";
 		return;
 	}
 
@@ -155,11 +155,11 @@ CustomPlanner::publishMission()
 
 	if (!gp)
 	{
-		APLOG_ERROR << "Cannot Set Mission. Global Planner Missing.";
+		APLOG_ERROR << "CustomMissionPlanner: Global Planner Missing.";
 		return;
 	}
 
-	APLOG_DEBUG << "Start Mission: " << currentMission_->first;
+	APLOG_DEBUG << "CustomMissionPlanner: Start " << currentMission_->first << " Mission.";
 
 	Mission mission = currentMission_->second;
 
