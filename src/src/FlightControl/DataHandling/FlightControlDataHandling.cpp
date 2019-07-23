@@ -17,10 +17,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////////////////
 /**
- *  @file         DataHandlingIO.cpp
- *  @author Mirco Theile
- *  @date      26 July 2017
- *  @brief      UAV Autopilot Flight Control Data Handling IO Source File
+ *  @file	FlightControlDataHandling.cpp
+ *  @author	Mirco Theile
+ *  @date	26 July 2017
+ *  @brief	UAV Autopilot Flight Control Data Handling Source File
  *
  *  Description
  */
@@ -51,14 +51,14 @@ FlightControlDataHandling::FlightControlDataHandling() :
 std::shared_ptr<FlightControlDataHandling>
 FlightControlDataHandling::create(const boost::property_tree::ptree& configuration)
 {
-	auto dataHandlingIO = std::make_shared<FlightControlDataHandling>();
+	auto flightControlDataHandling = std::make_shared<FlightControlDataHandling>();
 
-	if (!dataHandlingIO->configure(configuration))
+	if (!flightControlDataHandling->configure(configuration))
 	{
-		APLOG_ERROR << "DataHandlingIO: Failed to Load Global Configurations";
+		APLOG_ERROR << "FlightControlDataHandling: Failed to Load Config.";
 	}
 
-	return dataHandlingIO;
+	return flightControlDataHandling;
 }
 
 bool
@@ -80,28 +80,28 @@ FlightControlDataHandling::run(RunStage stage)
 	{
 		if (!localPlanner_.isSet())
 		{
-			APLOG_WARN << "DataHandlingIO: Failed to Load Local Planner";
+			APLOG_WARN << "FlightControlDataHandling: Local Planner Missing.";
 		}
 		if (!controller_.isSet())
 		{
-			APLOG_WARN << "DataHandlingIO: Failed to Load Controller";
+			APLOG_WARN << "FlightControlDataHandling: Controller Missing.";
 		}
 
 		if (!scheduler_.isSet())
 		{
-			APLOG_ERROR << "DataHandlingIO: Scheduler missing.";
+			APLOG_ERROR << "FlightControlDataHandling: Scheduler Missing.";
 
 			return true;
 		}
 		if (!ipc_.isSet())
 		{
-			APLOG_ERROR << "DataHandlingIO: IPC missing.";
+			APLOG_ERROR << "FlightControlDataHandling: IPC Missing.";
 
 			return true;
 		}
 		if (!dataPresentation_.isSet())
 		{
-			APLOG_ERROR << "DataHandlingIO: DataPresentation missing.";
+			APLOG_ERROR << "FlightControlDataHandling: Data Presentation Missing.";
 
 			return true;
 		}
@@ -122,10 +122,7 @@ FlightControlDataHandling::run(RunStage stage)
 
 		if (!flightControlSubscription_.connected())
 		{
-			APLOG_WARN
-					<< "DataHandlingIO: Failed to Subscribe On Flight Control Message Queue. Ignoring.";
-
-//			return true;
+			APLOG_WARN << "FlightControlDataHandling: Flight Control Subscription Missing.";
 		}
 
 		auto scheduler = scheduler_.get();
@@ -153,7 +150,7 @@ FlightControlDataHandling::collectAndSend()
 	auto dp = dataPresentation_.get();
 	if (!dp)
 	{
-		APLOG_ERROR << "Data presentation missing. Cannot collect and send.";
+		APLOG_ERROR << "FlightControlDataHandling: Data Presentation Missing.";
 		return;
 	}
 
@@ -169,7 +166,7 @@ FlightControlDataHandling::receiveAndDistribute(const Packet& packet)
 
 	if (!dp)
 	{
-		APLOG_ERROR << "Data presentation missing. Cannot Handle packet.";
+		APLOG_ERROR << "FlightControlDataHandling: Data Presentation Missing.";
 		return;
 	}
 
@@ -193,11 +190,11 @@ FlightControlDataHandling::receiveAndDistribute(const Packet& packet)
 		auto request = boost::any_cast<DataRequest>(any);
 		if (request == DataRequest::MISSION)
 		{
-			APLOG_WARN << "Received Mission Request. Flight control does not have this info.";
+			APLOG_WARN << "FlightControlDataHandling: Received Mission Request.";
 		}
 		else if (request == DataRequest::TRAJECTORY)
 		{
-			APLOG_DEBUG << "Received Trajectory Request.";
+			APLOG_DEBUG << "FlightControlDataHandling: Received Trajectory Request.";
 			collectAndSendTrajectory(dp);
 		}
 
@@ -208,18 +205,21 @@ FlightControlDataHandling::receiveAndDistribute(const Packet& packet)
 	{
 		auto advanced = boost::any_cast<AdvancedControl>(any);
 
-		APLOG_TRACE << "Camber Control: " << EnumMap<CamberControl>::convert(advanced.camberSelection);
-		APLOG_TRACE << "Special Control: " << EnumMap<SpecialControl>::convert(advanced.specialSelection);
-		APLOG_TRACE << "Throw Control: " << EnumMap<ThrowsControl>::convert(advanced.throwsSelection);
-		APLOG_TRACE << "Camber Value: " << advanced.camberValue;
-		APLOG_TRACE << "Special Value: " << advanced.specialValue;
+		APLOG_TRACE << "FlightControlDataHandling: Camber Control "
+				<< EnumMap<CamberControl>::convert(advanced.camberSelection);
+		APLOG_TRACE << "FlightControlDataHandling: Special Control "
+				<< EnumMap<SpecialControl>::convert(advanced.specialSelection);
+		APLOG_TRACE << "FlightControlDataHandling: Throw Control "
+				<< EnumMap<ThrowsControl>::convert(advanced.throwsSelection);
+		APLOG_TRACE << "FlightControlDataHandling: Camber Value " << advanced.camberValue;
+		APLOG_TRACE << "FlightControlDataHandling: Special Value " << advanced.specialValue;
 
 		advancedControlPublisher_.publish(advanced);
 		break;
 	}
 	default:
 	{
-		APLOG_ERROR << "Unspecified Content: " << static_cast<int>(content);
+		APLOG_ERROR << "FlightControlDataHandling: Unknown Content " << static_cast<int>(content);
 		break;
 	}
 	}
@@ -243,7 +243,7 @@ FlightControlDataHandling::collectAndSendSensorData(
 	auto sens = sensActIO_.get();
 	if (!sens)
 	{
-		APLOG_ERROR << "SensActIO missing. Cannot collect and send SensorData.";
+		APLOG_ERROR << "FlightControlDataHandling: Sensing Actuation IO Missing.";
 		return;
 	}
 
@@ -259,11 +259,11 @@ void
 FlightControlDataHandling::collectAndSendTrajectory(
 		std::shared_ptr<IDataPresentation<Content, Target>> dp)
 {
-	APLOG_DEBUG << "Collect and send Trajectory";
+	APLOG_DEBUG << "FlightControlDataHandling: Collect and Send Trajectory.";
 	auto lp = localPlanner_.get();
 	if (!lp)
 	{
-		APLOG_ERROR << "LocalPlanner missing. Cannot collect and send Trajectory.";
+		APLOG_ERROR << "FlightControlDataHandling: Local Planner Missing.";
 		return;
 	}
 
@@ -278,7 +278,7 @@ FlightControlDataHandling::tunePID(const PIDTuning& params)
 	auto controller = controller_.get();
 	if (!controller)
 	{
-		APLOG_ERROR << "Controller missing. Cannot tune PID.";
+		APLOG_ERROR << "FlightControlDataHandling: Controller Missing.";
 		return;
 	}
 
@@ -292,7 +292,7 @@ FlightControlDataHandling::tunePID(const PIDTuning& params)
 	}
 	else
 	{
-		APLOG_ERROR << "Cannot tune pid for given controller type.";
+		APLOG_ERROR << "FlightControlDataHandling: Unknown Controller Type.";
 		return;
 	}
 }
@@ -304,7 +304,7 @@ FlightControlDataHandling::collectAndSendPIDStatus(
 	auto controller = controller_.get();
 	if (!controller)
 	{
-		APLOG_ERROR << "Controller missing. Cannot tune PID.";
+		APLOG_ERROR << "FlightControlDataHandling: Controller Missing.";
 		return;
 	}
 
@@ -319,7 +319,7 @@ FlightControlDataHandling::collectAndSendPIDStatus(
 	}
 	else
 	{
-		APLOG_ERROR << "Cannot get PID status.";
+		APLOG_ERROR << "FlightControlDataHandling: Unknown Controller Type.";
 		return;
 	}
 
@@ -335,7 +335,7 @@ FlightControlDataHandling::collectAndSendLocalPlannerStatus(
 	auto lp = localPlanner_.get();
 	if (!lp)
 	{
-		APLOG_ERROR << "Local planner missing. Cannot collect status.";
+		APLOG_ERROR << "FlightControlDataHandling: Local Planner Missing.";
 		return;
 	}
 
@@ -350,7 +350,7 @@ FlightControlDataHandling::tuneLocalPlanner(const LocalPlannerParams& params)
 	auto lp = localPlanner_.get();
 	if (!lp)
 	{
-		APLOG_ERROR << "Local planner missing. Cannot tune.";
+		APLOG_ERROR << "FlightControlDataHandling: Local Planner Missing.";
 		return;
 	}
 
