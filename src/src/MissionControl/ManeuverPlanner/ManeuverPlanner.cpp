@@ -206,7 +206,7 @@ ManeuverPlanner::setManualOverride(const Override& override)
 {
 	if (overrideInterrupted_)
 	{
-		APLOG_WARN << "Override Interrupted.";
+		APLOG_WARN << "ManeuverPlanner: Override Interrupted.";
 		return;
 	}
 
@@ -226,7 +226,7 @@ ManeuverPlanner::setManeuverOverride(const std::string& maneuverSet)
 {
 	if (overrideInterrupted_)
 	{
-		APLOG_WARN << "Override Interrupted.";
+		APLOG_WARN << "ManeuverPlanner: Override Interrupted.";
 		return;
 	}
 
@@ -234,7 +234,7 @@ ManeuverPlanner::setManeuverOverride(const std::string& maneuverSet)
 
 	if (currentManeuverSet_ == maneuverSetMap_.end())
 	{
-		APLOG_ERROR << "ManeuverPlanner: Maneuver Set " << maneuverSet << " Not Found.";
+		APLOG_ERROR << "ManeuverPlanner: Unknown Maneuver Set " << maneuverSet << ".";
 		return;
 	}
 
@@ -282,7 +282,7 @@ ManeuverPlanner::interruptOverride()
 
 	overrideInterrupted_ = true;
 
-	APLOG_DEBUG << "Interrupt Override.";
+	APLOG_DEBUG << "ManeuverPlanner: Interrupt Override.";
 
 	std::unique_lock<std::mutex> overrideLock(overrideMutex_);
 	lastManualOverride_ = override_;
@@ -304,7 +304,7 @@ ManeuverPlanner::resumeOverride()
 		return;
 	}
 
-	APLOG_DEBUG << "Resume Override.";
+	APLOG_DEBUG << "ManeuverPlanner: Resume Override.";
 
 	if (lastManualActive_ && manualRestart_)
 	{
@@ -312,7 +312,7 @@ ManeuverPlanner::resumeOverride()
 		override_ = lastManualOverride_;
 		overrideLock.unlock();
 
-		APLOG_DEBUG << "Resume Manual Override.";
+		APLOG_DEBUG << "ManeuverPlanner: Resume Manual Override.";
 
 		setOverride("", !lastManualOverride_.isEmpty(), false);
 		startOverride();
@@ -322,7 +322,7 @@ ManeuverPlanner::resumeOverride()
 		maneuverSet_ = lastManeuverSet_;
 		currentManeuver_ = lastManeuver_;
 
-		APLOG_DEBUG << "Resume Maneuver Override.";
+		APLOG_DEBUG << "ManeuverPlanner: Resume Maneuver Override.";
 
 		setOverride(maneuverSet_, false, true);
 		startOverride();
@@ -404,11 +404,11 @@ ManeuverPlanner::stopManeuverAnalysis()
 void
 ManeuverPlanner::startOverride()
 {
-	APLOG_DEBUG << "Start Override.";
+	APLOG_DEBUG << "ManeuverPlanner: Start Override.";
 
 	if (manualActive_)
 	{
-		APLOG_DEBUG << "Start Manual Override.";
+		APLOG_DEBUG << "ManeuverPlanner: Start Manual Override.";
 
 		std::unique_lock<std::mutex> overrideLock(overrideMutex_);
 		Override override = override_;
@@ -434,7 +434,7 @@ ManeuverPlanner::startOverride()
 	}
 	else if (maneuverActive_)
 	{
-		APLOG_DEBUG << "Start Maneuver Override.";
+		APLOG_DEBUG << "ManeuverPlanner: Start Maneuver Override.";
 
 		if (currentManeuver_ == currentManeuverSet_->second.end())
 		{
@@ -451,7 +451,7 @@ ManeuverPlanner::startOverride()
 void
 ManeuverPlanner::stopOverride()
 {
-	APLOG_DEBUG << "Stop Override.";
+	APLOG_DEBUG << "ManeuverPlanner: Stop Override.";
 
 	if (maneuverActive_)
 	{
@@ -497,7 +497,7 @@ ManeuverPlanner::nextManeuverOverride()
 		return;
 	}
 
-	APLOG_DEBUG << "Next Maneuver Override.";
+	APLOG_DEBUG << "ManeuverPlanner: Next Maneuver Override.";
 
 	deactivateManeuverOverride();
 
@@ -523,7 +523,7 @@ ManeuverPlanner::activateManeuverOverride(const ICondition::ConditionTrigger& co
 		return;
 	}
 
-	APLOG_DEBUG << "Activate Maneuver Override.";
+	APLOG_DEBUG << "ManeuverPlanner: Activate Maneuver Override.";
 
 	if (!currentManeuver_)
 	{
@@ -655,14 +655,14 @@ ManeuverPlanner::activateManeuverOverride(const ICondition::ConditionTrigger& co
 
 	AdvancedControl advancedControl = currentManeuver->advancedControl;
 
-	APLOG_TRACE << "Maneuver Camber Control: "
+	APLOG_TRACE << "ManeuverPlanner: Camber Control "
 			<< EnumMap<CamberControl>::convert(advancedControl.camberSelection);
-	APLOG_TRACE << "Maneuver Special Control: "
+	APLOG_TRACE << "ManeuverPlanner: Special Control "
 			<< EnumMap<SpecialControl>::convert(advancedControl.specialSelection);
-	APLOG_TRACE << "Maneuver Throw Control: "
+	APLOG_TRACE << "ManeuverPlanner: Throw Control "
 			<< EnumMap<ThrowsControl>::convert(advancedControl.throwsSelection);
-	APLOG_TRACE << "Maneuver Camber Value: " << advancedControl.camberValue;
-	APLOG_TRACE << "Maneuver Special Value: " << advancedControl.specialValue;
+	APLOG_TRACE << "ManeuverPlanner: Camber Value " << advancedControl.camberValue;
+	APLOG_TRACE << "ManeuverPlanner: Special Value " << advancedControl.specialValue;
 
 	std::unique_lock<std::mutex> maneuverAnalysisStatusLock(maneuverAnalysisStatusMutex_);
 	maneuverAnalysisStatus_.maneuver = maneuverSet_;
@@ -694,7 +694,7 @@ ManeuverPlanner::deactivateManeuverOverride()
 		return;
 	}
 
-	APLOG_DEBUG << "Deactivate Maneuver Override.";
+	APLOG_DEBUG << "ManeuverPlanner: Deactivate Maneuver Override.";
 
 	if (!currentManeuver_)
 	{
