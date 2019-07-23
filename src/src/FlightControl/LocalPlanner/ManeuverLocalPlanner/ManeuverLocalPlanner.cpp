@@ -61,7 +61,7 @@ ManeuverLocalPlanner::setTrajectory(const Trajectory& traj)
 	status_.set_is_in_approach(trajectory_.approachSection != nullptr);
 	lockStatus.unlock();
 
-	APLOG_DEBUG << "Trajectory set.";
+	APLOG_DEBUG << "ManeuverLocalPlanner: Trajectory Set.";
 }
 
 Trajectory
@@ -88,8 +88,7 @@ ManeuverLocalPlanner::tune(const LocalPlannerParams& params)
 {
 	if (!params.has_maneuver_params())
 	{
-		APLOG_ERROR
-				<< "ManeuverLocalPlanner::tune: Tuning params do not contain Maneuver params. Ignore.";
+		APLOG_ERROR << "ManeuverLocalPlanner::tune: Maneuver Parameter Missing.";
 		return false;
 	}
 
@@ -107,22 +106,22 @@ ManeuverLocalPlanner::run(RunStage stage)
 	{
 		if (!controller_.isSet())
 		{
-			APLOG_ERROR << "LinearLocalPlanner: Controller missing";
+			APLOG_ERROR << "ManeuverLocalPlanner: Controller Missing.";
 			return true;
 		}
 		if (!sensing_.isSet())
 		{
-			APLOG_ERROR << "LinearLocalPlanner: FlightControlData missing";
+			APLOG_ERROR << "ManeuverLocalPlanner: Sensing Actuation IO Missing.";
 			return true;
 		}
 		if (!scheduler_.isSet())
 		{
-			APLOG_ERROR << "LinearLocalPlanner: Scheduler missing";
+			APLOG_ERROR << "ManeuverLocalPlanner: Scheduler Missing.";
 			return true;
 		}
 		if (!ipc_.isSet())
 		{
-			APLOG_ERROR << "LinearLocalPlanner: IPC missing";
+			APLOG_ERROR << "ManeuverLocalPlanner: IPC Missing.";
 			return true;
 		}
 
@@ -134,14 +133,14 @@ ManeuverLocalPlanner::run(RunStage stage)
 		//Directly calculate local plan when sensor data comes in
 		if (period_ == 0)
 		{
-			APLOG_DEBUG << "Calculate control on sensor data trigger";
+			APLOG_DEBUG << "ManeuverLocalPlanner: Calculate Control on Sensor Data.";
 			auto sensing = sensing_.get();
 			sensing->subscribeOnSensorData(
 					boost::bind(&ManeuverLocalPlanner::onSensorData, this, _1));
 		}
 		else
 		{
-			APLOG_DEBUG << "Calculate control with period " << period_;
+			APLOG_DEBUG << "ManeuverLocalPlanner: Calculate Control at Period " << period_ << ".";
 			auto scheduler = scheduler_.get();
 			scheduler->schedule(std::bind(&ManeuverLocalPlanner::update, this),
 					Milliseconds(period_), Milliseconds(period_));
@@ -188,13 +187,14 @@ ManeuverLocalPlanner::createLocalPlan(const Vector3& position, double heading, b
 	auto currentSection = updatePathSection(position);
 	if (!currentSection)
 	{
-		APLOG_ERROR << "No current pathsection. Fly safety procedure.";
+		APLOG_ERROR
+				<< "ManeuverLocalPlanner: Current Path Section Missing. Engaged Safety Procedure.";
 		safety = true;
 	}
 
 	if (!hasGPSFix)
 	{
-		APLOG_ERROR << "Lost GPS fix. LocalPlanner safety procedure.";
+		APLOG_ERROR << "ManeuverLocalPlanner: GPS Fix Missing. Engaged Safety Procedure.";
 		safety = true;
 	}
 
@@ -227,7 +227,7 @@ ManeuverLocalPlanner::createLocalPlan(const Vector3& position, double heading, b
 	auto controller = controller_.get();
 	if (!controller)
 	{
-		APLOG_ERROR << "LinearLocalPlanner: Controller missing";
+		APLOG_ERROR << "ManeuverLocalPlanner: Controller Missing.";
 		return;
 	}
 
@@ -243,7 +243,7 @@ ManeuverLocalPlanner::updatePathSection(const Vector3& position)
 	{
 		if (currentSection_ == trajectory_.pathSections.end())
 		{
-			APLOG_ERROR << "Trajectory at the end.";
+			APLOG_ERROR << "ManeuverLocalPlanner: Trajectory at the End.";
 			return nullptr;
 		}
 		currentSection = *currentSection_;
@@ -255,7 +255,7 @@ ManeuverLocalPlanner::updatePathSection(const Vector3& position)
 
 	if (!currentSection)
 	{
-		APLOG_ERROR << "Current Section is nullptr. Abort.";
+		APLOG_ERROR << "ManeuverLocalPlanner: Current Section Missing.";
 		return nullptr;
 	}
 	currentSection->updatePosition(position);
@@ -266,14 +266,14 @@ ManeuverLocalPlanner::updatePathSection(const Vector3& position)
 
 		if (currentSection_ == trajectory_.pathSections.end())
 		{
-			APLOG_ERROR << "Trajectory at the end.";
+			APLOG_ERROR << "ManeuverLocalPlanner: Trajectory at the End.";
 			return nullptr;
 		}
 
 		currentSection = *currentSection_;
 		if (!currentSection)
 		{
-			APLOG_ERROR << "Current Section is nullptr. Abort.";
+			APLOG_ERROR << "ManeuverLocalPlanner: Current Section Missing.";
 			return nullptr;
 		}
 		currentSection->updatePosition(position);
@@ -387,7 +387,7 @@ ManeuverLocalPlanner::onTrajectoryPacket(const Packet& packet)
 		setTrajectory(dp::deserialize<Trajectory>(packet));
 	} catch (ArchiveError& err)
 	{
-		APLOG_ERROR << "Invalid Trajectory packet: " << err.what();
+		APLOG_ERROR << "ManeuverLocalPlanner: Invalid Trajectory Packet " << err.what() << ".";
 		return;
 	}
 }
@@ -421,7 +421,7 @@ ManeuverLocalPlanner::update()
 
 	if (!sensing)
 	{
-		APLOG_ERROR << "ManeuverLocalPlanner: sensing missing";
+		APLOG_ERROR << "ManeuverLocalPlanner: Sensing Actuation IO Missing.";
 		return;
 	}
 

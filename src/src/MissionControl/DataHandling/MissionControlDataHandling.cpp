@@ -216,7 +216,8 @@ MissionControlDataHandling::receiveAndDistribute(const Packet& packet)
 			collectAndSendLocalFrame(dp);
 			break;
 		default:
-			APLOG_ERROR << "MissionControlDataHandling: Unknown Data Request " << static_cast<int>(request) << ".";
+			APLOG_ERROR << "MissionControlDataHandling: Unknown Data Request "
+					<< static_cast<int>(request) << ".";
 			break;
 		}
 
@@ -284,7 +285,8 @@ MissionControlDataHandling::receiveAndDistribute(const Packet& packet)
 	}
 	default:
 	{
-		APLOG_ERROR << "MissionControlDataHandling: Unknown Content " << static_cast<int>(content) << ".";
+		APLOG_ERROR << "MissionControlDataHandling: Unknown Content " << static_cast<int>(content)
+				<< ".";
 		break;
 	}
 	}
