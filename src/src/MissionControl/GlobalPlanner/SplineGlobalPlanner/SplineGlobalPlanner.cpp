@@ -22,6 +22,7 @@
  *  Created on: Dec 16, 2017
  *      Author: mircot
  */
+
 #include "uavAP/MissionControl/GlobalPlanner/PathSections/CubicSpline.h"
 #include "uavAP/MissionControl/GlobalPlanner/PathSections/Orbit.h"
 #include "uavAP/MissionControl/GlobalPlanner/Trajectory.h"
@@ -64,7 +65,7 @@ SplineGlobalPlanner::run(RunStage stage)
 	{
 		if (!ipc_.isSet())
 		{
-			APLOG_ERROR << "GlobalPlanner: IPC missing.";
+			APLOG_ERROR << "SplineGlobalPlanner: IPC Missing.";
 			return true;
 		}
 		auto ipc = ipc_.get();
@@ -94,7 +95,7 @@ SplineGlobalPlanner::setMission(const Mission& mission)
 {
 	if (mission.waypoints.empty())
 	{
-		APLOG_ERROR << "Mission does not contain Waypoints. Ignore.";
+		APLOG_ERROR << "SplineGlobalPlanner: Mission Waypoint Missing.";
 		return;
 	}
 
@@ -113,7 +114,7 @@ SplineGlobalPlanner::setMission(const Mission& mission)
 		traj = createCatmulRomSplines(mission);
 	}
 
-	APLOG_DEBUG << "Send Trajectory";
+	APLOG_DEBUG << "SplineGlobalPlanner: Send Trajectory.";
 	auto packet = dp::serialize(traj);
 	trajectoryPublisher_.publish(packet);
 }
@@ -150,7 +151,7 @@ SplineGlobalPlanner::createNaturalSplines(const Mission& mission)
 
 	Rn = (A + B * Lpow).inverse();
 
-	std::cout << "Rn: " << Rn << std::endl;
+//	std::cout << "Rn: " << Rn << std::endl;
 
 	std::vector<Eigen::Matrix3d> P;
 
@@ -174,9 +175,9 @@ SplineGlobalPlanner::createNaturalSplines(const Mission& mission)
 			P[j] = L * P[j];
 			auto k = (j + i) % (n - 1);
 			C[k] += P[j];
-			std::cout << C[j] << std::endl << std::endl;
+//			std::cout << C[j] << std::endl << std::endl;
 		}
-		std::cout << "Next" << std::endl << std::endl;
+//		std::cout << "Next" << std::endl << std::endl;
 	}
 
 	PathSections traj;
@@ -188,8 +189,8 @@ SplineGlobalPlanner::createNaturalSplines(const Mission& mission)
 				C[j].row(2), velocity);
 		traj.push_back(spline);
 
-		std::cout << spline->c0_ << ", " << spline->c1_ << ", " << spline->c2_ << ", "
-				<< spline->c3_ << ", " << std::endl;
+//		std::cout << spline->c0_ << ", " << spline->c1_ << ", " << spline->c2_ << ", "
+//				<< spline->c3_ << ", " << std::endl;
 	}
 
 	return Trajectory(traj, mission.infinite);
@@ -332,7 +333,8 @@ SplineGlobalPlanner::createCatmulRomSplines(const Mission& mission)
 		Waypoint init = *mission.initialPosition;
 		approachMat.row(1) = init.location.transpose();
 		if (init.direction)
-			approachMat.row(0) = approachMat.row(2) - (init.direction->transpose() * mission.velocity);
+			approachMat.row(0) = approachMat.row(2)
+					- (init.direction->transpose() * mission.velocity);
 		else
 			approachMat.row(0) = approachMat.row(1);
 

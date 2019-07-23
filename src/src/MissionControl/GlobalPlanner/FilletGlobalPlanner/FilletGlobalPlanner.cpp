@@ -45,7 +45,7 @@ FilletGlobalPlanner::create(const boost::property_tree::ptree& config)
 	auto planner = std::make_shared<FilletGlobalPlanner>();
 	if (!planner->configure(config))
 	{
-		APLOG_ERROR << "FilletGlobalPlanner Configuration failed.";
+		APLOG_ERROR << "FilletGlobalPlanner: Failed to Load Config.";
 	}
 	return planner;
 }
@@ -68,7 +68,7 @@ FilletGlobalPlanner::run(RunStage stage)
 	{
 		if (!ipc_.isSet())
 		{
-			APLOG_ERROR << "GlobalPlanner: IPC missing.";
+			APLOG_ERROR << "FilletGlobalPlanner: IPC Missing.";
 			return true;
 		}
 		auto ipc = ipc_.get();
@@ -176,7 +176,7 @@ FilletGlobalPlanner::setMission(const Mission& mission)
 		traj.push_back(orbit);
 	}
 
-	APLOG_DEBUG << "Send trajectory";
+	APLOG_DEBUG << "FilletGlobalPlanner: Send Trajectory.";
 	auto packet = dp::serialize(traj);
 	trajectoryPublisher_.publish(packet);
 }
