@@ -219,7 +219,7 @@ FlightControlDataHandling::receiveAndDistribute(const Packet& packet)
 	}
 	default:
 	{
-		APLOG_ERROR << "FlightControlDataHandling: Unknown Content " << static_cast<int>(content);
+		APLOG_ERROR << "FlightControlDataHandling: Unknown Content " << static_cast<int>(content) << ".";
 		break;
 	}
 	}

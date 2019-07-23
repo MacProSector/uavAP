@@ -22,6 +22,7 @@
  *  Created on: Sep 6, 2017
  *      Author: mircot
  */
+
 #include "uavAP/Core/DataPresentation/ContentMapping.h"
 #include "uavAP/Core/PropertyMapper/PropertyMapper.h"
 #include "uavAP/Core/IPC/IPC.h"
@@ -43,14 +44,14 @@ MissionControlDataHandling::MissionControlDataHandling() :
 std::shared_ptr<MissionControlDataHandling>
 MissionControlDataHandling::create(const boost::property_tree::ptree& configuration)
 {
-	auto dataHandling = std::make_shared<MissionControlDataHandling>();
+	auto missionControlDataHandling = std::make_shared<MissionControlDataHandling>();
 
-	if (!dataHandling->configure(configuration))
+	if (!missionControlDataHandling->configure(configuration))
 	{
-		APLOG_ERROR << "DataHandlingIO: Failed to Load Global Configurations";
+		APLOG_ERROR << "MissionControlDataHandling: Failed to Load Config.";
 	}
 
-	return dataHandling;
+	return missionControlDataHandling;
 }
 
 bool
@@ -71,29 +72,29 @@ MissionControlDataHandling::run(RunStage stage)
 	{
 		if (!scheduler_.isSet())
 		{
-			APLOG_ERROR << "DataHandling: Scheduler missing.";
+			APLOG_ERROR << "MissionControlDataHandling: Scheduler Missing.";
 
 			return true;
 		}
 		if (!ipc_.isSet())
 		{
-			APLOG_ERROR << "DataHandling: IPC missing.";
+			APLOG_ERROR << "MissionControlDataHandling: IPC Missing.";
 
 			return true;
 		}
 		if (!dataPresentation_.isSet())
 		{
-			APLOG_ERROR << "DataHandling: DataPresentation missing.";
+			APLOG_ERROR << "MissionControlDataHandling: Data Presentation Missing.";
 
 			return true;
 		}
 		if (!globalPlanner_.isSet())
 		{
-			APLOG_WARN << "DataHandling: global planner missing.";
+			APLOG_WARN << "MissionControlDataHandling: Global Planner Missing.";
 		}
 		if (!conditionManager_.isSet())
 		{
-			APLOG_WARN << "DataHandling: Condition Manager Missing.";
+			APLOG_WARN << "MissionControlDataHandling: Condition Manager Missing.";
 		}
 
 		auto ipc = ipc_.get();
@@ -110,7 +111,7 @@ MissionControlDataHandling::run(RunStage stage)
 
 		if (!missionControlSubscription_.connected())
 		{
-			APLOG_ERROR << "DataHandlingIO: Failed to Subscribe On Flight Control Message Queue.";
+			APLOG_ERROR << "MissionControlDataHandling: Mission Control Subscription Missing.";
 
 			return true;
 		}
@@ -154,7 +155,7 @@ MissionControlDataHandling::collectAndSend()
 	auto dp = dataPresentation_.get();
 	if (!dp)
 	{
-		APLOG_ERROR << "Data presentation missing. Cannot collect and send.";
+		APLOG_ERROR << "MissionControlDataHandling: Data Presentation Missing.";
 		return;
 	}
 
@@ -191,7 +192,7 @@ MissionControlDataHandling::receiveAndDistribute(const Packet& packet)
 
 	if (!dp)
 	{
-		APLOG_ERROR << "Data presentaiton missing. Cannot Handle packet.";
+		APLOG_ERROR << "MissionControlDataHandling: Data Presentation Missing.";
 		return;
 	}
 
@@ -215,7 +216,7 @@ MissionControlDataHandling::receiveAndDistribute(const Packet& packet)
 			collectAndSendLocalFrame(dp);
 			break;
 		default:
-			APLOG_WARN << "Received invalid data request: " << static_cast<int>(request);
+			APLOG_ERROR << "MissionControlDataHandling: Unknown Data Request " << static_cast<int>(request) << ".";
 			break;
 		}
 
@@ -227,7 +228,7 @@ MissionControlDataHandling::receiveAndDistribute(const Packet& packet)
 		auto mp = maneuverPlanner_.get();
 		if (!mp)
 		{
-			APLOG_ERROR << "Maneuver Planner not found. Cannot override.";
+			APLOG_ERROR << "MissionControlDataHandling: Maneuver Planner Missing.";
 			break;
 		}
 		mp->setManualOverride(manOverride);
@@ -239,7 +240,7 @@ MissionControlDataHandling::receiveAndDistribute(const Packet& packet)
 		auto mp = maneuverPlanner_.get();
 		if (!mp)
 		{
-			APLOG_ERROR << "Maneuver Planner not found. Cannot override.";
+			APLOG_ERROR << "MissionControlDataHandling: Maneuver Planner Missing.";
 			break;
 		}
 		mp->setManeuverOverride(maneuverSet);
@@ -251,7 +252,7 @@ MissionControlDataHandling::receiveAndDistribute(const Packet& packet)
 		auto mp = missionPlanner_.get();
 		if (!mp)
 		{
-			APLOG_ERROR << "Mission Planner not found. Cannot override.";
+			APLOG_ERROR << "MissionControlDataHandling: Mission Planner Missing.";
 			break;
 		}
 		mp->missionRequest(mission);
@@ -263,7 +264,7 @@ MissionControlDataHandling::receiveAndDistribute(const Packet& packet)
 		auto lfm = localFrameManager_.get();
 		if (!lfm)
 		{
-			APLOG_ERROR << "Maneuver Planner Not Found. Cannot Set Local Frame.";
+			APLOG_ERROR << "MissionControlDataHandling: Maneuver Planner Missing.";
 			break;
 		}
 		lfm->setFrame(frame);
@@ -275,7 +276,7 @@ MissionControlDataHandling::receiveAndDistribute(const Packet& packet)
 		auto mp = maneuverPlanner_.get();
 		if (!mp)
 		{
-			APLOG_ERROR << "Maneuver Planner not found. Cannot Set Controller Output Offset.";
+			APLOG_ERROR << "MissionControlDataHandling: Maneuver Planner Missing.";
 			break;
 		}
 		mp->setControllerOutputOffset(offset);
@@ -283,7 +284,7 @@ MissionControlDataHandling::receiveAndDistribute(const Packet& packet)
 	}
 	default:
 	{
-		APLOG_ERROR << "Unspecified Content: " << static_cast<int>(content);
+		APLOG_ERROR << "MissionControlDataHandling: Unknown Content " << static_cast<int>(content) << ".";
 		break;
 	}
 	}
@@ -293,11 +294,11 @@ void
 MissionControlDataHandling::collectAndSendMission(
 		std::shared_ptr<IDataPresentation<Content, Target>> dp)
 {
-	APLOG_DEBUG << "Collect and send Mission";
+	APLOG_DEBUG << "MissionControlDataHandling: Collect and Send Mission.";
 	auto gp = globalPlanner_.get();
 	if (!gp)
 	{
-		APLOG_ERROR << "GlobalPlanner missing. Cannot collect and send Mission.";
+		APLOG_ERROR << "MissionControlDataHandling: Global Planner Missing.";
 		return;
 	}
 
@@ -310,13 +311,13 @@ void
 MissionControlDataHandling::collectAndSendSafetyBounds(
 		std::shared_ptr<IDataPresentation<Content, Target>> dp)
 {
-	APLOG_DEBUG << "Collect and Send Safety Bounds.";
+	APLOG_DEBUG << "MissionControlDataHandling: Collect and Send Geofence.";
 
 	auto maneuverPlanner = maneuverPlanner_.get();
 
 	if (!maneuverPlanner)
 	{
-		APLOG_ERROR << "Maneuver Planner Missing. Collect and Send Safety Bounds.";
+		APLOG_ERROR << "MissionControlDataHandling: Maneuver Planner Missing.";
 		return;
 	}
 
@@ -327,12 +328,12 @@ MissionControlDataHandling::collectAndSendSafetyBounds(
 
 void
 MissionControlDataHandling::collectAndSendLocalFrame(
-		std::shared_ptr<IDataPresentation<Content, Target> > dp)
+		std::shared_ptr<IDataPresentation<Content, Target>> dp)
 {
 	auto lmf = localFrameManager_.get();
 	if (!lmf)
 	{
-		APLOG_DEBUG << "No local frame manager set. Local frame is earth frame.";
+		APLOG_ERROR << "MissionControlDataHandling: Local Frame Manager Missing.";
 		return;
 	}
 
