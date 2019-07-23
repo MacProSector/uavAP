@@ -17,25 +17,23 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////////////////
 /*
- * GeneralTests.cpp
+ * EmergencyGeofencingPlannerTest.cpp
  *
  *  Created on: Aug 20, 2018
  *      Author: mircot
  */
 
-
-
-
 #include <boost/test/unit_test.hpp>
-#include <uavAP/Core/SensorData.h>
-#include <uavAP/MissionControl/Geofencing/ConstRollRateModel.h>
 
-BOOST_AUTO_TEST_SUITE(GeofencingTests)
+#include "uavAP/Core/SensorData.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyGeofencingPlanner/GeofencingModel/ConstRollRateGeofencingModel/ConstRollRateGeofencingModel.h"
+
+BOOST_AUTO_TEST_SUITE(EmergencyGeofencingPlannerTest)
 
 BOOST_AUTO_TEST_CASE(ConstRollRateTest001_InitialConditions)
 {
 
-	ConstRollRateModel model;
+	ConstRollRateGeofencingModel model;
 
 	boost::property_tree::ptree config;
 	config.add("roll_rate", 15);
@@ -53,16 +51,16 @@ BOOST_AUTO_TEST_CASE(ConstRollRateTest001_InitialConditions)
 	model.updateModel(data);
 
 	//Initial condition
-	BOOST_CHECK_CLOSE(model.calculateYaw(30 * M_PI / 180.0, ConstRollRateModel::RollDirection::LEFT), 70 * M_PI / 180.0, 1e-8);
-	BOOST_CHECK_CLOSE(model.calculateYaw(30 * M_PI / 180.0, ConstRollRateModel::RollDirection::RIGHT), 70 * M_PI / 180.0, 1e-8);
+	BOOST_CHECK_CLOSE(model.calculateYaw(30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::LEFT), 70 * M_PI / 180.0, 1e-8);
+	BOOST_CHECK_CLOSE(model.calculateYaw(30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::RIGHT), 70 * M_PI / 180.0, 1e-8);
 
 	//Yaw symmetry
-	BOOST_CHECK_CLOSE(model.calculateYaw(-30 * M_PI / 180.0, ConstRollRateModel::RollDirection::LEFT), 70 * M_PI / 180.0, 1e-8);
-	BOOST_CHECK_CLOSE(model.calculateYaw(-30 * M_PI / 180.0, ConstRollRateModel::RollDirection::RIGHT), 70 * M_PI / 180.0, 1e-8);
+	BOOST_CHECK_CLOSE(model.calculateYaw(-30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::LEFT), 70 * M_PI / 180.0, 1e-8);
+	BOOST_CHECK_CLOSE(model.calculateYaw(-30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::RIGHT), 70 * M_PI / 180.0, 1e-8);
 
 	//Initial position condition
-	Vector3 pointTest1 = model.calculatePoint(30 * M_PI / 180.0, ConstRollRateModel::RollDirection::RIGHT);
-	Vector3 pointTest2 = model.calculatePoint(30 * M_PI / 180.0, ConstRollRateModel::RollDirection::LEFT);
+	Vector3 pointTest1 = model.calculatePoint(30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::RIGHT);
+	Vector3 pointTest2 = model.calculatePoint(30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::LEFT);
 	BOOST_CHECK_SMALL(pointTest1.x() - 111, 1e-8);
 	BOOST_CHECK_SMALL(pointTest1.y() - 222, 1e-8);
 	BOOST_CHECK_SMALL(pointTest1.z() - 333, 1e-8);
@@ -79,16 +77,16 @@ BOOST_AUTO_TEST_CASE(ConstRollRateTest001_InitialConditions)
 	model.updateModel(data);
 
 	//Initial condition
-	BOOST_CHECK_CLOSE(model.calculateYaw(30 * M_PI / 180.0, ConstRollRateModel::RollDirection::LEFT), 70 * M_PI / 180.0, 1e-8);
-	BOOST_CHECK_CLOSE(model.calculateYaw(30 * M_PI / 180.0, ConstRollRateModel::RollDirection::RIGHT), 70 * M_PI / 180.0, 1e-8);
+	BOOST_CHECK_CLOSE(model.calculateYaw(30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::LEFT), 70 * M_PI / 180.0, 1e-8);
+	BOOST_CHECK_CLOSE(model.calculateYaw(30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::RIGHT), 70 * M_PI / 180.0, 1e-8);
 
 	//Yaw symmetry
-	BOOST_CHECK_CLOSE(model.calculateYaw(-30 * M_PI / 180.0, ConstRollRateModel::RollDirection::LEFT), 70 * M_PI / 180.0, 1e-8);
-	BOOST_CHECK_CLOSE(model.calculateYaw(-30 * M_PI / 180.0, ConstRollRateModel::RollDirection::RIGHT), 70 * M_PI / 180.0, 1e-8);
+	BOOST_CHECK_CLOSE(model.calculateYaw(-30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::LEFT), 70 * M_PI / 180.0, 1e-8);
+	BOOST_CHECK_CLOSE(model.calculateYaw(-30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::RIGHT), 70 * M_PI / 180.0, 1e-8);
 
 	//Initial position condition
-	pointTest1 = model.calculatePoint(-30 * M_PI / 180.0, ConstRollRateModel::RollDirection::RIGHT);
-	pointTest2 = model.calculatePoint(-30 * M_PI / 180.0, ConstRollRateModel::RollDirection::LEFT);
+	pointTest1 = model.calculatePoint(-30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::RIGHT);
+	pointTest2 = model.calculatePoint(-30 * M_PI / 180.0, ConstRollRateGeofencingModel::RollDirection::LEFT);
 	BOOST_CHECK_SMALL(pointTest1.x() - 111, 1e-8);
 	BOOST_CHECK_SMALL(pointTest1.y() - 222, 1e-8);
 	BOOST_CHECK_SMALL(pointTest1.z() - 333, 1e-8);
@@ -101,7 +99,7 @@ BOOST_AUTO_TEST_CASE(ConstRollRateTest001_InitialConditions)
 BOOST_AUTO_TEST_CASE(ConstRollRateTest002_CenterSymmetry_Left)
 {
 
-	ConstRollRateModel model;
+	ConstRollRateGeofencingModel model;
 
 	boost::property_tree::ptree config;
 	config.add("roll_rate", 15);
@@ -122,9 +120,9 @@ BOOST_AUTO_TEST_CASE(ConstRollRateTest002_CenterSymmetry_Left)
 
 	model.updateModel(data);
 
-	Vector3 pos2 = model.calculatePoint(0, ConstRollRateModel::RollDirection::LEFT);
+	Vector3 pos2 = model.calculatePoint(0, ConstRollRateGeofencingModel::RollDirection::LEFT);
 	Vector3 att2(0,0,0);
-	att2[2] = model.calculateYaw(0, ConstRollRateModel::RollDirection::LEFT);
+	att2[2] = model.calculateYaw(0, ConstRollRateGeofencingModel::RollDirection::LEFT);
 
 	data.position = pos2;
 	data.attitude = att2;
@@ -134,8 +132,8 @@ BOOST_AUTO_TEST_CASE(ConstRollRateTest002_CenterSymmetry_Left)
 	Vector3 att3(40,0,0);
 	degToRadRef(att3);
 
-	Vector3 pos3 = model.calculatePoint(att3[0], ConstRollRateModel::RollDirection::LEFT);
-	att3[2] = model.calculateYaw(att3[0], ConstRollRateModel::RollDirection::LEFT);
+	Vector3 pos3 = model.calculatePoint(att3[0], ConstRollRateGeofencingModel::RollDirection::LEFT);
+	att3[2] = model.calculateYaw(att3[0], ConstRollRateGeofencingModel::RollDirection::LEFT);
 
 	BOOST_CHECK_SMALL((pos3 - pos1).norm(), 1e-6);
 	BOOST_CHECK_SMALL((att3 - att1).norm(), 1e-6);
@@ -144,7 +142,7 @@ BOOST_AUTO_TEST_CASE(ConstRollRateTest002_CenterSymmetry_Left)
 BOOST_AUTO_TEST_CASE(ConstRollRateTest003_CenterSymmetry_Right)
 {
 
-	ConstRollRateModel model;
+	ConstRollRateGeofencingModel model;
 
 	boost::property_tree::ptree config;
 	config.add("roll_rate", 15);
@@ -165,9 +163,9 @@ BOOST_AUTO_TEST_CASE(ConstRollRateTest003_CenterSymmetry_Right)
 
 	model.updateModel(data);
 
-	Vector3 pos2 = model.calculatePoint(0, ConstRollRateModel::RollDirection::RIGHT);
+	Vector3 pos2 = model.calculatePoint(0, ConstRollRateGeofencingModel::RollDirection::RIGHT);
 	Vector3 att2(0,0,0);
-	att2[2] = model.calculateYaw(0, ConstRollRateModel::RollDirection::RIGHT);
+	att2[2] = model.calculateYaw(0, ConstRollRateGeofencingModel::RollDirection::RIGHT);
 
 	data.position = pos2;
 	data.attitude = att2;
@@ -177,8 +175,8 @@ BOOST_AUTO_TEST_CASE(ConstRollRateTest003_CenterSymmetry_Right)
 	Vector3 att3(40,0,0);
 	degToRadRef(att3);
 
-	Vector3 pos3 = model.calculatePoint(att3[0], ConstRollRateModel::RollDirection::RIGHT);
-	att3[2] = model.calculateYaw(att3[0], ConstRollRateModel::RollDirection::RIGHT);
+	Vector3 pos3 = model.calculatePoint(att3[0], ConstRollRateGeofencingModel::RollDirection::RIGHT);
+	att3[2] = model.calculateYaw(att3[0], ConstRollRateGeofencingModel::RollDirection::RIGHT);
 
 	BOOST_CHECK_SMALL((pos3 - pos1).norm(), 1e-6);
 	BOOST_CHECK_SMALL((att3 - att1).norm(), 1e-6);

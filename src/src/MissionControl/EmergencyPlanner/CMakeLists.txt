@@ -20,6 +20,7 @@ set(MISSION_CONTROL_SRC ${MISSION_CONTROL_SRC}
 						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyGeofencingPlanner/GeofencingModel/ConstRollRateGeofencingModel/ConstRollRateGeofencingModel.cpp
 						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyGeofencingPlanner/GeofencingModel/DirectRollGeofencingModel/DirectRollGeofencingModel.cpp
 						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyGeofencingPlanner/EmergencyGeofencingPlanner.cpp
+						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyLandingPlanner/EmergencyLandingParameter.cpp
 						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyLandingPlanner/EmergencyLandingPlanner.cpp
 						PARENT_SCOPE)
 						

@@ -32,10 +32,15 @@
 #include "uavAP/Core/Object/IAggregatableObject.h"
 #include "uavAP/Core/Object/ObjectHandle.h"
 #include "uavAP/Core/Runner/IRunnableObject.h"
+#include "uavAP/Core/SensorData.h"
+#include "uavAP/MissionControl/EmergencyPlanner/EmergencyLandingPlanner/EmergencyLandingParameter.h"
 
 class IPC;
 class IScheduler;
-class SensorData;
+class Override;
+class ManeuverPlanner;
+class EmergencyLandingPlan;
+class EmergencyLandingStatus;
 
 class EmergencyLandingPlanner: public IAggregatableObject, public IRunnableObject
 {
@@ -57,22 +62,43 @@ public:
 	bool
 	run(RunStage stage) override;
 
+	std::vector<EmergencyLandingParameter>
+	getEmergencyLandingParameters() const;
+
+	void
+	setEmergencyLandingParameters(std::vector<EmergencyLandingParameter> landingParameters);
+
 private:
 
 	void
-	onSensorData(const SensorData& data);
+	onSensorData(const SensorData& sensorData);
+
+	void
+	onFault(bool fault);
+
+	EmergencyLandingStatus
+	getEmergencyLandingStatus() const;
+
+	void
+	calculateEmergencyLandingPlan(EmergencyLandingParameter& landingParameter);
+
+	void
+	publishEmergencyLandingPlan(const EmergencyLandingPlan& landingPlan);
+
+	std::pair<double, EmergencyLandingPhases>
+	evaluateCost(EmergencyLandingParameter& landingParameter,
+			const EmergencyLandingStatus& landingStatus);
 
 	ObjectHandle<IPC> ipc_;
 	ObjectHandle<IScheduler> scheduler_;
+	ObjectHandle<ManeuverPlanner> maneuverPlanner_;
 
-	Publisher overridePublisher_;
 	Subscription sensorDataSubscription_;
 
-	Vector3 landingPosition_;
-	Vector3 landingAttitude_;
-	Vector3 obstaclePosition_;
+	std::vector<EmergencyLandingParameter> landingParameters_;
 
-	double landingVelocity_;
+	SensorData sensorData_;
+	mutable std::mutex sensorDataMutex_;
 };
 
 #endif /* UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYLANDINGPLANNER_EMERGENCYLANDINGPLANNER_H_ */

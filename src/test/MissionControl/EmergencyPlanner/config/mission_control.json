@@ -1,0 +1,60 @@
+{
+	"emergency_landing_planner": {
+		"landing_sites": {
+			"default": {
+				"planning": {
+					"acceleration": 0.1524,
+					"climb_rate": 0.3,
+					"yaw_rate": 5,
+					"gliding_velocity": 36,
+					"gliding_climb_angle": -5,
+					"period": 10000
+				},
+				"searching": {
+					"acceleration": 0.9144,
+					"climb_rate": 0.25,
+					"yaw_rate": 5,
+					"loiter_radius": 2438.4,
+					"loiter_lambda": 22.9183,
+					"line_distance": 1828.8,
+					"line_delta": 609.6,
+					"approach_radius": 2621.28,
+					"approach_altitude": 304.8
+				},
+				"approaching": {
+					"velocity": 21.336,
+					"climb_angle": -3,
+					"yaw_angle": 5,
+					"sideslip_angle": 5,
+					"position": [100, 200, 10],
+					"obstacles": {
+						"farm_house": [1000, 1000, 200]
+					}
+				}
+			},
+			"site_one": {
+				"planning": {
+					"climb_rate": 1000,
+					"period": 50000
+				},
+				"searching": {
+					"line_distance": 2,
+					"approach_altitude": 4
+				},
+				"approaching": {
+					"velocity": 50,
+					"position": [2, 4, 6],
+					"obstacles": {
+						"farm_house_one": [100, 100, 20],
+						"farm_house_two": [2000, 2000, 400]
+					}
+				}
+			},
+			"site_two": {
+				"planning": {
+					"yaw_rate": 10
+				}
+			}
+		}
+	}
+}
