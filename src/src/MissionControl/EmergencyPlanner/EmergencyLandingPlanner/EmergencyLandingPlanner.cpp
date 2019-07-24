@@ -424,6 +424,7 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 	double targetPositionX = 0;
 	double targetPositionY = 0;
 	double yawAngleDelta = 0;
+	double approachDelta = 0;
 	double carrotChasingRadius = 0;
 	double carrotChasingRadiusU = 0;
 	double carrotChasingThetaU = 0;
@@ -433,8 +434,11 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 	double lineTheta = 0;
 	double lineThetaNegative = 0;
 	double lineTau = 0;
-	double cost = 0;
+	double cost = INFINITY;
 	EmergencyLandingPhases phase = EmergencyLandingPhases::CRUISING;
+
+	approachDelta = 2 * M_PI * landingParameter.searchingParameter.loiterRadius
+			* tan(-landingParameter.planningParameter.glidingClimbAngle);
 
 	approachDistance = sqrt(
 			pow((landingStatus.position.x() - landingParameter.approachingParameter.position.x()),
@@ -486,12 +490,13 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 
 		phase = EmergencyLandingPhases::CRUISING;
 	}
-	else if (landingStatus.position.z() < landingParameter.searchingParameter.approachAltitude
-			&& std::min(fabs(landingParameter.approachingParameter.yawAngle - lineThetaNegative),
+	else if (std::min(fabs(landingParameter.approachingParameter.yawAngle - lineThetaNegative),
+			fabs(
 					fabs(
-							fabs(
-									landingParameter.approachingParameter.yawAngle
-											- lineThetaNegative) - 2 * M_PI)) < lineTau)
+							landingParameter.approachingParameter.yawAngle
+									- lineThetaNegative) - 2 * M_PI)) < lineTau
+			&& landingStatus.position.z() - approachDelta
+					< landingParameter.searchingParameter.approachAltitude)
 	{
 		carrotChasingRadiusU =
 				sqrt(
