@@ -434,7 +434,7 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 	double lineTheta = 0;
 	double lineThetaNegative = 0;
 	double lineTau = 0;
-	double cost = INFINITY;
+	double cost = 0;
 	EmergencyLandingPhases phase = EmergencyLandingPhases::CRUISING;
 
 	approachDelta = 2 * M_PI * landingParameter.searchingParameter.loiterRadius
