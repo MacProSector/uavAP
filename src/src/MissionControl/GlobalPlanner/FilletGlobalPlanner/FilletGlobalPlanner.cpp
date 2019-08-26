@@ -177,7 +177,7 @@ FilletGlobalPlanner::setMission(const Mission& mission)
 	}
 
 	APLOG_DEBUG << "FilletGlobalPlanner: Send Trajectory.";
-	auto packet = dp::serialize(traj);
+	auto packet = dp::serialize(Trajectory(traj, mission.infinite));
 	trajectoryPublisher_.publish(packet);
 }
 
