@@ -115,7 +115,7 @@ EmergencyLandingParameter::configure(const boost::property_tree::ptree& config)
 	degreeToRadian(searchingParameter);
 	degreeToRadian(approachingParameter);
 
-	phase = EmergencyLandingPhases::CRUISING;
+	phase = EmergencyLandingPhases::DISENGAGED;
 
 	return pm.map();
 }

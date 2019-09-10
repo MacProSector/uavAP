@@ -424,21 +424,30 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 	double targetPositionX = 0;
 	double targetPositionY = 0;
 	double yawAngleDelta = 0;
-	double approachDelta = 0;
 	double carrotChasingRadius = 0;
 	double carrotChasingRadiusU = 0;
 	double carrotChasingThetaU = 0;
 	double carrotChasingBeta = 0;
+	double loiterCenterX = 0;
+	double loiterCenterY = 0;
+	double approachDistanceLoiter = 0;
 	double approachDistance = 0;
 	double approachAngle = 0;
 	double lineTheta = 0;
-	double lineThetaNegative = 0;
-	double lineTau = 0;
 	double cost = 0;
-	EmergencyLandingPhases phase = EmergencyLandingPhases::CRUISING;
+	EmergencyLandingPhases phase = landingParameter.phase;
 
-	approachDelta = 2 * M_PI * landingParameter.searchingParameter.loiterRadius
-			* tan(-landingParameter.planningParameter.glidingClimbAngle);
+	loiterCenterX = landingParameter.approachingParameter.position.x()
+			+ 3 * landingParameter.searchingParameter.loiterRadius
+					* cos(landingParameter.approachingParameter.yawAngle - M_PI);
+
+	loiterCenterY = landingParameter.approachingParameter.position.y()
+			+ 3 * landingParameter.searchingParameter.loiterRadius
+					* sin(landingParameter.approachingParameter.yawAngle - M_PI);
+
+	approachDistanceLoiter = sqrt(
+			pow((landingStatus.position.x() - loiterCenterX), 2)
+					+ pow((landingStatus.position.y() - loiterCenterY), 2));
 
 	approachDistance = sqrt(
 			pow((landingStatus.position.x() - landingParameter.approachingParameter.position.x()),
@@ -451,25 +460,15 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 			landingStatus.position.z() - landingParameter.approachingParameter.position.z(),
 			approachDistance);
 
-	lineTheta = atan2(
-			landingStatus.position.y() - landingParameter.approachingParameter.position.y(),
-			landingStatus.position.x() - landingParameter.approachingParameter.position.x());
+	lineTheta = atan2(landingStatus.position.y() - loiterCenterY,
+			landingStatus.position.x() - loiterCenterX);
 
-	lineThetaNegative = atan2(
-			landingParameter.approachingParameter.position.y() - landingStatus.position.y(),
-			landingParameter.approachingParameter.position.x() - landingStatus.position.x());
-
-	lineTau = asin(
-			landingParameter.searchingParameter.lineDistance
-					/ landingParameter.searchingParameter.cruiseRadius);
-
-	if (approachDistance > landingParameter.searchingParameter.cruiseRadius
+	if (approachDistanceLoiter > landingParameter.searchingParameter.cruiseRadius
 			&& landingParameter.phase != EmergencyLandingPhases::DESCENDING
 			&& landingParameter.phase != EmergencyLandingPhases::APPROACHING)
 	{
-		yawAngleDelta = atan2(
-				landingParameter.approachingParameter.position.y() - landingStatus.position.y(),
-				landingParameter.approachingParameter.position.x() - landingStatus.position.x());
+		yawAngleDelta = atan2(loiterCenterY - landingStatus.position.y(),
+				loiterCenterX - landingStatus.position.x());
 
 		for (const auto& it : landingParameter.approachingParameter.obstacles)
 		{
@@ -490,25 +489,19 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 
 		phase = EmergencyLandingPhases::CRUISING;
 	}
-	else if (std::min(fabs(landingParameter.approachingParameter.yawAngle - lineThetaNegative),
-			fabs(
-					fabs(
-							landingParameter.approachingParameter.yawAngle
-									- lineThetaNegative) - 2 * M_PI)) < lineTau
-			&& landingStatus.position.z() - approachDelta
-					< landingParameter.searchingParameter.approachAltitude)
+	else if (landingStatus.position.z() < landingParameter.searchingParameter.approachAltitude)
 	{
 		carrotChasingRadiusU =
 				sqrt(
 						pow(
-								landingParameter.approachingParameter.position.x()
+								loiterCenterX
 										+ landingParameter.searchingParameter.loiterRadius
 												* cos(
 														landingParameter.approachingParameter.yawAngle
 																- M_PI)
 										- landingStatus.position.x(), 2)
 								+ pow(
-										landingParameter.approachingParameter.position.y()
+										loiterCenterY
 												+ landingParameter.searchingParameter.loiterRadius
 														* sin(
 																landingParameter.approachingParameter.yawAngle
@@ -516,10 +509,10 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 												- landingStatus.position.y(), 2));
 
 		carrotChasingThetaU = atan2(
-				landingStatus.position.y() - landingParameter.approachingParameter.position.y()
+				landingStatus.position.y() - loiterCenterY
 						- landingParameter.searchingParameter.loiterRadius
 								* sin(landingParameter.approachingParameter.yawAngle - M_PI),
-				landingStatus.position.x() - landingParameter.approachingParameter.position.x()
+				landingStatus.position.x() - loiterCenterX
 						- landingParameter.searchingParameter.loiterRadius
 								* cos(landingParameter.approachingParameter.yawAngle - M_PI));
 
@@ -529,13 +522,13 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 				pow(carrotChasingRadiusU, 2)
 						- pow(carrotChasingRadiusU * sin(carrotChasingBeta), 2));
 
-		targetPositionX = landingParameter.approachingParameter.position.x()
+		targetPositionX = loiterCenterX
 				+ landingParameter.searchingParameter.loiterRadius
 						* cos(landingParameter.approachingParameter.yawAngle - M_PI)
 				+ (carrotChasingRadius + landingParameter.searchingParameter.lineDelta)
 						* cos(landingParameter.approachingParameter.yawAngle);
 
-		targetPositionY = landingParameter.approachingParameter.position.y()
+		targetPositionY = loiterCenterY
 				+ landingParameter.searchingParameter.loiterRadius
 						* sin(landingParameter.approachingParameter.yawAngle - M_PI)
 				+ (carrotChasingRadius + landingParameter.searchingParameter.lineDelta)
@@ -548,18 +541,22 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 				fabs(fabs(landingStatus.yawAngle - yawAngleDelta) - 2 * M_PI))
 				/ landingParameter.searchingParameter.yawRate;
 
-		cost += fabs(landingStatus.velocity - landingParameter.approachingParameter.velocity)
-				/ landingParameter.searchingParameter.acceleration;
-
-		if (approachDistance > 2 * landingParameter.searchingParameter.loiterRadius / 3)
+		if (approachDistance < landingParameter.searchingParameter.loiterRadius)
 		{
-			cost += fabs(approachAngle - landingParameter.approachingParameter.climbAngle)
+			cost += fabs(landingStatus.velocity - landingParameter.approachingParameter.velocity)
+					/ landingParameter.searchingParameter.acceleration;
+
+			cost += fabs(
+					landingStatus.climbAngle - landingParameter.approachingParameter.climbAngle)
 					/ landingParameter.searchingParameter.climbRate;
 		}
 		else
 		{
 			cost += fabs(
-					landingStatus.climbAngle - landingParameter.approachingParameter.climbAngle)
+					landingStatus.velocity - landingParameter.planningParameter.glidingVelocity)
+					/ landingParameter.searchingParameter.acceleration;
+
+			cost += fabs(approachAngle - landingParameter.approachingParameter.climbAngle)
 					/ landingParameter.searchingParameter.climbRate;
 		}
 
@@ -567,11 +564,11 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 	}
 	else if (landingParameter.phase != EmergencyLandingPhases::APPROACHING)
 	{
-		targetPositionX = landingParameter.approachingParameter.position.x()
+		targetPositionX = loiterCenterX
 				+ landingParameter.searchingParameter.loiterRadius
 						* cos(lineTheta + landingParameter.searchingParameter.loiterLambda);
 
-		targetPositionY = landingParameter.approachingParameter.position.y()
+		targetPositionY = loiterCenterY
 				+ landingParameter.searchingParameter.loiterRadius
 						* sin(lineTheta + landingParameter.searchingParameter.loiterLambda);
 
