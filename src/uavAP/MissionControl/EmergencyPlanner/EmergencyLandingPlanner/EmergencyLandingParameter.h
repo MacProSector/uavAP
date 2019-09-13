@@ -66,6 +66,7 @@ struct SearchingParameter
 	double yawRate;
 	double cruiseRadius;
 	double loiterRadius;
+	double loiterRadiusOffset;
 	double loiterLambda;
 	double approachAltitude;
 	double lineDistance;
@@ -82,6 +83,7 @@ struct ApproachingParameter
 	double velocity;
 	double climbAngle;
 	double yawAngle;
+	double yawRate;
 	double angleOfSideslip;
 	Obstacles obstacles;
 	bool isDefault;

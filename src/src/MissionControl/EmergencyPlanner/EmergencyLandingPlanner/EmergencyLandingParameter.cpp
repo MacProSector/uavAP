@@ -53,6 +53,7 @@ SearchingParameter::configure(const boost::property_tree::ptree& config)
 	pm.add<double>("yaw_rate", yawRate, isDefault);
 	pm.add<double>("cruise_radius", cruiseRadius, isDefault);
 	pm.add<double>("loiter_radius", loiterRadius, isDefault);
+	pm.add<double>("loiter_radius_offset", loiterRadiusOffset, isDefault);
 	pm.add<double>("loiter_lambda", loiterLambda, isDefault);
 	pm.add<double>("approach_altitude", approachAltitude, isDefault);
 	pm.add<double>("line_distance", lineDistance, isDefault);
@@ -71,6 +72,7 @@ ApproachingParameter::configure(const boost::property_tree::ptree& config)
 	pm.add<double>("velocity", velocity, isDefault);
 	pm.add<double>("climb_angle", climbAngle, isDefault);
 	pm.add<double>("yaw_angle", yawAngle, isDefault);
+	pm.add<double>("yaw_rate", yawRate, isDefault);
 	pm.add<double>("sideslip_angle", angleOfSideslip, isDefault);
 	pm.add("obstacles", obstacleConfig, false);
 
@@ -141,6 +143,7 @@ degreeToRadian(ApproachingParameter& approachingParameter)
 {
 	approachingParameter.climbAngle = degToRad(approachingParameter.climbAngle);
 	approachingParameter.yawAngle = degToRad(approachingParameter.yawAngle);
+	approachingParameter.yawRate = degToRad(approachingParameter.yawRate);
 	approachingParameter.angleOfSideslip = degToRad(approachingParameter.angleOfSideslip);
 }
 
@@ -165,5 +168,6 @@ radianToDegree(ApproachingParameter& approachingParameter)
 {
 	approachingParameter.climbAngle = radToDeg(approachingParameter.climbAngle);
 	approachingParameter.yawAngle = radToDeg(approachingParameter.yawAngle);
+	approachingParameter.yawRate = radToDeg(approachingParameter.yawRate);
 	approachingParameter.angleOfSideslip = radToDeg(approachingParameter.angleOfSideslip);
 }

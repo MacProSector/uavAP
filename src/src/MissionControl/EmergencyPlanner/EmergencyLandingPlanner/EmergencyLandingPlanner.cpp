@@ -438,11 +438,13 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 	EmergencyLandingPhases phase = landingParameter.phase;
 
 	loiterCenterX = landingParameter.approachingParameter.position.x()
-			+ 3 * landingParameter.searchingParameter.loiterRadius
+			+ landingParameter.searchingParameter.loiterRadiusOffset
+					* landingParameter.searchingParameter.loiterRadius
 					* cos(landingParameter.approachingParameter.yawAngle - M_PI);
 
 	loiterCenterY = landingParameter.approachingParameter.position.y()
-			+ 3 * landingParameter.searchingParameter.loiterRadius
+			+ landingParameter.searchingParameter.loiterRadiusOffset
+					* landingParameter.searchingParameter.loiterRadius
 					* sin(landingParameter.approachingParameter.yawAngle - M_PI);
 
 	approachDistanceLoiter = sqrt(
@@ -539,7 +541,7 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 
 		cost += std::min(fabs(landingStatus.yawAngle - yawAngleDelta),
 				fabs(fabs(landingStatus.yawAngle - yawAngleDelta) - 2 * M_PI))
-				/ landingParameter.searchingParameter.yawRate;
+				/ landingParameter.approachingParameter.yawRate;
 
 		if (approachDistance < landingParameter.searchingParameter.loiterRadius)
 		{
