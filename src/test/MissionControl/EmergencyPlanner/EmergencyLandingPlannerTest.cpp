@@ -71,16 +71,18 @@ BOOST_AUTO_TEST_CASE(Configuration)
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.acceleration, 0.9144);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.climbRate, degToRad(0.25));
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.yawRate, degToRad(5));
+	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.cruiseRadius, 2621.28);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.loiterRadius, 2438.4);
+	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.loiterRadiusOffset, 6);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.loiterLambda, degToRad(22.9183));
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.lineDistance, 1828.8);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.lineDelta, 609.6);
-	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.approachRadius, 2621.28);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.approachAltitude, 304.8);
 
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.velocity, 21.336);
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.climbAngle, degToRad(-3));
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.yawAngle, degToRad(5));
+	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.yawRate, degToRad(5));
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.angleOfSideslip, degToRad(5));
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.position, approachingPosition);
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.obstacles.size(), 1);
@@ -103,16 +105,18 @@ BOOST_AUTO_TEST_CASE(Configuration)
 
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.climbRate, degToRad(0.25));
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.yawRate, degToRad(5));
+	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.cruiseRadius, 2621.28);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.loiterRadius, 2438.4);
+	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.loiterRadiusOffset, 6);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.loiterLambda, degToRad(22.9183));
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.lineDistance, 2);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.lineDelta, 609.6);
-	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.approachRadius, 2621.28);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.approachAltitude, 4);
 
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.velocity, 50);
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.climbAngle, degToRad(-3));
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.yawAngle, degToRad(5));
+	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.yawRate, degToRad(5));
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.angleOfSideslip, degToRad(5));
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.position, approachingPosition);
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.obstacles.size(), 2);
@@ -138,16 +142,18 @@ BOOST_AUTO_TEST_CASE(Configuration)
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.acceleration, 0.9144);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.climbRate, degToRad(0.25));
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.yawRate, degToRad(5));
+	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.cruiseRadius, 2621.28);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.loiterRadius, 2438.4);
+	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.loiterRadiusOffset, 6);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.loiterLambda, degToRad(22.9183));
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.lineDistance, 1828.8);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.lineDelta, 609.6);
-	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.approachRadius, 2621.28);
 	BOOST_CHECK_EQUAL(landingParameter.searchingParameter.approachAltitude, 304.8);
 
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.velocity, 21.336);
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.climbAngle, degToRad(-3));
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.yawAngle, degToRad(5));
+	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.yawRate, degToRad(5));
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.angleOfSideslip, degToRad(5));
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.position, approachingPosition);
 	BOOST_CHECK_EQUAL(landingParameter.approachingParameter.obstacles.size(), 1);

@@ -238,7 +238,7 @@ EmergencyLandingPlanner::getEmergencyLandingStatus() const
 	EmergencyLandingStatus landingStatus;
 
 	landingStatus.position = sensorData.position;
-	landingStatus.velocity = sensorData.velocity.norm();
+	landingStatus.velocity = sensorData.airSpeed;
 	landingStatus.climbAngle = sensorData.attitude[1] - sensorData.angleOfAttack;
 	landingStatus.yawAngle = sensorData.attitude[2];
 	landingStatus.angleOfSideslip = sensorData.angleOfSideslip;
@@ -390,11 +390,12 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 		}
 	}
 
-	publishEmergencyLandingPlan(landingPlan);
+	publishEmergencyLandingPlan(landingParameter, landingPlan);
 }
 
 void
-EmergencyLandingPlanner::publishEmergencyLandingPlan(const EmergencyLandingPlan& landingPlan)
+EmergencyLandingPlanner::publishEmergencyLandingPlan(const EmergencyLandingParameter& landingParameter,
+		const EmergencyLandingPlan& landingPlan)
 {
 	Override override;
 
@@ -402,9 +403,12 @@ EmergencyLandingPlanner::publishEmergencyLandingPlan(const EmergencyLandingPlan&
 			ControllerTargets::CLIMB_ANGLE, landingPlan.climbAngle);
 	std::pair<ControllerTargets, double> yawRateOverride = std::make_pair(
 			ControllerTargets::YAW_RATE, landingPlan.yawRate);
+	std::pair<PIDs, double> rudderOverride = std::make_pair(
+			PIDs::RUDDER, std::fabs(boundAngleRad(landingParameter.approachingParameter.yawAngle)));
 
 	override.controllerTarget.insert(climbAngleOverride);
 	override.controllerTarget.insert(yawRateOverride);
+	override.pid.insert(rudderOverride);
 
 	auto maneuverPlanner = maneuverPlanner_.get();
 
@@ -434,7 +438,7 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 	double approachDistance = 0;
 	double approachAngle = 0;
 	double lineTheta = 0;
-	double cost = 0;
+	double cost = INFINITY;
 	EmergencyLandingPhases phase = landingParameter.phase;
 
 	loiterCenterX = landingParameter.approachingParameter.position.x()
@@ -465,34 +469,10 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 	lineTheta = atan2(landingStatus.position.y() - loiterCenterY,
 			landingStatus.position.x() - loiterCenterX);
 
-	if (approachDistanceLoiter > landingParameter.searchingParameter.cruiseRadius
-			&& landingParameter.phase != EmergencyLandingPhases::DESCENDING
-			&& landingParameter.phase != EmergencyLandingPhases::APPROACHING)
+	if (landingStatus.position.z() < landingParameter.searchingParameter.approachAltitude)
 	{
-		yawAngleDelta = atan2(loiterCenterY - landingStatus.position.y(),
-				loiterCenterX - landingStatus.position.x());
+		cost = 0;
 
-		for (const auto& it : landingParameter.approachingParameter.obstacles)
-		{
-			cost += exp(
-					it.second.z()
-							/ sqrt(
-									pow((landingStatus.position.x() - it.second.x()), 2)
-											+ pow((landingStatus.position.y() - it.second.y()), 2)))
-					- 1;
-		}
-
-		cost += std::min(fabs(landingStatus.yawAngle - yawAngleDelta),
-				fabs(fabs(landingStatus.yawAngle - yawAngleDelta) - 2 * M_PI))
-				/ landingParameter.searchingParameter.yawRate;
-
-		cost += fabs(landingStatus.velocity - landingParameter.planningParameter.glidingVelocity)
-				/ landingParameter.searchingParameter.acceleration;
-
-		phase = EmergencyLandingPhases::CRUISING;
-	}
-	else if (landingStatus.position.z() < landingParameter.searchingParameter.approachAltitude)
-	{
 		carrotChasingRadiusU =
 				sqrt(
 						pow(
@@ -564,8 +544,38 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 
 		phase = EmergencyLandingPhases::APPROACHING;
 	}
+	else if (approachDistanceLoiter > landingParameter.searchingParameter.cruiseRadius
+			&& landingParameter.phase != EmergencyLandingPhases::DESCENDING
+			&& landingParameter.phase != EmergencyLandingPhases::APPROACHING)
+	{
+		cost = 0;
+
+		yawAngleDelta = atan2(loiterCenterY - landingStatus.position.y(),
+				loiterCenterX - landingStatus.position.x());
+
+		for (const auto& it : landingParameter.approachingParameter.obstacles)
+		{
+			cost += exp(
+					it.second.z()
+							/ sqrt(
+									pow((landingStatus.position.x() - it.second.x()), 2)
+											+ pow((landingStatus.position.y() - it.second.y()), 2)))
+					- 1;
+		}
+
+		cost += std::min(fabs(landingStatus.yawAngle - yawAngleDelta),
+				fabs(fabs(landingStatus.yawAngle - yawAngleDelta) - 2 * M_PI))
+				/ landingParameter.searchingParameter.yawRate;
+
+		cost += fabs(landingStatus.velocity - landingParameter.planningParameter.glidingVelocity)
+				/ landingParameter.searchingParameter.acceleration;
+
+		phase = EmergencyLandingPhases::CRUISING;
+	}
 	else if (landingParameter.phase != EmergencyLandingPhases::APPROACHING)
 	{
+		cost = 0;
+
 		targetPositionX = loiterCenterX
 				+ landingParameter.searchingParameter.loiterRadius
 						* cos(lineTheta + landingParameter.searchingParameter.loiterLambda);

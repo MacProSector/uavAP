@@ -104,8 +104,14 @@ private:
 	std::map<PIDs, PIDParameter> pidParameters_;
 	ControllerOutput deflections_;
 
+	std::shared_ptr<ManualSwitch<double>> yawOutputManualSwitch_;
+	std::shared_ptr<Gain<double, double, double>> rudderPIDGain_;
+
 	double rollAngleTarget_;
 	double angleOfSideslipTarget_;
+	double rudderTarget_;
+	double rudderInput_;
+	double useRudderControl_;
 };
 
 template<typename ENUM, typename PARAM>

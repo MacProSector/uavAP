@@ -168,6 +168,10 @@ radToDeg(const Vector3& vec);
 double
 radToDeg(const double& rad);
 
+template<typename TYPE>
+TYPE
+sign(const TYPE& input);
+
 std::istream&
 operator>>(std::istream& is, Vector3& obj);
 std::ostream&
@@ -180,6 +184,18 @@ std::istream&
 operator>>(std::istream& is, EigenHyperplane& obj);
 std::ostream&
 operator<<(std::ostream& os, const EigenHyperplane& obj);
+
+template<typename TYPE>
+inline TYPE
+sign(const TYPE& input)
+{
+	if (input < 0)
+	{
+		return TYPE(-1);
+	}
+
+	return TYPE(1);
+}
 
 namespace dp
 {

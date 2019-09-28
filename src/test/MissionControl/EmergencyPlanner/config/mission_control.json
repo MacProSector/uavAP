@@ -14,17 +14,19 @@
 					"acceleration": 0.9144,
 					"climb_rate": 0.25,
 					"yaw_rate": 5,
+					"cruise_radius": 2621.28,
 					"loiter_radius": 2438.4,
+					"loiter_radius_offset": 6,
 					"loiter_lambda": 22.9183,
 					"line_distance": 1828.8,
 					"line_delta": 609.6,
-					"approach_radius": 2621.28,
 					"approach_altitude": 304.8
 				},
 				"approaching": {
 					"velocity": 21.336,
 					"climb_angle": -3,
 					"yaw_angle": 5,
+					"yaw_rate": 5,
 					"sideslip_angle": 5,
 					"position": [100, 200, 10],
 					"obstacles": {

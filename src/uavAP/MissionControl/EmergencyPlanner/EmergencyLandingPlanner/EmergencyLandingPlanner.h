@@ -83,7 +83,8 @@ private:
 	calculateEmergencyLandingPlan(EmergencyLandingParameter& landingParameter);
 
 	void
-	publishEmergencyLandingPlan(const EmergencyLandingPlan& landingPlan);
+	publishEmergencyLandingPlan(const EmergencyLandingParameter& landingParameter,
+			const EmergencyLandingPlan& landingPlan);
 
 	std::pair<double, EmergencyLandingPhases>
 	evaluateCost(const EmergencyLandingParameter& landingParameter,

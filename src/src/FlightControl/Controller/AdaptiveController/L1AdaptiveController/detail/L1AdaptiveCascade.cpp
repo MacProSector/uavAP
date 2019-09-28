@@ -31,7 +31,8 @@ L1AdaptiveCascade::L1AdaptiveCascade(SensorData& sensorData, ControllerTarget& c
 		ControllerOutput& controllerOutput) :
 		sensorData_(sensorData), controllerTarget_(controllerTarget), controllerOutput_(
 				controllerOutput), controlEnvironment_(&sensorData.autopilotActive,
-				&sensorData.timestamp), rollAngleTarget_(0), angleOfSideslipTarget_(0)
+				&sensorData.timestamp), rollAngleTarget_(0), angleOfSideslipTarget_(0),
+				rudderTarget_(boundAngleRad(degToRad(270))), rudderInput_(0), useRudderControl_(false)
 {
 	deflections_.throttleOutput = 0;
 }
@@ -359,6 +360,7 @@ L1AdaptiveCascade::createCascade()
 {
 	PIDParameter climbAnglePIDParameter = getParameter(pidParameters_, PIDs::CLIMB_ANGLE);
 	PIDParameter velocityPIDParameter = getParameter(pidParameters_, PIDs::VELOCITY);
+	PIDParameter rudderPIDParameter = getParameter(pidParameters_, PIDs::RUDDER);
 
 	/* Roll control input */
 	double* rollAngleInputValue = &sensorData_.attitude[0];
@@ -596,6 +598,19 @@ L1AdaptiveCascade::createCascade()
 
 	yawControlAdaptiveFeedback->setInput(yawControlAdaptiveGain);
 
+	/* Rudder control */
+	double* rudderInputValue = &rudderInput_;
+	double* rudderRateInputValue = &sensorData_.angularRate[2];
+	double* rudderTargetValue = &rudderTarget_;
+
+	auto rudderInput = controlEnvironment_.addInput<double>(rudderInputValue);
+	auto rudderRateInput = controlEnvironment_.addInput<double>(rudderRateInputValue);
+	auto rudderTarget = controlEnvironment_.addInput<double>(rudderTargetValue);
+
+	auto rudderPID = controlEnvironment_.addPID<double>(rudderInput, rudderTarget,
+			rudderRateInput, rudderPIDParameter);
+	rudderPIDGain_ = controlEnvironment_.addGain<double, double, double>(rudderPID, -sign(rudderInput_));
+
 	/* Yaw control output */
 	auto yawControlOutputTrim = controlEnvironment_.addConstant<Scalar>(
 			yawAdaptiveParameter_.outputTrim);
@@ -611,9 +626,11 @@ L1AdaptiveCascade::createCascade()
 	auto yawControlOutputDemux = controlEnvironment_.addDemux<Scalar, double>(yawControlOutputSum,
 			yawControlOutputVector);
 
+	yawOutputManualSwitch_ = controlEnvironment_.addManualSwitch<double>(rudderPIDGain_, yawOutputConstant, false);
+
 	double* yawOutputValue = &controllerOutput_.yawOutput;
 
-	auto yawOutputGain = controlEnvironment_.addGain<double, double, double>(yawOutputConstant,
+	auto yawOutputGain = controlEnvironment_.addGain<double, double, double>(yawOutputManualSwitch_,
 			1 / deflections_.yawOutput);
 
 	auto yawOutputSaturation = controlEnvironment_.addSaturation<double>(yawOutputGain, -1, 1);
@@ -651,6 +668,7 @@ L1AdaptiveCascade::createCascade()
 
 	pids_.insert(std::make_pair(PIDs::CLIMB_ANGLE, climbAnglePID));
 	pids_.insert(std::make_pair(PIDs::VELOCITY, velocityPID));
+	pids_.insert(std::make_pair(PIDs::RUDDER, rudderPID));
 
 	outputs_.insert(std::make_pair(ControllerOutputs::ROLL, rollOutput));
 	outputs_.insert(std::make_pair(ControllerOutputs::PITCH, pitchOutput));
@@ -693,4 +711,21 @@ L1AdaptiveCascade::calculateControllerTarget()
 
 	rollAngleTarget_ = -atan2(velocityBodyTotal * controllerTarget_.yawRate, gravity);
 	angleOfSideslipTarget_ = 0;
+	rudderTarget_ = std::fabs(boundAngleRad(degToRad(270)));
+	rudderInput_ = boundAngleRad(sensorData_.attitude[2]);
+	rudderPIDGain_->setGain(-sign(rudderInput_));
+	rudderInput_ = std::fabs(rudderInput_);
+
+	if (sensorData_.position[2] < 5 && useRudderControl_ == false)
+	{
+		useRudderControl_ = true;
+		yawOutputManualSwitch_->setSelection(useRudderControl_);
+		controlEnvironment_.resetIntegrator();
+	}
+	else if (sensorData_.position[2] >= 5 && useRudderControl_ == true)
+	{
+		useRudderControl_ = false;
+		yawOutputManualSwitch_->setSelection(useRudderControl_);
+		controlEnvironment_.resetState();
+	}
 }
