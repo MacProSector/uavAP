@@ -238,7 +238,8 @@ EmergencyLandingPlanner::getEmergencyLandingStatus() const
 	EmergencyLandingStatus landingStatus;
 
 	landingStatus.position = sensorData.position;
-	landingStatus.velocity = sensorData.airSpeed;
+	landingStatus.velocity = sensorData.velocity;
+	landingStatus.airSpeed = sensorData.airSpeed;
 	landingStatus.climbAngle = sensorData.attitude[1] - sensorData.angleOfAttack;
 	landingStatus.yawAngle = sensorData.attitude[2];
 	landingStatus.angleOfSideslip = sensorData.angleOfSideslip;
@@ -269,21 +270,15 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 			/ fabs(landingParameter.planningParameter.glidingClimbAngle);
 
 	currentLandingStatus.position.x() = initialLandingStatus.position.x()
-			+ (initialLandingStatus.velocity - velocityDelta / 2)
-					* landingParameter.planningParameter.periodSecond
-					* cos(initialLandingStatus.climbAngle) * cos(initialLandingStatus.yawAngle);
+			+ initialLandingStatus.velocity.x() * landingParameter.planningParameter.periodSecond;
 
 	currentLandingStatus.position.y() = initialLandingStatus.position.y()
-			+ (initialLandingStatus.velocity - velocityDelta / 2)
-					* landingParameter.planningParameter.periodSecond
-					* cos(initialLandingStatus.climbAngle) * sin(initialLandingStatus.yawAngle);
+			+ initialLandingStatus.velocity.y() * landingParameter.planningParameter.periodSecond;
 
 	currentLandingStatus.position.z() = initialLandingStatus.position.z()
-			+ (initialLandingStatus.velocity - velocityDelta / 2)
-					* landingParameter.planningParameter.periodSecond
-					* sin(initialLandingStatus.climbAngle);
+			+ initialLandingStatus.velocity.z() * landingParameter.planningParameter.periodSecond;
 
-	currentLandingStatus.velocity = initialLandingStatus.velocity - velocityDelta;
+	currentLandingStatus.airSpeed = initialLandingStatus.airSpeed - velocityDelta;
 
 	currentLandingStatus.climbAngle = initialLandingStatus.climbAngle;
 
@@ -311,50 +306,19 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 							- landingParameter.planningParameter.glidingClimbAngle)
 					/ fabs(landingParameter.planningParameter.glidingClimbAngle);
 
-			currentLandingStatus.position.x() =
-					initialLandingStatus.position.x()
-							+ (initialLandingStatus.velocity - velocityDelta / 2)
-									* landingParameter.planningParameter.periodSecond
-									* cos(
-											initialLandingStatus.climbAngle
-													+ i
-															* landingParameter.planningParameter.climbRate
-															* landingParameter.planningParameter.periodSecond
-															/ 2)
-									* cos(
-											initialLandingStatus.yawAngle
-													+ j * landingParameter.planningParameter.yawRate
-															* landingParameter.planningParameter.periodSecond
-															/ 2);
+			currentLandingStatus.position.x() = initialLandingStatus.position.x()
+					+ initialLandingStatus.velocity.x()
+							* landingParameter.planningParameter.periodSecond;
 
-			currentLandingStatus.position.y() =
-					initialLandingStatus.position.y()
-							+ (initialLandingStatus.velocity - velocityDelta / 2)
-									* landingParameter.planningParameter.periodSecond
-									* cos(
-											initialLandingStatus.climbAngle
-													+ i
-															* landingParameter.planningParameter.climbRate
-															* landingParameter.planningParameter.periodSecond
-															/ 2)
-									* sin(
-											initialLandingStatus.yawAngle
-													+ j * landingParameter.planningParameter.yawRate
-															* landingParameter.planningParameter.periodSecond
-															/ 2);
+			currentLandingStatus.position.y() = initialLandingStatus.position.y()
+					+ initialLandingStatus.velocity.y()
+							* landingParameter.planningParameter.periodSecond;
 
-			currentLandingStatus.position.z() =
-					initialLandingStatus.position.z()
-							+ (initialLandingStatus.velocity - velocityDelta / 2)
-									* landingParameter.planningParameter.periodSecond
-									* sin(
-											initialLandingStatus.climbAngle
-													+ i
-															* landingParameter.planningParameter.climbRate
-															* landingParameter.planningParameter.periodSecond
-															/ 2);
+			currentLandingStatus.position.z() = initialLandingStatus.position.z()
+					+ initialLandingStatus.velocity.z()
+							* landingParameter.planningParameter.periodSecond;
 
-			currentLandingStatus.velocity = initialLandingStatus.velocity - velocityDelta;
+			currentLandingStatus.airSpeed = initialLandingStatus.airSpeed - velocityDelta;
 
 			currentLandingStatus.climbAngle = initialLandingStatus.climbAngle
 					+ i * landingParameter.planningParameter.climbRate
@@ -394,8 +358,8 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 }
 
 void
-EmergencyLandingPlanner::publishEmergencyLandingPlan(const EmergencyLandingParameter& landingParameter,
-		const EmergencyLandingPlan& landingPlan)
+EmergencyLandingPlanner::publishEmergencyLandingPlan(
+		const EmergencyLandingParameter& landingParameter, const EmergencyLandingPlan& landingPlan)
 {
 	Override override;
 
@@ -403,8 +367,8 @@ EmergencyLandingPlanner::publishEmergencyLandingPlan(const EmergencyLandingParam
 			ControllerTargets::CLIMB_ANGLE, landingPlan.climbAngle);
 	std::pair<ControllerTargets, double> yawRateOverride = std::make_pair(
 			ControllerTargets::YAW_RATE, landingPlan.yawRate);
-	std::pair<PIDs, double> rudderOverride = std::make_pair(
-			PIDs::RUDDER, std::fabs(boundAngleRad(landingParameter.approachingParameter.yawAngle)));
+	std::pair<PIDs, double> rudderOverride = std::make_pair(PIDs::RUDDER,
+			std::fabs(boundAngleRad(landingParameter.approachingParameter.yawAngle)));
 
 	override.controllerTarget.insert(climbAngleOverride);
 	override.controllerTarget.insert(yawRateOverride);
@@ -525,7 +489,7 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 
 		if (approachDistance < landingParameter.searchingParameter.loiterRadius)
 		{
-			cost += fabs(landingStatus.velocity - landingParameter.approachingParameter.velocity)
+			cost += fabs(landingStatus.airSpeed - landingParameter.approachingParameter.velocity)
 					/ landingParameter.searchingParameter.acceleration;
 
 			cost += fabs(
@@ -535,7 +499,7 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 		else
 		{
 			cost += fabs(
-					landingStatus.velocity - landingParameter.planningParameter.glidingVelocity)
+					landingStatus.airSpeed - landingParameter.planningParameter.glidingVelocity)
 					/ landingParameter.searchingParameter.acceleration;
 
 			cost += fabs(approachAngle - landingParameter.approachingParameter.climbAngle)
@@ -567,7 +531,7 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 				fabs(fabs(landingStatus.yawAngle - yawAngleDelta) - 2 * M_PI))
 				/ landingParameter.searchingParameter.yawRate;
 
-		cost += fabs(landingStatus.velocity - landingParameter.planningParameter.glidingVelocity)
+		cost += fabs(landingStatus.airSpeed - landingParameter.planningParameter.glidingVelocity)
 				/ landingParameter.searchingParameter.acceleration;
 
 		phase = EmergencyLandingPhases::CRUISING;
@@ -591,7 +555,7 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 				fabs(fabs(landingStatus.yawAngle - yawAngleDelta) - 2 * M_PI))
 				/ landingParameter.searchingParameter.yawRate;
 
-		cost += fabs(landingStatus.velocity - landingParameter.planningParameter.glidingVelocity)
+		cost += fabs(landingStatus.airSpeed - landingParameter.planningParameter.glidingVelocity)
 				/ landingParameter.searchingParameter.acceleration;
 
 		phase = EmergencyLandingPhases::DESCENDING;

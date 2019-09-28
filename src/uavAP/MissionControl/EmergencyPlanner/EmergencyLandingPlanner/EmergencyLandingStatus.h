@@ -31,13 +31,14 @@
 struct EmergencyLandingStatus
 {
 	Vector3 position;
-	double velocity;
+	Vector3 velocity;
+	double airSpeed;
 	double climbAngle;
 	double yawAngle;
 	double angleOfSideslip;
 
 	EmergencyLandingStatus() :
-			position(), velocity(0), climbAngle(0), yawAngle(0), angleOfSideslip(0)
+			position(), velocity(), airSpeed(0), climbAngle(0), yawAngle(0), angleOfSideslip(0)
 	{
 	}
 };
