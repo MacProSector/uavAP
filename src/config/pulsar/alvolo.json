@@ -5,7 +5,7 @@
 		"trace_seq_nr":false,
 		"use_airspeed":false,
 		"use_euler":false,
-		"external_gps":true,
+		"external_gps":false,
 		"course_as_heading":true,
 		"rotation_offset":
 		{
