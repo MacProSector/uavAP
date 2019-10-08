@@ -33,6 +33,23 @@ if [ $RETURN -ne 0 ]; then
 	exit $RETURN
 fi
 
+# Install Protobuf
+cd $DEPLOY_DIR
+printf "\nInstalling Protobuf...\n\n"
+git clone "https://github.com/google/protobuf.git" protobuf
+cd protobuf
+git reset --hard 9497a657d577ebda0272711651c3dcdda3a4ac35
+./autogen.sh
+./configure CFLAGS="-fPIC -m32" CXXFLAGS="-fPIC -m32" --prefix=$DEPLOY_DIR/usr/local
+make -j$CORES
+make check -j$CORES
+make install -j$CORES
+RETURN=$?
+if [ $RETURN -ne 0 ]; then
+    printf "\nDeployment failed. Quit.\n\n"
+	exit $RETURN
+fi
+
 # Install Eigen
 cd $DEPLOY_DIR
 printf "\nInstalling Eigen...\n\n"
