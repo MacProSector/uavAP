@@ -32,9 +32,9 @@
 #include <boost/thread/thread_time.hpp>
 
 ApExtManager::ApExtManager() :
-		internalImu_(false), externalGps_(false), useAirspeed_(false), useEuler_(false), traceSeqNr_(false), courseAsHeading_(
-				false), gpsTimeout_(Seconds(1)), airspeedTimeout_(Milliseconds(100)), downsample_(0), gpsSampleTimestamp_(
-				boost::posix_time::min_date_time), sampleNr_(0)
+		externalGps_(false), useAirspeed_(false), useEuler_(false), traceSeqNr_(false), courseAsHeading_(
+				false), gpsTimeout_(Seconds(1)), airspeedTimeout_(Milliseconds(100)), downsample_(
+				0), gpsSampleTimestamp_(boost::posix_time::min_date_time), sampleNr_(0)
 {
 }
 
@@ -73,7 +73,6 @@ ApExtManager::configure(const boost::property_tree::ptree& config)
 			rotationOffset_->normalize();
 		}
 	}
-	pm.add<bool>("internal_imu", internalImu_, false);
 	pm.add<bool>("external_gps", externalGps_, false);
 	pm.add<bool>("use_airspeed", useAirspeed_, false);
 	pm.add<bool>("use_euler", useEuler_, false);
@@ -107,93 +106,51 @@ ApExtManager::ap_sense(const data_sample_t* sample)
 
 	angularRate << 0.0, 0.0, 0.0;
 
-	if (internalImu_)
+	auto imuSample = sample->imu_sample;
+	if (!imuSample)
 	{
-		auto imuSample = sample->int_imu_sample;
-		if (!imuSample)
-		{
-			APLOG_ERROR << "Cannot read imu sample from internal imu.";
-		}
-		else
-		{
-
-			//Attitude
-			if (useEuler_)
-			{
-				euler.x() = imuSample->imu_euler_roll;
-				euler.y() = imuSample->imu_euler_pitch;
-				euler.z() = imuSample->imu_euler_yaw;
-			}
-			else
-			{
-				attitude.w() = imuSample->imu_quat_w;
-				attitude.x() = imuSample->imu_quat_x;
-				attitude.y() = imuSample->imu_quat_y;
-				attitude.z() = imuSample->imu_quat_z;
-			}
-
-			//Acceleration
-			acceleration[0] = imuSample->imu_accel_x;
-			acceleration[1] = imuSample->imu_accel_y;
-			acceleration[2] = imuSample->imu_accel_z;
-
-			//Rotation Rate
-			angularRate[0] = imuSample->imu_rot_x;
-			angularRate[1] = imuSample->imu_rot_y;
-			angularRate[2] = imuSample->imu_rot_z;
-
-			//Set timestamp to system time since int imu has no timestamp
-			sens.timestamp = boost::get_system_time();
-		}
+		APLOG_ERROR << "Cannot read imu sample from external imu.";
 	}
 	else
 	{
-		auto imuSample = sample->imu_sample;
-		if (!imuSample)
+		//Attitude
+		if (useEuler_)
 		{
-			APLOG_ERROR << "Cannot read imu sample from external imu.";
+			euler.x() = imuSample->imu_euler_roll;
+			euler.y() = imuSample->imu_euler_pitch;
+			euler.z() = imuSample->imu_euler_yaw;
 		}
 		else
 		{
-			//Attitude
-			if (useEuler_)
-			{
-				euler.x() = imuSample->imu_euler_roll;
-				euler.y() = imuSample->imu_euler_pitch;
-				euler.z() = imuSample->imu_euler_yaw;
-			}
-			else
-			{
-				attitude.w() = imuSample->imu_quat_w;
-				attitude.x() = imuSample->imu_quat_x;
-				attitude.y() = imuSample->imu_quat_y;
-				attitude.z() = imuSample->imu_quat_z;
-			}
+			attitude.w() = imuSample->imu_quat_w;
+			attitude.x() = imuSample->imu_quat_x;
+			attitude.y() = imuSample->imu_quat_y;
+			attitude.z() = imuSample->imu_quat_z;
+		}
 
-			//Acceleration
-			acceleration[0] = imuSample->imu_accel_x;
-			acceleration[1] = imuSample->imu_accel_y;
-			acceleration[2] = imuSample->imu_accel_z;
+		//Acceleration
+		acceleration[0] = imuSample->imu_accel_x;
+		acceleration[1] = imuSample->imu_accel_y;
+		acceleration[2] = imuSample->imu_accel_z;
 
-			//Rotation Rate
-			angularRate[0] = imuSample->imu_rot_x;
-			angularRate[1] = imuSample->imu_rot_y;
-			angularRate[2] = imuSample->imu_rot_z;
+		//Rotation Rate
+		angularRate[0] = imuSample->imu_rot_x;
+		angularRate[1] = imuSample->imu_rot_y;
+		angularRate[2] = imuSample->imu_rot_z;
 
-			try
-			{
-				Date date(imuSample->imu_time_year, imuSample->imu_time_month,
-						imuSample->imu_time_day);
+		try
+		{
+			Date date(imuSample->imu_time_year, imuSample->imu_time_month,
+					imuSample->imu_time_day);
 
-				Duration duration = Hours(imuSample->imu_time_hour)
-						+ Minutes(imuSample->imu_time_minute) + Seconds(imuSample->imu_time_second)
-						+ Microseconds(imuSample->imu_time_nano / 1000);
-				sens.timestamp = TimePoint(date, duration);
-			} catch (std::out_of_range& err)
-			{
-				APLOG_ERROR << "Time is not valid. " << err.what();
-				sens.timestamp = boost::posix_time::not_a_date_time;
-			}
+			Duration duration = Hours(imuSample->imu_time_hour)
+					+ Minutes(imuSample->imu_time_minute) + Seconds(imuSample->imu_time_second)
+					+ Microseconds(imuSample->imu_time_nano / 1000);
+			sens.timestamp = TimePoint(date, duration);
+		} catch (std::out_of_range& err)
+		{
+			APLOG_ERROR << "Time is not valid. " << err.what();
+			sens.timestamp = boost::posix_time::not_a_date_time;
 		}
 	}
 
@@ -226,7 +183,7 @@ ApExtManager::ap_sense(const data_sample_t* sample)
 		sens.attitude = quaternionToEuler(attitude);
 	}
 
-	sens.attitude[2] = boundAngleRad(-(sens.attitude[2] - M_PI/2));
+	sens.attitude[2] = boundAngleRad(-(sens.attitude[2] - M_PI / 2));
 
 	//Remove gravity from acceleration
 	Vector3 gravityInertial(0, 0, 9.81);
@@ -400,10 +357,10 @@ ApExtManager::ap_sense(const data_sample_t* sample)
 	auto slink = sample->slink_sample;
 	if (slink)
 	{
-		sens.batteryVoltage = slink->volt;
-		sens.batteryCurrent = slink->current;
-		sens.throttle = slink->throttle;
-		sens.rpm = slink->rpm;
+		sens.batteryVoltage = slink->channels->volt;
+		sens.batteryCurrent = slink->channels->current;
+		sens.throttle = slink->channels->throttle;
+		sens.rpm = slink->channels->rpm;
 	}
 
 	//************************
@@ -435,7 +392,7 @@ ApExtManager::ap_sense(const data_sample_t* sample)
 
 	if (courseAsHeading_)
 	{
-		sens.attitude[2] = boundAngleRad(-(courseAngle - M_PI/2));
+		sens.attitude[2] = boundAngleRad(-(courseAngle - M_PI / 2));
 	}
 
 	uavapAPI_.setSensorData(sens);

@@ -3,7 +3,6 @@
 	{
 		"num_output_channel":7,
 		"trace_seq_nr":false,
-		"internal_imu":true,
 		"use_airspeed":false,
 		"use_euler":false,
 		"external_gps":true,
