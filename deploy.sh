@@ -36,9 +36,9 @@ fi
 # Install Protobuf
 cd $DEPLOY_DIR
 printf "\nInstalling Protobuf...\n\n"
-git clone "https://github.com/google/protobuf.git" protobuf
-cd protobuf
-git reset --hard 9497a657d577ebda0272711651c3dcdda3a4ac35
+wget "https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protobuf-all-3.6.1.tar.gz"
+tar -xzf protobuf-all-3.6.1.tar.gz
+cd protobuf-3.6.1
 ./autogen.sh
 ./configure CFLAGS="-fPIC -m32" CXXFLAGS="-fPIC -m32" --prefix=$DEPLOY_DIR/usr/local
 make -j$CORES
