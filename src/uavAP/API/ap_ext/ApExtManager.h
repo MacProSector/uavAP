@@ -77,6 +77,7 @@ private:
 	std::vector<unsigned long> outputChannels_;
 
 	boost::optional<Eigen::Quaterniond> rotationOffset_;
+	bool internalImu_;
 	bool externalGps_;
 	bool useAirspeed_;
 	bool useEuler_;

@@ -32,9 +32,10 @@
 #include <boost/thread/thread_time.hpp>
 
 ApExtManager::ApExtManager() :
-		externalGps_(false), useAirspeed_(false), useEuler_(false), traceSeqNr_(false), courseAsHeading_(
-				false), gpsTimeout_(Seconds(1)), airspeedTimeout_(Milliseconds(100)), downsample_(
-				0), gpsSampleTimestamp_(boost::posix_time::min_date_time), sampleNr_(0)
+		internalImu_(false), externalGps_(false), useAirspeed_(false), useEuler_(false), traceSeqNr_(
+				false), courseAsHeading_(false), gpsTimeout_(Seconds(1)), airspeedTimeout_(
+				Milliseconds(100)), downsample_(0), gpsSampleTimestamp_(
+				boost::posix_time::min_date_time), sampleNr_(0)
 {
 }
 
@@ -73,6 +74,7 @@ ApExtManager::configure(const boost::property_tree::ptree& config)
 			rotationOffset_->normalize();
 		}
 	}
+	pm.add<bool>("internal_imu", internalImu_, false);
 	pm.add<bool>("external_gps", externalGps_, false);
 	pm.add<bool>("use_airspeed", useAirspeed_, false);
 	pm.add<bool>("use_euler", useEuler_, false);
@@ -103,10 +105,19 @@ ApExtManager::ap_sense(const data_sample_t* sample)
 	Vector3 angularRate;
 	Vector3 euler;
 	Eigen::Quaterniond attitude;
+	imu_sample_t* imuSample = NULL;
 
 	angularRate << 0.0, 0.0, 0.0;
 
-	auto imuSample = sample->imu_sample;
+	if (internalImu_)
+	{
+		imuSample = sample->int_imu_sample;
+	}
+	else
+	{
+		imuSample = sample->imu_sample;
+	}
+
 	if (!imuSample)
 	{
 		APLOG_ERROR << "Cannot read imu sample from external imu.";
@@ -138,19 +149,26 @@ ApExtManager::ap_sense(const data_sample_t* sample)
 		angularRate[1] = imuSample->imu_rot_y;
 		angularRate[2] = imuSample->imu_rot_z;
 
-		try
+		if (internalImu_)
 		{
-			Date date(imuSample->imu_time_year, imuSample->imu_time_month,
-					imuSample->imu_time_day);
+			sens.timestamp = boost::get_system_time();
+		}
+		else
+		{
+			try
+			{
+				Date date(imuSample->imu_time_year, imuSample->imu_time_month,
+						imuSample->imu_time_day);
 
-			Duration duration = Hours(imuSample->imu_time_hour)
-					+ Minutes(imuSample->imu_time_minute) + Seconds(imuSample->imu_time_second)
-					+ Microseconds(imuSample->imu_time_nano / 1000);
-			sens.timestamp = TimePoint(date, duration);
-		} catch (std::out_of_range& err)
-		{
-			APLOG_ERROR << "Time is not valid. " << err.what();
-			sens.timestamp = boost::posix_time::not_a_date_time;
+				Duration duration = Hours(imuSample->imu_time_hour)
+						+ Minutes(imuSample->imu_time_minute) + Seconds(imuSample->imu_time_second)
+						+ Microseconds(imuSample->imu_time_nano / 1000);
+				sens.timestamp = TimePoint(date, duration);
+			} catch (std::out_of_range& err)
+			{
+				APLOG_ERROR << "Time is not valid. " << err.what();
+				sens.timestamp = boost::posix_time::not_a_date_time;
+			}
 		}
 	}
 
