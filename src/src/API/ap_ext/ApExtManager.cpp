@@ -257,7 +257,16 @@ ApExtManager::ap_sense(const data_sample_t* sample)
 	}
 	else
 	{
-		auto imu = sample->imu_sample;
+		imu_sample_t* imu = NULL;
+		if (internalImu_)
+		{
+			imu = sample->int_imu_sample;
+		}
+		else
+		{
+			imu = sample->imu_sample;
+		}
+
 		if (!imu)
 		{
 			APLOG_ERROR << "IMU sample not available. Cannot read GPS data.";
