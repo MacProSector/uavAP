@@ -270,19 +270,13 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 			/ fabs(landingParameter.planningParameter.glidingClimbAngle);
 
 	currentLandingStatus.position.x() = initialLandingStatus.position.x()
-			+ initialLandingStatus.velocity.x()
-			- (velocityDelta / 2) * landingParameter.planningParameter.periodSecond
-					* cos(initialLandingStatus.climbAngle) * cos(initialLandingStatus.yawAngle);
+			+ initialLandingStatus.velocity.x() * landingParameter.planningParameter.periodSecond;
 
 	currentLandingStatus.position.y() = initialLandingStatus.position.y()
-			+ initialLandingStatus.velocity.y()
-			- (velocityDelta / 2) * landingParameter.planningParameter.periodSecond
-					* cos(initialLandingStatus.climbAngle) * sin(initialLandingStatus.yawAngle);
+			+ initialLandingStatus.velocity.y() * landingParameter.planningParameter.periodSecond;
 
 	currentLandingStatus.position.z() = initialLandingStatus.position.z()
-			+ initialLandingStatus.velocity.z()
-			- (velocityDelta / 2) * landingParameter.planningParameter.periodSecond
-					* sin(initialLandingStatus.climbAngle);
+			+ initialLandingStatus.velocity.z() * landingParameter.planningParameter.periodSecond;
 
 	currentLandingStatus.airSpeed = initialLandingStatus.airSpeed - velocityDelta;
 
@@ -313,44 +307,44 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 					/ fabs(landingParameter.planningParameter.glidingClimbAngle);
 
 			currentLandingStatus.position.x() =
-					initialLandingStatus.position.x() + initialLandingStatus.velocity.x()
-							- (velocityDelta / 2) * landingParameter.planningParameter.periodSecond
+					initialLandingStatus.position.x()
+							+ initialLandingStatus.velocity.x()
+									* landingParameter.planningParameter.periodSecond
+							+ (initialLandingStatus.airSpeed - velocityDelta / 2)
+									* landingParameter.planningParameter.periodSecond
 									* cos(
 											initialLandingStatus.climbAngle
 													+ i
 															* landingParameter.planningParameter.climbRate
 															* landingParameter.planningParameter.periodSecond
 															/ 2)
-									* cos(
+									* (cos(
 											initialLandingStatus.yawAngle
 													+ j * landingParameter.planningParameter.yawRate
-															* landingParameter.planningParameter.periodSecond
-															/ 2);
+															* landingParameter.planningParameter.periodSecond)
+											- cos(initialLandingStatus.yawAngle)) / 2;
 
 			currentLandingStatus.position.y() =
-					initialLandingStatus.position.y() + initialLandingStatus.velocity.y()
-							- (velocityDelta / 2) * landingParameter.planningParameter.periodSecond
+					initialLandingStatus.position.y()
+							+ initialLandingStatus.velocity.y()
+									* landingParameter.planningParameter.periodSecond
+							+ (initialLandingStatus.airSpeed - velocityDelta / 2)
+									* landingParameter.planningParameter.periodSecond
 									* cos(
 											initialLandingStatus.climbAngle
 													+ i
 															* landingParameter.planningParameter.climbRate
 															* landingParameter.planningParameter.periodSecond
 															/ 2)
-									* sin(
+									* (sin(
 											initialLandingStatus.yawAngle
 													+ j * landingParameter.planningParameter.yawRate
-															* landingParameter.planningParameter.periodSecond
-															/ 2);
+															* landingParameter.planningParameter.periodSecond)
+											- sin(initialLandingStatus.yawAngle)) / 2;
 
-			currentLandingStatus.position.z() =
-					initialLandingStatus.position.z() + initialLandingStatus.velocity.z()
-							- (velocityDelta / 2) * landingParameter.planningParameter.periodSecond
-									* sin(
-											initialLandingStatus.climbAngle
-													+ i
-															* landingParameter.planningParameter.climbRate
-															* landingParameter.planningParameter.periodSecond
-															/ 2);
+			currentLandingStatus.position.z() = initialLandingStatus.position.z()
+					+ initialLandingStatus.velocity.z()
+							* landingParameter.planningParameter.periodSecond;
 
 			currentLandingStatus.airSpeed = initialLandingStatus.airSpeed - velocityDelta;
 
