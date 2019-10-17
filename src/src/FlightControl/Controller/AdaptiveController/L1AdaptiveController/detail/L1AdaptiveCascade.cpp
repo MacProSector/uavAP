@@ -31,8 +31,8 @@ L1AdaptiveCascade::L1AdaptiveCascade(SensorData& sensorData, ControllerTarget& c
 		ControllerOutput& controllerOutput) :
 		sensorData_(sensorData), controllerTarget_(controllerTarget), controllerOutput_(
 				controllerOutput), controlEnvironment_(&sensorData.autopilotActive,
-				&sensorData.timestamp), rollAngleTarget_(0), angleOfSideslipTarget_(0),
-				rudderTarget_(boundAngleRad(degToRad(270))), rudderInput_(0), useRudderControl_(false)
+				&sensorData.timestamp), rollAngleTarget_(0), angleOfSideslipTarget_(0), rudderTarget_(
+				boundAngleRad(degToRad(270))), rudderInput_(0), useRudderControl_(false)
 {
 	deflections_.throttleOutput = 0;
 }
@@ -607,9 +607,10 @@ L1AdaptiveCascade::createCascade()
 	auto rudderRateInput = controlEnvironment_.addInput<double>(rudderRateInputValue);
 	auto rudderTarget = controlEnvironment_.addInput<double>(rudderTargetValue);
 
-	auto rudderPID = controlEnvironment_.addPID<double>(rudderInput, rudderTarget,
-			rudderRateInput, rudderPIDParameter);
-	rudderPIDGain_ = controlEnvironment_.addGain<double, double, double>(rudderPID, -sign(rudderInput_));
+	auto rudderPID = controlEnvironment_.addPID<double>(rudderInput, rudderTarget, rudderRateInput,
+			rudderPIDParameter);
+	rudderPIDGain_ = controlEnvironment_.addGain<double, double, double>(rudderPID,
+			-sign(rudderInput_));
 
 	/* Yaw control output */
 	auto yawControlOutputTrim = controlEnvironment_.addConstant<Scalar>(
@@ -626,7 +627,8 @@ L1AdaptiveCascade::createCascade()
 	auto yawControlOutputDemux = controlEnvironment_.addDemux<Scalar, double>(yawControlOutputSum,
 			yawControlOutputVector);
 
-	yawOutputManualSwitch_ = controlEnvironment_.addManualSwitch<double>(rudderPIDGain_, yawOutputConstant, false);
+	yawOutputManualSwitch_ = controlEnvironment_.addManualSwitch<double>(rudderPIDGain_,
+			yawOutputConstant, false);
 
 	double* yawOutputValue = &controllerOutput_.yawOutput;
 
@@ -666,6 +668,14 @@ L1AdaptiveCascade::createCascade()
 	auto throttleOutput = controlEnvironment_.addOutput<double, double>(throttleOutputSaturation,
 			throttleOutputValue);
 
+	/* Flap control */
+	double* flapOutputValue = &controllerOutput_.flapOutput;
+
+	auto flapTarget = controlEnvironment_.addConstant<double>(0);
+
+	/* Flap output */
+	auto flapOutput = controlEnvironment_.addOutput<double, double>(flapTarget, flapOutputValue);
+
 	pids_.insert(std::make_pair(PIDs::CLIMB_ANGLE, climbAnglePID));
 	pids_.insert(std::make_pair(PIDs::VELOCITY, velocityPID));
 	pids_.insert(std::make_pair(PIDs::RUDDER, rudderPID));
@@ -674,6 +684,7 @@ L1AdaptiveCascade::createCascade()
 	outputs_.insert(std::make_pair(ControllerOutputs::PITCH, pitchOutput));
 	outputs_.insert(std::make_pair(ControllerOutputs::YAW, yawOutput));
 	outputs_.insert(std::make_pair(ControllerOutputs::THROTTLE, throttleOutput));
+	outputs_.insert(std::make_pair(ControllerOutputs::FLAP, flapOutput));
 
 	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::ROLL, rollOutput));
 	outputWaveforms_.insert(std::make_pair(ControllerOutputsWaveforms::PITCH, pitchOutput));

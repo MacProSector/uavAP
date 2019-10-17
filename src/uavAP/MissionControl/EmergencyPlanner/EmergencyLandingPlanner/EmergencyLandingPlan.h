@@ -30,9 +30,10 @@ struct EmergencyLandingPlan
 {
 	double climbAngle;
 	double yawRate;
+	double flap;
 
 	EmergencyLandingPlan() :
-			climbAngle(0), yawRate(0)
+			climbAngle(0), yawRate(0), flap(0)
 	{
 	}
 };

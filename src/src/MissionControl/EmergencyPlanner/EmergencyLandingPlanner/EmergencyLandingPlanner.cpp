@@ -30,7 +30,8 @@
 #include "uavAP/MissionControl/EmergencyPlanner/EmergencyLandingPlanner/EmergencyLandingStatus.h"
 #include "uavAP/MissionControl/ManeuverPlanner/ManeuverPlanner.h"
 
-EmergencyLandingPlanner::EmergencyLandingPlanner()
+EmergencyLandingPlanner::EmergencyLandingPlanner() :
+		runwayAlignedCount_(0)
 {
 }
 
@@ -253,6 +254,9 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 	double velocityDelta = 0;
 	double minimumCost = 0;
 	double currentCost = 0;
+	double approachDistance = 0;
+	double approachDistanceEasting = 0;
+	double approachAngle = 0;
 	EmergencyLandingPhases currentPhase;
 	EmergencyLandingPlan landingPlan;
 	EmergencyLandingStatus initialLandingStatus;
@@ -268,6 +272,21 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 			* (initialLandingStatus.climbAngle
 					- landingParameter.planningParameter.glidingClimbAngle)
 			/ fabs(landingParameter.planningParameter.glidingClimbAngle);
+
+	approachDistance = sqrt(
+			pow(
+					(initialLandingStatus.position.x()
+							- landingParameter.approachingParameter.position.x()), 2)
+					+ pow(
+							(initialLandingStatus.position.y()
+									- landingParameter.approachingParameter.position.y()), 2));
+
+	approachDistanceEasting = fabs(
+			initialLandingStatus.position.x() - landingParameter.approachingParameter.position.x());
+
+	approachAngle = -atan2(
+			initialLandingStatus.position.z() - landingParameter.approachingParameter.position.z(),
+			approachDistance);
 
 	currentLandingStatus.position.x() = initialLandingStatus.position.x()
 			+ initialLandingStatus.velocity.x() * landingParameter.planningParameter.periodSecond;
@@ -382,6 +401,8 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 		}
 	}
 
+	landingPlan.flap = 1;
+
 	publishEmergencyLandingPlan(landingParameter, landingPlan);
 }
 
@@ -397,10 +418,13 @@ EmergencyLandingPlanner::publishEmergencyLandingPlan(
 			ControllerTargets::YAW_RATE, landingPlan.yawRate);
 	std::pair<PIDs, double> rudderOverride = std::make_pair(PIDs::RUDDER,
 			std::fabs(boundAngleRad(landingParameter.approachingParameter.yawAngle)));
+	std::pair<ControllerOutputs, double> flapOverride = std::make_pair(ControllerOutputs::FLAP,
+			landingPlan.flap);
 
 	override.controllerTarget.insert(climbAngleOverride);
 	override.controllerTarget.insert(yawRateOverride);
 	override.pid.insert(rudderOverride);
+	override.output.insert(flapOverride);
 
 	auto maneuverPlanner = maneuverPlanner_.get();
 

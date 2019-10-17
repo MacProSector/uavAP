@@ -34,7 +34,7 @@
 
 enum class ControllerOutputs
 {
-	INVALID, ROLL, PITCH, YAW, THROTTLE, NUM_OUTPUT
+	INVALID, ROLL, PITCH, YAW, THROTTLE, FLAP, NUM_OUTPUT
 };
 
 enum class ControllerOutputsWaveforms
@@ -53,7 +53,8 @@ enum class Waveforms
 };
 
 ENUMMAP_INIT(ControllerOutputs, { {ControllerOutputs::ROLL, "roll"}, {ControllerOutputs::PITCH,
-		"pitch"}, {ControllerOutputs::YAW, "yaw"}, {ControllerOutputs::THROTTLE, "throttle"} });
+		"pitch"}, {ControllerOutputs::YAW, "yaw"}, {ControllerOutputs::THROTTLE, "throttle"},
+		{ControllerOutputs::FLAP, "flap"} });
 
 ENUMMAP_INIT(ControllerOutputsWaveforms, { {ControllerOutputsWaveforms::ROLL, "roll"},
 		{ControllerOutputsWaveforms::PITCH, "pitch"}, {ControllerOutputsWaveforms::YAW, "yaw"},
@@ -73,11 +74,13 @@ struct ControllerOutput: SerializeCustom
 	double pitchOutput;
 	double yawOutput;
 	double throttleOutput;
+	double flapOutput;
 
 	uint32_t sequenceNr; //Trace sequence number to get timing
 
 	ControllerOutput() :
-			rollOutput(0), pitchOutput(0), yawOutput(0), throttleOutput(-1), sequenceNr(0)
+			rollOutput(0), pitchOutput(0), yawOutput(0), throttleOutput(-1), flapOutput(0), sequenceNr(
+					0)
 	{
 	}
 };
@@ -92,6 +95,7 @@ serialize(Archive& ar, ControllerOutput& t)
 	ar & t.pitchOutput;
 	ar & t.yawOutput;
 	ar & t.throttleOutput;
+	ar & t.flapOutput;
 	ar & t.sequenceNr;
 }
 }
