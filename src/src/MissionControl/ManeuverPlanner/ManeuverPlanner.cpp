@@ -259,16 +259,28 @@ ManeuverPlanner::setControllerOutputOffset(const ControllerOutput& offset)
 void
 ManeuverPlanner::publishEmergencyPlan(const Override& override)
 {
+	ManeuverAnalysisStatus maneuverAnalysisStatus;
+	maneuverAnalysisStatus.maneuver = "emergency_plan";
+	maneuverAnalysisStatus.analysis = true;
+	maneuverAnalysisStatus.interrupted = false;
+
 	interruptOverride();
+	startManeuverAnalysis();
+
 	overridePublisher_.publish(dp::serialize(override));
+	maneuverAnalysisStatusPublisher_.publish(dp::serialize(maneuverAnalysisStatus));
 }
 
 void
 ManeuverPlanner::cancelEmergencyPlan()
 {
 	Override override;
+	ManeuverAnalysisStatus maneuverAnalysisStatus;
 
 	overridePublisher_.publish(dp::serialize(override));
+	maneuverAnalysisStatusPublisher_.publish(dp::serialize(maneuverAnalysisStatus));
+
+	stopManeuverAnalysis();
 	resumeOverride();
 }
 
