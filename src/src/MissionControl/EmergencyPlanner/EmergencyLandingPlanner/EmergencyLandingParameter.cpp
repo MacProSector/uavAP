@@ -70,10 +70,14 @@ ApproachingParameter::configure(const boost::property_tree::ptree& config)
 
 	pm.add("position", position, isDefault);
 	pm.add<double>("velocity", velocity, isDefault);
+	pm.add<double>("approach_angle", approachAngle, isDefault);
+	pm.add<double>("approach_angle_min", approachAngleMin, isDefault);
+	pm.add<double>("approach_angle_max", approachAngleMax, isDefault);
 	pm.add<double>("climb_angle", climbAngle, isDefault);
 	pm.add<double>("yaw_angle", yawAngle, isDefault);
 	pm.add<double>("yaw_rate", yawRate, isDefault);
 	pm.add<double>("sideslip_angle", angleOfSideslip, isDefault);
+	pm.add<double>("runway_align_distance", runwayAlignDistance, isDefault);
 	pm.add("obstacles", obstacleConfig, false);
 
 	PropertyMapper obstaclePm(obstacleConfig);
@@ -141,6 +145,9 @@ degreeToRadian(SearchingParameter& searchingParameter)
 void
 degreeToRadian(ApproachingParameter& approachingParameter)
 {
+	approachingParameter.approachAngle = degToRad(approachingParameter.approachAngle);
+	approachingParameter.approachAngleMin = degToRad(approachingParameter.approachAngleMin);
+	approachingParameter.approachAngleMax = degToRad(approachingParameter.approachAngleMax);
 	approachingParameter.climbAngle = degToRad(approachingParameter.climbAngle);
 	approachingParameter.yawAngle = degToRad(approachingParameter.yawAngle);
 	approachingParameter.yawRate = degToRad(approachingParameter.yawRate);
@@ -166,6 +173,9 @@ radianToDegree(SearchingParameter& searchingParameter)
 void
 radianToDegree(ApproachingParameter& approachingParameter)
 {
+	approachingParameter.approachAngle = radToDeg(approachingParameter.approachAngle);
+	approachingParameter.approachAngleMin = radToDeg(approachingParameter.approachAngleMin);
+	approachingParameter.approachAngleMax = radToDeg(approachingParameter.approachAngleMax);
 	approachingParameter.climbAngle = radToDeg(approachingParameter.climbAngle);
 	approachingParameter.yawAngle = radToDeg(approachingParameter.yawAngle);
 	approachingParameter.yawRate = radToDeg(approachingParameter.yawRate);

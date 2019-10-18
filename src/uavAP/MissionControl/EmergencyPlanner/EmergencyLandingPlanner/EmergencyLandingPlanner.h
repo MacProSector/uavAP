@@ -101,7 +101,8 @@ private:
 	SensorData sensorData_;
 	mutable std::mutex sensorDataMutex_;
 
-	unsigned runwayAlignedCount_;
+	unsigned runwayAlignCount_;
+	double flap_;
 };
 
 #endif /* UAVAP_MISSIONCONTROL_EMERGENCYPLANNER_EMERGENCYLANDINGPLANNER_EMERGENCYLANDINGPLANNER_H_ */

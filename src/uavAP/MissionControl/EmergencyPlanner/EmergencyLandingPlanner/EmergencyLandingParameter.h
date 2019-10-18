@@ -81,10 +81,14 @@ struct ApproachingParameter
 {
 	Vector3 position;
 	double velocity;
+	double approachAngle;
+	double approachAngleMin;
+	double approachAngleMax;
 	double climbAngle;
 	double yawAngle;
 	double yawRate;
 	double angleOfSideslip;
+	double runwayAlignDistance;
 	Obstacles obstacles;
 	bool isDefault;
 

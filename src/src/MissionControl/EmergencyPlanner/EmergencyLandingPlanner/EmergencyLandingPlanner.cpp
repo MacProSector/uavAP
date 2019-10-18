@@ -31,7 +31,7 @@
 #include "uavAP/MissionControl/ManeuverPlanner/ManeuverPlanner.h"
 
 EmergencyLandingPlanner::EmergencyLandingPlanner() :
-		runwayAlignedCount_(0)
+		runwayAlignCount_(0), flap_(0)
 {
 }
 
@@ -254,8 +254,8 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 	double velocityDelta = 0;
 	double minimumCost = 0;
 	double currentCost = 0;
+	double runwayAlignDistance = 0;
 	double approachDistance = 0;
-	double approachDistanceEasting = 0;
 	double approachAngle = 0;
 	EmergencyLandingPhases currentPhase;
 	EmergencyLandingPlan landingPlan;
@@ -273,6 +273,9 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 					- landingParameter.planningParameter.glidingClimbAngle)
 			/ fabs(landingParameter.planningParameter.glidingClimbAngle);
 
+	runwayAlignDistance = fabs(
+			initialLandingStatus.position.x() - landingParameter.approachingParameter.position.x());
+
 	approachDistance = sqrt(
 			pow(
 					(initialLandingStatus.position.x()
@@ -280,9 +283,6 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 					+ pow(
 							(initialLandingStatus.position.y()
 									- landingParameter.approachingParameter.position.y()), 2));
-
-	approachDistanceEasting = fabs(
-			initialLandingStatus.position.x() - landingParameter.approachingParameter.position.x());
 
 	approachAngle = -atan2(
 			initialLandingStatus.position.z() - landingParameter.approachingParameter.position.z(),
@@ -401,7 +401,38 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 		}
 	}
 
-	landingPlan.flap = 1;
+	if (landingParameter.phase == EmergencyLandingPhases::APPROACHING)
+	{
+		if (runwayAlignDistance <= landingParameter.approachingParameter.runwayAlignDistance)
+		{
+			runwayAlignCount_++;
+		}
+
+		if (runwayAlignCount_ >= 2 && approachDistance > 800)
+		{
+			if (fabs(approachAngle) > fabs(landingParameter.approachingParameter.approachAngleMax)
+					&& initialLandingStatus.airSpeed
+							> landingParameter.approachingParameter.velocity + 3)
+			{
+				flap_ = 1.5;
+			}
+			else if (flap_ > 0
+					&& (fabs(approachAngle)
+							<= fabs(landingParameter.approachingParameter.approachAngleMin)
+							|| initialLandingStatus.airSpeed
+									< landingParameter.approachingParameter.velocity))
+			{
+				flap_ = 0;
+			}
+
+			landingPlan.flap = flap_ / 3;
+		}
+	}
+	else
+	{
+		runwayAlignCount_ = 0;
+		flap_ = 0;
+	}
 
 	publishEmergencyLandingPlan(landingParameter, landingPlan);
 }
@@ -554,7 +585,7 @@ EmergencyLandingPlanner::evaluateCost(const EmergencyLandingParameter& landingPa
 					landingStatus.airSpeed - landingParameter.planningParameter.glidingVelocity)
 					/ landingParameter.searchingParameter.acceleration;
 
-			cost += fabs(approachAngle - landingParameter.approachingParameter.climbAngle)
+			cost += fabs(approachAngle - landingParameter.approachingParameter.approachAngle)
 					/ landingParameter.searchingParameter.climbRate;
 		}
 
