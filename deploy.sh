@@ -2,7 +2,7 @@
 
 # Declare variables
 CORES=$(grep -c ^processor /proc/cpuinfo)
-DEPLOY_DIR=$(pwd)/build/Deploy
+DEPLOY_DIR=$(pwd)/build/deploy
 SOURCE_DIR=$(pwd)/src
 
 # Create deployment folder
