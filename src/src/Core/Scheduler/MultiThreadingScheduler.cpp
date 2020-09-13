@@ -23,24 +23,49 @@
  *      Author: mircot
  */
 
-#include "uavAP/Core/Logging/APLogger.h"
-#include "uavAP/Core/Scheduler/MultiThreadingScheduler.h"
 #include <utility>
 
+#include "uavAP/Core/Logging/APLogger.h"
+#include "uavAP/Core/PropertyMapper/PropertyMapper.h"
+#include "uavAP/Core/Scheduler/MultiThreadingScheduler.h"
+
 MultiThreadingScheduler::MultiThreadingScheduler() :
-		started_(false), mainThread_(false)
+		started_(false), mainThread_(false), priority_(20)
 {
 }
 
 MultiThreadingScheduler::~MultiThreadingScheduler()
 {
-	stop();
+	if (started_)
+	{
+		stop();
+	}
+
+	APLOG_TRACE << "Scheduler destroyed.";
 }
 
 std::shared_ptr<IScheduler>
-MultiThreadingScheduler::create(const boost::property_tree::ptree&)
+MultiThreadingScheduler::create(const boost::property_tree::ptree& config)
 {
-	return std::make_shared<MultiThreadingScheduler>();
+	auto multiThreadingScheduler = std::make_shared<MultiThreadingScheduler>();
+
+	if (!multiThreadingScheduler->configure(config))
+	{
+		APLOG_ERROR << "MultiThreadingScheduler: Failed to Load Config.";
+	}
+
+	return multiThreadingScheduler;
+}
+
+bool
+MultiThreadingScheduler::configure(const boost::property_tree::ptree& config)
+{
+	PropertyMapper pm(config);
+	boost::property_tree::ptree toleranceTree;
+
+	pm.add<int>("priority", priority_, false);
+
+	return pm.map();
 }
 
 Event
@@ -72,11 +97,48 @@ MultiThreadingScheduler::schedule(const std::function<void
 void
 MultiThreadingScheduler::stop()
 {
-	boost::unique_lock<boost::mutex> lock(eventsMutex_);
+	std::unique_lock<boost::mutex> lock(eventsMutex_);
 	started_ = false;
+
+	for (auto &event : events_)
+	{
+		std::unique_lock<boost::mutex> l(event.second->executionMutex);
+		event.second->isCanceled.store(true);
+		event.second->intervalCondition.notify_all();
+		l.unlock();
+	}
+	for (auto &event : events_)
+	{
+		if (event.second->periodicThread.joinable())
+		{
+			APLOG_TRACE << "Joining " << event.second->body.target_type().name();
+			event.second->periodicThread.join();
+			APLOG_TRACE << "Joined " << event.second->body.target_type().name();
+		}
+		else
+		{
+			APLOG_WARN << event.second->body.target_type().name() << " not joinable";
+		}
+	}
+
+	for (auto event : nonPeriodicEvents_)
+	{
+		if (event->periodicThread.joinable())
+		{
+			APLOG_TRACE << "Joining non-periodic " << event->body.target_type().name();
+			event->periodicThread.join();
+			APLOG_TRACE << "Joined non-periodic " << event->body.target_type().name();
+		}
+	}
+
+	events_.clear();
 	wakeupCondition_.notify_all();
 	lock.unlock();
-	invokerThread_.join();
+
+	if (!mainThread_)
+	{
+		invokerThread_.join();
+	}
 }
 
 bool
@@ -85,24 +147,52 @@ MultiThreadingScheduler::run(RunStage stage)
 	switch (stage)
 	{
 	case RunStage::INIT:
+	{
 		if (!timeProvider_.isSet())
 		{
 			APLOG_ERROR << "TimeProvider missing.";
 			return true;
 		}
+
+		schedulingParams_.sched_priority = priority_;
+
 		break;
+	}
 	case RunStage::NORMAL:
+	{
 		break;
+	}
 	case RunStage::FINAL:
+	{
 		started_ = true;
+
 		if (!mainThread_)
+		{
 			invokerThread_ = boost::thread(
 					boost::bind(&MultiThreadingScheduler::runSchedule, this));
 
-		break;
-	default:
+			if (priority_ != 20)
+			{
+				pthread_setschedparam(invokerThread_.native_handle(), SCHED_FIFO,
+						&schedulingParams_);
+			}
+		}
+		else
+		{
+			if (priority_ != 20)
+			{
+				pthread_setschedparam(pthread_self(), SCHED_FIFO, &schedulingParams_);
+			}
+		}
+
 		break;
 	}
+	default:
+	{
+		break;
+	}
+	}
+
 	return false;
 }
 
@@ -163,27 +253,45 @@ MultiThreadingScheduler::runSchedule()
 					//Check if isCanceled
 					if (eventBody->isCanceled.load())
 					{
-						eventBody->periodicThread.join();
+						nonPeriodicEvents_.push_back(eventBody);
 						events_.erase(events_.begin());
 						continue;
 					}
 				}
 				else
 				{
-					//Thread not started yet
-					eventBody->periodicThread = boost::thread(
-							boost::bind(&MultiThreadingScheduler::periodicTask, this, eventBody));
+					if (!eventBody->isCanceled.load())
+					{
+						//Thread not started yet
+						eventBody->periodicThread = boost::thread(
+								boost::bind(&MultiThreadingScheduler::periodicTask, this,
+										eventBody));
+
+						if (priority_ != 20)
+						{
+							if (int r = pthread_setschedparam(
+									eventBody->periodicThread.native_handle(),
+									SCHED_FIFO, &schedulingParams_))
+							{
+								APLOG_DEBUG << "Cannot set sched params: " << r;
+							}
+						}
+					}
 				}
-				//Reschedule Task
-				auto element = std::make_pair(it->first + *eventBody->period, eventBody);
-				events_.insert(element);
+				if (!eventBody->isCanceled.load())
+				{
+					//Reschedule Task
+					auto element = std::make_pair(it->first + *eventBody->period, eventBody);
+					events_.insert(element);
+				}
 			}
 			else
 			{
 				//Not a periodic thread
-				if (!it->second->isCanceled.load())
+				if (!eventBody->isCanceled.load())
 				{
-					boost::thread(it->second->body).detach();
+					eventBody->periodicThread = boost::thread(it->second->body);
+					nonPeriodicEvents_.push_back(eventBody);
 				}
 			}
 			//Remove current schedule from events as it was handeled

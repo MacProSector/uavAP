@@ -25,9 +25,11 @@
 
 #ifndef UAVAP_CORE_SCHEDULER_MULTITHREADINGSCHEDULER_H_
 #define UAVAP_CORE_SCHEDULER_MULTITHREADINGSCHEDULER_H_
+
 #include <boost/optional/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/thread.hpp>
+
 #include "uavAP/Core/Object/IAggregatableObject.h"
 #include "uavAP/Core/Object/ObjectHandle.h"
 #include "uavAP/Core/Runner/IRunnableObject.h"
@@ -49,7 +51,10 @@ public:
 	~MultiThreadingScheduler();
 
 	static std::shared_ptr<IScheduler>
-	create(const boost::property_tree::ptree& conf);
+	create(const boost::property_tree::ptree& config);
+
+	bool
+	configure(const boost::property_tree::ptree& config);
 
 	Event
 	schedule(const std::function<void
@@ -95,6 +100,8 @@ private:
 
 	EventMap events_;
 
+	std::vector<std::shared_ptr<EventBody>> nonPeriodicEvents_;
+
 	ObjectHandle<ITimeProvider> timeProvider_;
 
 	boost::thread invokerThread_;
@@ -106,6 +113,10 @@ private:
 	TimePoint startingTime_;
 
 	bool mainThread_;
+
+	int priority_;
+
+	sched_param schedulingParams_;
 };
 
 #endif /* UAVAP_CORE_SCHEDULER_MULTITHREADINGSCHEDULER_H_ */

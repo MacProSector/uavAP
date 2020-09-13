@@ -234,6 +234,10 @@
 		"compress_sensor_data": true,
 		"period": 100
 	},
+	"scheduler": {
+		"type": "thread",
+		"priority": "99"
+	},
 	"data_presentation": {
 		"compress_double": true
 	}
