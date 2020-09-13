@@ -67,9 +67,9 @@ sudo make install -j$CORES
 cd ${SETUP_ROOT_DIR}/tmp
 
 #Get Eigen headers
-wget "http://bitbucket.org/eigen/eigen/get/3.3.4.tar.gz"
+wget "https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.tar.gz"
 printf "\nExtracting eigen\n"
-tar -xzf 3.3.4.tar.gz 
+tar -xzf eigen-3.3.4.tar.gz
 mkdir eigen-build
 cd eigen-build
 cmake ../eigen-eigen-5a0156e40feb
@@ -87,7 +87,7 @@ sudo make install -j$CORES
 cd ${SETUP_ROOT_DIR}/tmp
 
 #MPFR
-wget "https://www.mpfr.org/mpfr-current/mpfr-4.0.2.tar.xz"
+wget "https://www.mpfr.org/mpfr-4.0.2/mpfr-4.0.2.tar.xz"
 tar -xf mpfr-4.0.2.tar.xz
 cd mpfr-4.0.2
 ./configure
