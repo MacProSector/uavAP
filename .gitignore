@@ -1,5 +1,5 @@
 # Ignoring Build Folder
-[Bb]ld*/
+build/
 
 # Ignoring generated protobuff headers
 *.pb.h

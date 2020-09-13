@@ -2,7 +2,7 @@
 
 # Declare variables
 CORES=$(grep -c ^processor /proc/cpuinfo)
-DEPLOY_DIR=$(pwd)/bld/Deploy
+DEPLOY_DIR=$(pwd)/build/Deploy
 SOURCE_DIR=$(pwd)/src
 
 # Create deployment folder
@@ -53,12 +53,12 @@ fi
 # Install Eigen
 cd $DEPLOY_DIR
 printf "\nInstalling Eigen...\n\n"
-wget "http://bitbucket.org/eigen/eigen/get/3.3.4.tar.gz"
+wget "https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.tar.gz"
 printf "\nExtracting eigen\n"
-tar -xzf 3.3.4.tar.gz 
+tar -xzf eigen-3.3.4.tar.gz
 mkdir eigen-build
 cd eigen-build
-cmake ../eigen-eigen-5a0156e40feb
+cmake ../eigen-3.3.4
 make DESTDIR=$DEPLOY_DIR install -j$CORES
 RETURN=$?
 if [ $RETURN -ne 0 ]; then
@@ -132,8 +132,8 @@ cd $DEPLOY_DIR
 printf "\nInstalling Redis...\n\n"
 git clone --recurse-submodules "https://github.com/cpp-redis/cpp_redis.git"
 cd cpp_redis
-mkdir bld
-cd bld
+mkdir build
+cd build
 cmake -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_INSTALL_PREFIX=$DEPLOY_DIR/usr/local/ ../
 make -j$CORES
 make install -j$CORES
@@ -143,8 +143,8 @@ if [ $RETURN -ne 0 ]; then
 	exit $RETURN
 fi
 cd ../tacopie
-mkdir bld
-cd bld
+mkdir build
+cd build
 cmake -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_INSTALL_PREFIX=$DEPLOY_DIR/usr/local/ ../
 make -j$CORES
 make install -j$CORES
@@ -157,12 +157,12 @@ fi
 
 # Create build folders
 printf "\nCreating build folders...\n\n"
-if [ -d "bld" ]; then
+if [ -d "build" ]; then
 	printf "\nRemoving existing build folders...\n\n"
-	rm -rfv bld
+	rm -rfv build
 fi
-mkdir bld
-cd bld
+mkdir build
+cd build
 mkdir Release
 cd Release
 

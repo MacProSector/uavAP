@@ -72,7 +72,7 @@ printf "\nExtracting eigen\n"
 tar -xzf eigen-3.3.4.tar.gz
 mkdir eigen-build
 cd eigen-build
-cmake ../eigen-eigen-5a0156e40feb
+cmake ../eigen-3.3.4
 sudo make install -j$CORES
 cd ${SETUP_ROOT_DIR}/tmp
 
@@ -111,7 +111,6 @@ make -j$CORES
 sudo make install -j$CORES
 cd ${SETUP_ROOT_DIR}/tmp
 
-
 #Remove tmp dir
 cd ${SETUP_ROOT_DIR}
 sudo rm -rf tmp
@@ -119,22 +118,20 @@ sudo rm -rf tmp
 printf "\nGenerating protobuf files\n"
 ./generate_proto.sh
 
-#Create bld paths
-if [ -d "bld" ]; then
-	rm -rf bld
+#Create build paths
+if [ -d "build" ]; then
+	rm -rf build
 fi
 
-mkdir bld
-cd bld
-mkdir Release
-mkdir Debug
+mkdir build
+cd build
+mkdir release
+mkdir debug
 
-cd Release 
+cd release 
 cmake -G "Eclipse CDT4 - Unix Makefiles" -DLIBRARY_ROOT_DIR="/" -DCMAKE_BUILD_TYPE=Release -DCMAKE_ECLIPSE_MAKE_ARGUMENTS=-j$CORES -DCMAKE_ECLIPSE_VERSION=$ECLIPSE ../../src/
 
-cd ../Debug
+cd ../debug
 cmake -G "Eclipse CDT4 - Unix Makefiles" -DLIBRARY_ROOT_DIR="/" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ECLIPSE_MAKE_ARGUMENTS=-j$CORES -DCMAKE_ECLIPSE_VERSION=$ECLIPSE ../../src/
 
 printf "\nSetup completed\n\n"
-
-
