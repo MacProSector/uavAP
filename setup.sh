@@ -7,7 +7,7 @@ SETUP_ROOT_DIR=$(pwd)
     
 #Check System and install packages
 if [ `cat /proc/version | grep -c "Ubuntu"` -gt 0 ]; then
-	sudo apt-get --assume-yes install gcc-multilib autoconf g++-multilib cmake autogen libtool curl lzip
+	sudo apt-get --assume-yes install gcc-multilib autoconf g++-multilib cmake autogen libtool curl lzip m4
 elif [ `cat /proc/version | grep -c "ARCH"` -gt 0 ]; then
 	if [ ! `sudo pacman -Qs gcc-multilib | grep -c "gcc-multilib"` -gt 0 ]; then
 	    	sudo pacman -S --noconfirm gcc-multilib
