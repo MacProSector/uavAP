@@ -363,7 +363,15 @@ EmergencyLandingPlanner::calculateEmergencyLandingPlan(EmergencyLandingParameter
 
 			currentLandingStatus.position.z() = initialLandingStatus.position.z()
 					+ initialLandingStatus.velocity.z()
-							* landingParameter.planningParameter.periodSecond;
+							* landingParameter.planningParameter.periodSecond
+					+ (initialLandingStatus.airSpeed - velocityDelta / 2)
+									* landingParameter.planningParameter.periodSecond
+									* (sin(
+											initialLandingStatus.climbAngle
+							                                + i * landingParameter.planningParameter.climbRate
+									                    * landingParameter.planningParameter.periodSecond)
+											- sin(initialLandingStatus.climbAngle)) / 2;
+
 
 			currentLandingStatus.airSpeed = initialLandingStatus.airSpeed - velocityDelta;
 
