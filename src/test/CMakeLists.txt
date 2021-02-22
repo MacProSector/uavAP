@@ -17,12 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 set (TEST_SOURCES 	TestRunner.cpp
-			API/ApExtTest.cpp
+#			API/ApExtTest.cpp
 #			Core/APLoggerTest.cpp
 #			Core/FramesTest.cpp
-            Core/DataPresentationTest.cpp
+#           Core/DataPresentationTest.cpp
             Core/IPCTest.cpp
-            Core/PropertyMapperTest.cpp
+#           Core/PropertyMapperTest.cpp
             Core/RunnerTest.cpp
             Core/SchedulerTest.cpp
 			FlightControl/Controller/AdaptiveControlEnvironmentTest.cpp
@@ -30,7 +30,8 @@ set (TEST_SOURCES 	TestRunner.cpp
 #			FlightControl/Controller/PIDControllerTest_Helicopter.cpp
             Math/BetaIncompleteTest.cpp
             MissionControl/EmergencyPlanner/EmergencyGeofencingPlannerTest.cpp
-            MissionControl/EmergencyPlanner/EmergencyLandingPlannerTest.cpp
+#           MissionControl/EmergencyPlanner/EmergencyLandingPlannerTest.cpp
+            MissionControl/EmergencyPlanner/EmergencyLandingModelTest.cpp
 			)
 
 set (TEST_DEPENDENCIES 	boost_system
@@ -48,7 +49,7 @@ set (TEST_DEPENDENCIES 	boost_system
         		flint
         		)
         		
-add_subdirectory(Plugin)
+# add_subdirectory(Plugin)
 
 
 add_executable (tests EXCLUDE_FROM_ALL ${TEST_SOURCES})

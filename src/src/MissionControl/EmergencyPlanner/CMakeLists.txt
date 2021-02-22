@@ -22,5 +22,6 @@ set(MISSION_CONTROL_SRC ${MISSION_CONTROL_SRC}
 						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyGeofencingPlanner/EmergencyGeofencingPlanner.cpp
 						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyLandingPlanner/EmergencyLandingParameter.cpp
 						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyLandingPlanner/EmergencyLandingPlanner.cpp
+						${CMAKE_CURRENT_SOURCE_DIR}/EmergencyLandingPlanner/EmergencyLandingModel.cpp
 						PARENT_SCOPE)
 						
